@@ -1,0 +1,31 @@
+{
+  "dataset_class": "SYNTHETIC_INTERNAL",
+  "synthetic": true,
+  "disclaimer": "프로젝트 시연을 위해 생성한 합성 공문이며 실제 KB 내부자료가 아닙니다.",
+  "notice_id": "SIN-SELLER-CHECKLIST-V1",
+  "family_id": "SIN-SELLER-CHECKLIST",
+  "version": 1,
+  "title": "[합성] KB 셀러론 상담 준비 체크리스트 안내 v1",
+  "issued_at": "2026-09-10",
+  "effective_from": "2026-09-15",
+  "status": "DRAFT",
+  "references": [
+    {
+      "dataset_class": "PUBLIC_KB",
+      "product_key": "kb-seller-loan",
+      "snapshot_hash": "sha256:def6b5b670fc0adf36909ffd1ce47bd416a67e213f7127b5058c44681fe7e44b"
+    }
+  ],
+  "checklist_changes": [
+    {
+      "change_id": "CHECK-CORPORATE-LIMIT-SOURCE",
+      "instruction": "법인사업자 상담 준비 시 공개 상품 원문의 최대 20억원 표기와 근거 위치를 확인한다.",
+      "evidence_required": true
+    },
+    {
+      "change_id": "CHECK-HUMAN-REVIEW",
+      "instruction": "자동 검증 결과와 별도로 담당자의 검토 기록을 남긴다.",
+      "evidence_required": true
+    }
+  ]
+}

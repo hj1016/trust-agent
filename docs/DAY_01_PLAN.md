@@ -13,23 +13,25 @@
 - [x] 공개 snapshot manifest schema 작성
 - [x] 공개 상품 catalog baseline 작성
 - [x] 애플리케이션, 데이터셋, 인프라, 테스트 디렉터리 구성
-- [ ] Git baseline commit 생성
-- [ ] 공개 상품 3개의 실제 첫 snapshot 수집
-- [ ] 실제 SHA-256과 schema를 통과하는 manifest 생성
-- [ ] 첫 합성 공문과 합성 기업 및 신청 fixture 생성
-- [ ] 잘못된 데이터 분류와 경로 조합을 거부하는 contract test 작성
+- [x] Git baseline commit 생성
+- [x] 공개 상품 3개의 실제 첫 snapshot 수집
+- [x] 실제 SHA-256과 schema를 통과하는 manifest 생성
+- [x] 첫 합성 공문과 합성 기업 및 신청 fixture 생성
+- [x] 잘못된 데이터 분류와 경로 조합을 거부하는 contract test 작성
 
 ## 첫날 완료 조건
 
-공개 상품 3개의 실제 snapshot과 검증된 manifest가 존재하고 합성 fixture가 명확히 분리되며 contract test가 의도적인 경계 위반을 한 건 이상 거부해야 합니다.
+공개 상품 3개의 실제 snapshot이 비공개 artifact로 존재하고 검증된 manifest가 Git에 존재하며, 합성 fixture가 명확히 분리되고 contract test가 의도적인 분류 위반을 한 건 이상 거부해야 합니다.
 
 ## 보존할 evidence
 
-- snapshot 파일과 SHA-256
+- 비공개 snapshot artifact와 Git에 기록된 SHA-256
 - schema 검증 결과
 - 데이터 경계 contract test 결과
 - ADR
 - Git commit ID
+
+검증 명령, 결과, snapshot hash와 Git commit ID는 `docs/evidence/DAY_01_EVIDENCE.md`에 보존합니다.
 
 ## 다음 구현 순서
 

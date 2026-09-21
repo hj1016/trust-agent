@@ -1,6 +1,8 @@
 {
   "dataset_class": "PUBLIC_KB",
-  "baseline_status": "SOURCE_URLS_ONLY",
+  "synthetic": false,
+  "baseline_status": "SNAPSHOT_VERIFIED",
+  "snapshot_date": "2026-09-21",
   "products": [
     {
       "product_key": "small-business-credit",

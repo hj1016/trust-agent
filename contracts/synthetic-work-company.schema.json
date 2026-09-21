@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/synthetic-work-company.schema.json",
+  "title": "TrustAgent Synthetic Company",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset_class", "synthetic", "disclaimer", "company_id", "legal_name", "business_id", "business_type", "industry", "established_on"],
+  "properties": {
+    "dataset_class": {"const": "SYNTHETIC_WORK"},
+    "synthetic": {"const": true},
+    "disclaimer": {"type": "string", "minLength": 10},
+    "company_id": {"type": "string", "pattern": "^SW-COMPANY-[0-9]{3}$"},
+    "legal_name": {"type": "string", "minLength": 1},
+    "business_id": {"type": "string", "pattern": "^SYNTH-BIZ-[0-9]{3}$"},
+    "business_type": {"enum": ["SOLE_PROPRIETOR", "CORPORATION"]},
+    "industry": {"type": "string", "minLength": 1},
+    "established_on": {"type": "string", "format": "date"}
+  }
+}
