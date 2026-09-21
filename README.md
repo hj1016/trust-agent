@@ -4,7 +4,15 @@
 
 ## 현재 상태
 
-첫날 프로젝트 기준과 저장소 구조를 설정하는 단계입니다. 아직 애플리케이션 서비스는 구현하지 않았습니다.
+첫날 데이터 기준선 구성을 완료했습니다. KB 공식 공개 상품 3개의 2026-09-21 비공개 원문 artifact와 공개 가능한 SHA-256 manifest, 합성 공문과 합성 기업 및 신청 fixture, 데이터 분류 contract test가 있습니다. raw HTML은 Git에 포함하지 않습니다. 애플리케이션 서비스는 아직 구현하지 않았습니다.
+
+검증 명령은 다음과 같습니다.
+
+```bash
+python3 -m unittest discover -s tests/contract -v
+```
+
+2026-09-21 비공개 artifact 필수 검증 결과 9개 테스트가 모두 통과했습니다. 상세 증거는 `docs/evidence/DAY_01_EVIDENCE.md`에 기록합니다.
 
 ## 2주 MVP 목표
 
@@ -35,6 +43,7 @@
 - 첫날 계획: `docs/DAY_01_PLAN.md`
 - 기술 결정: `docs/adr/`
 - 데이터 계약: `contracts/`
+- 첫날 검증 증거: `docs/evidence/DAY_01_EVIDENCE.md`
 
 ## 구현 상태 기록 원칙
 

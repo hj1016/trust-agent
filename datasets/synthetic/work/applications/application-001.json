@@ -1,0 +1,12 @@
+{
+  "dataset_class": "SYNTHETIC_WORK",
+  "synthetic": true,
+  "disclaimer": "프로젝트 시연을 위해 생성한 가상 상담 신청이며 실제 여신 신청 또는 승인 자료가 아닙니다.",
+  "application_id": "SW-APPLICATION-001",
+  "company_id": "SW-COMPANY-001",
+  "product_key": "kb-seller-loan",
+  "requested_at": "2026-09-18T09:00:00+09:00",
+  "requested_amount_krw": 150000000,
+  "purpose": "온라인 판매 정산 주기 사이의 운전자금 상담 준비",
+  "status": "DRAFT"
+}

@@ -11,3 +11,7 @@ __pycache__/
 .vscode/
 tmp/
 datasets/derived/
+
+# 공개 저장소에 포함하지 않는 원문 artifact
+.private-artifacts/
+datasets/public/kb/snapshots/

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/synthetic-work-application.schema.json",
+  "title": "TrustAgent Synthetic Consultation Application",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset_class", "synthetic", "disclaimer", "application_id", "company_id", "product_key", "requested_at", "requested_amount_krw", "purpose", "status"],
+  "properties": {
+    "dataset_class": {"const": "SYNTHETIC_WORK"},
+    "synthetic": {"const": true},
+    "disclaimer": {"type": "string", "minLength": 10},
+    "application_id": {"type": "string", "pattern": "^SW-APPLICATION-[0-9]{3}$"},
+    "company_id": {"type": "string", "pattern": "^SW-COMPANY-[0-9]{3}$"},
+    "product_key": {"const": "kb-seller-loan"},
+    "requested_at": {"type": "string", "format": "date-time"},
+    "requested_amount_krw": {"type": "integer", "minimum": 1},
+    "purpose": {"type": "string", "minLength": 1},
+    "status": {"const": "DRAFT"}
+  }
+}

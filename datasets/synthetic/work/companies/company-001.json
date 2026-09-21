@@ -1,0 +1,11 @@
+{
+  "dataset_class": "SYNTHETIC_WORK",
+  "synthetic": true,
+  "disclaimer": "프로젝트 시연을 위해 생성한 가상 기업이며 실제 고객 또는 기업 정보가 아닙니다.",
+  "company_id": "SW-COMPANY-001",
+  "legal_name": "가상상사 주식회사",
+  "business_id": "SYNTH-BIZ-001",
+  "business_type": "CORPORATION",
+  "industry": "온라인 생활용품 판매업",
+  "established_on": "2021-04-12"
+}
