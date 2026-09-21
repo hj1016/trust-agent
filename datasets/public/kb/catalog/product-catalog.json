@@ -1,0 +1,21 @@
+{
+  "dataset_class": "PUBLIC_KB",
+  "baseline_status": "SOURCE_URLS_ONLY",
+  "products": [
+    {
+      "product_key": "small-business-credit",
+      "display_name": "KB 소상공인 신용대출",
+      "source_url": "https://zloan.kbstar.com/quics?CooperCD=A000092&page=C106666"
+    },
+    {
+      "product_key": "boss-plus-overdraft",
+      "display_name": "KB 사장님+ 마이너스통장",
+      "source_url": "https://zloan.kbstar.com/quics?page=C110940"
+    },
+    {
+      "product_key": "kb-seller-loan",
+      "display_name": "KB 셀러론",
+      "source_url": "https://zloan.kbstar.com/quics?page=C108424"
+    }
+  ]
+}

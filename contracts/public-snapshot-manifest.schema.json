@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/public-snapshot-manifest.schema.json",
+  "title": "TrustAgent Public KB Snapshot Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dataset_class",
+    "product_key",
+    "source_url",
+    "collected_at",
+    "snapshot_hash",
+    "parser_version",
+    "synthetic"
+  ],
+  "properties": {
+    "dataset_class": {"const": "PUBLIC_KB"},
+    "product_key": {
+      "type": "string",
+      "enum": ["small-business-credit", "boss-plus-overdraft", "kb-seller-loan"]
+    },
+    "source_url": {
+      "type": "string",
+      "pattern": "^https://([a-z0-9-]+\\.)*kbstar\\.com/"
+    },
+    "collected_at": {"type": "string", "format": "date-time"},
+    "published_or_reviewed_at": {"type": ["string", "null"], "format": "date"},
+    "effective_from": {"type": ["string", "null"], "format": "date"},
+    "effective_to": {"type": ["string", "null"], "format": "date"},
+    "snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "parser_version": {"type": "string", "minLength": 1},
+    "synthetic": {"const": false}
+  }
+}
