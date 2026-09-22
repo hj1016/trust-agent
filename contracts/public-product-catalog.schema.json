@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/public-product-catalog.schema.json",
+  "title": "TrustAgent Public KB Product Catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset_class", "synthetic", "baseline_status", "snapshot_date", "products"],
+  "properties": {
+    "dataset_class": {"const": "PUBLIC_KB"},
+    "synthetic": {"const": false},
+    "baseline_status": {"enum": ["SOURCE_URLS_ONLY", "SNAPSHOT_VERIFIED"]},
+    "snapshot_date": {"type": "string", "format": "date"},
+    "products": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["product_key", "display_name", "source_marker", "source_url"],
+        "properties": {
+          "product_key": {
+            "type": "string",
+            "enum": ["small-business-credit", "boss-plus-overdraft", "kb-seller-loan"]
+          },
+          "display_name": {"type": "string", "minLength": 1},
+          "source_marker": {"type": "string", "minLength": 1},
+          "source_url": {
+            "type": "string",
+            "pattern": "^https://([a-z0-9-]+\\.)*kbstar\\.com/"
+          }
+        }
+      }
+    }
+  }
+}

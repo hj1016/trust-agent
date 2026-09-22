@@ -1,0 +1,17 @@
+{
+  "dataset_class": "PUBLIC_KB",
+  "product_key": "small-business-credit",
+  "source_url": "https://zloan.kbstar.com/quics?CooperCD=A000092&page=C106666",
+  "collected_at": "2026-09-22T14:00:36.524273Z",
+  "acquisition_method": "HTTP_DOWNLOAD",
+  "snapshot_storage": "LOCAL_PRIVATE",
+  "snapshot_object_key": "public-kb/sha256/08d48f15e16d98ce8db9e6d399defd12cbb47bc673243666f34bc386cb701c90.html",
+  "content_type": "text/html",
+  "byte_size": 90223,
+  "published_or_reviewed_at": null,
+  "effective_from": null,
+  "effective_to": null,
+  "snapshot_hash": "sha256:08d48f15e16d98ce8db9e6d399defd12cbb47bc673243666f34bc386cb701c90",
+  "parser_version": "raw-html-v1",
+  "synthetic": false
+}

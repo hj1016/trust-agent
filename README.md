@@ -4,15 +4,27 @@
 
 ## 현재 상태
 
-첫날 데이터 기준선 구성을 완료했습니다. KB 공식 공개 상품 3개의 2026-09-21 비공개 원문 artifact와 공개 가능한 SHA-256 manifest, 합성 공문과 합성 기업 및 신청 fixture, 데이터 분류 contract test가 있습니다. raw HTML은 Git에 포함하지 않습니다. 애플리케이션 서비스는 아직 구현하지 않았습니다.
+공개 상품 snapshot 수집 경로를 완성했습니다. Catalog의 공식 KB URL을 검증하고 raw HTML을 비공개 content-addressed artifact로 저장하며, SHA-256 manifest를 자동 생성합니다. 동일 원문은 중복 저장하지 않고 실패 시 기존 데이터를 보존합니다. 정규화된 product version과 fact, 애플리케이션 서비스는 아직 구현하지 않았습니다.
 
 검증 명령은 다음과 같습니다.
 
 ```bash
-python3 -m unittest discover -s tests/contract -v
+python3 -m unittest discover -s tests -v
 ```
 
-2026-09-21 비공개 artifact 필수 검증 결과 9개 테스트가 모두 통과했습니다. 상세 증거는 `docs/evidence/DAY_01_EVIDENCE.md`에 기록합니다.
+비공개 원문을 포함한 전체 검증은 다음과 같이 실행합니다.
+
+```bash
+TRUSTAGENT_REQUIRE_PRIVATE_SNAPSHOTS=1 python3 -m unittest discover -s tests -v
+```
+
+2026-09-22 실행 결과 23개 테스트가 모두 통과했습니다. 상세 증거는 `docs/evidence/DAY_02_EVIDENCE.md`에 기록합니다.
+
+공개 상품 3개를 수집하는 명령은 다음과 같습니다.
+
+```bash
+python3 scripts/collect_public_kb_snapshots.py --all
+```
 
 ## 2주 MVP 목표
 
@@ -41,9 +53,11 @@ python3 -m unittest discover -s tests/contract -v
 
 - 프로젝트 기준: `docs/PROJECT_CONTEXT.md`
 - 첫날 계획: `docs/DAY_01_PLAN.md`
+- 둘째 날 계획: `docs/DAY_02_PLAN.md`
 - 기술 결정: `docs/adr/`
 - 데이터 계약: `contracts/`
 - 첫날 검증 증거: `docs/evidence/DAY_01_EVIDENCE.md`
+- 둘째 날 검증 증거: `docs/evidence/DAY_02_EVIDENCE.md`
 
 ## 구현 상태 기록 원칙
 

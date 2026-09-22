@@ -10,7 +10,8 @@ from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 
 
 ROOT = Path(__file__).resolve().parents[2]
-MANIFEST_DIR = ROOT / "datasets/public/kb/manifests/2026-09-21"
+MANIFEST_ROOT = ROOT / "datasets/public/kb/manifests"
+BASELINE_MANIFEST_DIR = MANIFEST_ROOT / "2026-09-21"
 PRIVATE_ARTIFACT_ROOT = Path(
     os.environ.get("TRUSTAGENT_PRIVATE_ARTIFACT_ROOT", ROOT / ".private-artifacts")
 )
@@ -84,13 +85,19 @@ class PublicSnapshotContractTest(unittest.TestCase):
     }
 
     def manifests(self) -> list[tuple[Path, dict]]:
-        return [(path, load_json(path)) for path in sorted(MANIFEST_DIR.glob("*.json"))]
+        return [(path, load_json(path)) for path in sorted(MANIFEST_ROOT.rglob("*.json"))]
+
+    def baseline_manifests(self) -> list[tuple[Path, dict]]:
+        return [
+            (path, load_json(path))
+            for path in sorted(BASELINE_MANIFEST_DIR.glob("*.json"))
+        ]
 
     def artifact_path(self, manifest: dict) -> Path:
         return PRIVATE_ARTIFACT_ROOT / manifest["snapshot_object_key"]
 
     def test_three_snapshot_manifests_are_registered(self) -> None:
-        manifests = self.manifests()
+        manifests = self.baseline_manifests()
         self.assertEqual(3, len(manifests))
         self.assertEqual(set(self.expected_markers), {item["product_key"] for _, item in manifests})
 
@@ -155,7 +162,7 @@ class SyntheticFixtureContractTest(unittest.TestCase):
         self.assertEqual(company["company_id"], application["company_id"])
 
         manifest_hashes = {
-            load_json(path)["snapshot_hash"] for path in MANIFEST_DIR.glob("*.json")
+            load_json(path)["snapshot_hash"] for path in MANIFEST_ROOT.rglob("*.json")
         }
         self.assertIn(notice["references"][0]["snapshot_hash"], manifest_hashes)
 
