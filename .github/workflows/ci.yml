@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  python-contracts:
+    name: Python contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install --requirement requirements.txt
+
+      - name: Run contract and unit tests
+        env:
+          TRUSTAGENT_PRIVATE_ARTIFACT_ROOT: ${{ runner.temp }}/trust-agent-private-artifacts
+        run: python -m unittest discover -s tests -v
+
+      - name: Validate JSON documents
+        run: find contracts datasets -type f -name '*.json' -print0 | xargs -0 -n1 python -m json.tool >/dev/null
+
+      - name: Compile Python sources
+        run: python -m compileall -q scripts tests
+
+      - name: Reject private or generated files
+        shell: bash
+        run: |
+          forbidden_files="$({ git ls-files | grep -E '(^|/)(\.private-artifacts/|datasets/public/kb/snapshots/|\.idea/|__pycache__/|.*\.pyc$|.*\.html$|\.env($|\.))' || true; } | grep -v -E '(^|/)\.env\.example$' || true)"
+          if [[ -n "${forbidden_files}" ]]; then
+            echo "Git에 포함할 수 없는 파일이 발견됐습니다."
+            echo "${forbidden_files}"
+            exit 1
+          fi
+
