@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/public-product-fact.schema.json",
+  "title": "TrustAgent Public KB Product Fact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fact_id",
+    "fact_key",
+    "subject_type",
+    "value_type",
+    "value",
+    "unit",
+    "source_locator"
+  ],
+  "properties": {
+    "fact_id": {"type": "string", "pattern": "^fact:[a-z0-9-]+:[a-z0-9_]+$"},
+    "fact_key": {
+      "enum": [
+        "product_name",
+        "applicant_eligibility_text",
+        "max_limit_individual_krw",
+        "max_limit_corporate_krw",
+        "advertised_rate_text",
+        "advertised_rate_reference_date",
+        "repayment_method_text",
+        "sale_status"
+      ]
+    },
+    "subject_type": {"enum": ["PRODUCT", "SOLE_PROPRIETOR", "CORPORATION"]},
+    "value_type": {"enum": ["TEXT", "INTEGER", "DATE", "STATUS"]},
+    "value": {"type": ["string", "integer"]},
+    "unit": {"enum": ["TEXT", "KRW", "DATE", "STATUS"]},
+    "source_locator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "strategy",
+        "selector",
+        "label",
+        "evidence_text",
+        "evidence_hash",
+        "snapshot_hash",
+        "source_url"
+      ],
+      "properties": {
+        "strategy": {"enum": ["CSS_ATTRIBUTE", "LABELED_ADJACENT_TEXT", "CSS_TEXT_MATCH"]},
+        "selector": {"type": "string", "minLength": 1},
+        "label": {"type": "string", "minLength": 1},
+        "evidence_text": {"type": "string", "minLength": 1},
+        "evidence_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "source_url": {"type": "string", "pattern": "^https://([a-z0-9-]+\\.)*kbstar\\.com/"}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"value_type": {"const": "INTEGER"}}},
+      "then": {"properties": {"value": {"type": "integer"}, "unit": {"const": "KRW"}}}
+    },
+    {
+      "if": {"properties": {"value_type": {"const": "DATE"}}},
+      "then": {"properties": {"value": {"type": "string", "format": "date"}, "unit": {"const": "DATE"}}}
+    }
+  ]
+}
