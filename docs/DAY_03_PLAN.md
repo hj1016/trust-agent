@@ -63,3 +63,13 @@ Product fact pipeline은 raw HTML과 Spring 서비스 사이의 변환 계층입
 ## 다음 작업과의 연결
 
 생성된 product version과 fact를 Spring Boot 및 DB에 적재하고 요청 기준일에 유효한 version을 선택하는 API를 구현합니다.
+
+## 후속 운영 계획
+
+- 공개 상품 변경 감지용 Spring Batch Job 구현
+- 초기에는 수동 Job 실행을 지원하고 이후 scheduler 또는 외부 cron 연결
+- 상품 수가 적은 초기 단계에서는 Tasklet 기반 step 구성 우선 검토
+- Snapshot 수집, fact 추출, version 비교, 변경 후보 등록 단계 분리
+- 감지한 변경을 자동 적용하지 않고 담당자 검토 대기 상태로 저장
+- 실제 업무에서는 내부 공문을 공식 변경 기준으로 사용하고 공개 상품 정보는 교차 검증에 활용
+- 프로젝트에서는 실제 내부 공문 대신 `SYNTHETIC_INTERNAL` 합성 공문으로 흐름 검증

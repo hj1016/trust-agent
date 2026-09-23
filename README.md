@@ -32,6 +32,10 @@ python3 scripts/collect_public_kb_snapshots.py --all
 python3 scripts/extract_public_kb_product_facts.py --all
 ```
 
+## 후속 운영 방향
+
+향후 공개 상품 변경 감지용 Spring Batch Job과 담당자 검토 흐름을 추가합니다. 실제 업무에서는 내부 공문을 공식 변경 기준으로 사용하고, 공개 상품 정보는 공문 내용의 교차 검증과 고객 공개 정보 변경 감지에 활용합니다. Batch가 감지한 변경은 자동 적용하지 않고 검토 대기 상태로 저장하는 방향으로 구현합니다.
+
 ## 2주 MVP 목표
 
 다음 흐름을 처음부터 끝까지 재현하면 MVP가 완료된 것으로 판단합니다.
