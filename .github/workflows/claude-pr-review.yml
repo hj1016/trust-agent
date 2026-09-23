@@ -1,0 +1,57 @@
+name: Claude PR Review
+
+on:
+  pull_request:
+    types:
+      - opened
+      - ready_for_review
+      - reopened
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    name: Claude review
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout pull request
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+
+      - name: Review pull request
+        uses: anthropics/claude-code-action@cfc3eb22bfed5c26ef66e3223c982af27e4524de # v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          track_progress: true
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            이 pull request의 변경분만 한국어로 검토하세요. 코드를 수정하거나 commit하지 말고 GitHub review comment만 작성하세요.
+
+            다음 항목을 우선 확인하세요.
+            - 실제 버그, 보안 취약점, 회귀 가능성
+            - 테스트 누락과 evidence 없는 완료 표시
+            - PUBLIC_KB, SYNTHETIC_INTERNAL, SYNTHETIC_WORK, DERIVED 데이터 경계 위반
+            - 실제 내부자료나 고객정보처럼 오인될 표현과 비공개 artifact 또는 secret 유출
+            - 대출 승인과 거절, 신용등급, 최종 한도, 최종 금리를 결정하는 기능 유입
+            - parser, hash, version, 중복 제거와 source evidence의 정확성
+
+            발견한 문제는 심각도, 파일과 위치, 영향, 수정 방향을 포함해 작성하세요. 단순 취향이나 근거 없는 지적은 생략하세요. 중대한 문제가 없으면 확인한 범위와 남은 위험만 짧게 남기세요.
+
+            Use `gh pr comment` for top-level feedback.
+            Use `mcp__github_inline_comment__create_inline_comment` with `confirmed: true` for specific issues.
+            Only post GitHub comments and do not return review text as an action message.
+          claude_args: |
+            --allowedTools "Read,Glob,Grep,mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
