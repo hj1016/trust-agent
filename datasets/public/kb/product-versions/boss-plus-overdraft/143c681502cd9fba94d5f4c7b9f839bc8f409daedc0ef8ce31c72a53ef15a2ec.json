@@ -1,0 +1,135 @@
+{
+  "dataset_class": "PUBLIC_KB",
+  "synthetic": false,
+  "product_version_id": "pv:boss-plus-overdraft:sha256:143c681502cd9fba94d5f4c7b9f839bc8f409daedc0ef8ce31c72a53ef15a2ec",
+  "product_key": "boss-plus-overdraft",
+  "fact_set_hash": "sha256:143c681502cd9fba94d5f4c7b9f839bc8f409daedc0ef8ce31c72a53ef15a2ec",
+  "observed_at": "2026-09-22T14:00:36.992221Z",
+  "effective_from": null,
+  "effective_to": null,
+  "source_manifest_path": "datasets/public/kb/manifests/2026-09-22/boss-plus-overdraft--fa7560e52dda5788bce3f3eb73e06b2dbf7fbefbd19d96b757c9c6fb513dac73.manifest.json",
+  "source_snapshot_hash": "sha256:fa7560e52dda5788bce3f3eb73e06b2dbf7fbefbd19d96b757c9c6fb513dac73",
+  "source_url": "https://zloan.kbstar.com/quics?page=C110940",
+  "parser_version": "public-kb-html-v1",
+  "facts": [
+    {
+      "fact_id": "fact:boss-plus-overdraft:advertised_rate_reference_date",
+      "fact_key": "advertised_rate_reference_date",
+      "subject_type": "PRODUCT",
+      "value_type": "DATE",
+      "value": "2026-09-22",
+      "unit": "DATE",
+      "source_locator": {
+        "strategy": "CSS_TEXT_MATCH",
+        "selector": "span",
+        "label": "광고 금리 기준일",
+        "evidence_text": "(2026.09.22, 신용등급 1등급 기준)",
+        "evidence_hash": "sha256:685dec9d16151d77d42cada7df5e593bad87a4542d3a2f39c0de320bb7a8e9dd",
+        "snapshot_hash": "sha256:fa7560e52dda5788bce3f3eb73e06b2dbf7fbefbd19d96b757c9c6fb513dac73",
+        "source_url": "https://zloan.kbstar.com/quics?page=C110940"
+      }
+    },
+    {
+      "fact_id": "fact:boss-plus-overdraft:advertised_rate_text",
+      "fact_key": "advertised_rate_text",
+      "subject_type": "PRODUCT",
+      "value_type": "TEXT",
+      "value": "최저 연 3.72% ~ 최고 연 6.14%",
+      "unit": "TEXT",
+      "source_locator": {
+        "strategy": "CSS_TEXT_MATCH",
+        "selector": "span.txt",
+        "label": "광고 금리 문구",
+        "evidence_text": "최저 연 3.72% ~ 최고 연 6.14%",
+        "evidence_hash": "sha256:663ee5300382d5e90177b4a3b287ca6a2d7dc8a6e9c93f141b475534cd575833",
+        "snapshot_hash": "sha256:fa7560e52dda5788bce3f3eb73e06b2dbf7fbefbd19d96b757c9c6fb513dac73",
+        "source_url": "https://zloan.kbstar.com/quics?page=C110940"
+      }
+    },
+    {
+      "fact_id": "fact:boss-plus-overdraft:applicant_eligibility_text",
+      "fact_key": "applicant_eligibility_text",
+      "subject_type": "PRODUCT",
+      "value_type": "TEXT",
+      "value": "- 아래 요건을 모두 충족하는 개인사업자 고객 · 소매형SOHO 6C등급 이상 고객 · KB국민은행으로 카드가맹점 결제계좌를 이용 중이거나 신청한 고객 · 최근 3개월 간 연속하여 발생한 카드매출이 있는 고객",
+      "unit": "TEXT",
+      "source_locator": {
+        "strategy": "LABELED_ADJACENT_TEXT",
+        "selector": "p.tit3 + p.p-text",
+        "label": "가입대상",
+        "evidence_text": "- 아래 요건을 모두 충족하는 개인사업자 고객 · 소매형SOHO 6C등급 이상 고객 · KB국민은행으로 카드가맹점 결제계좌를 이용 중이거나 신청한 고객 · 최근 3개월 간 연속하여 발생한 카드매출이 있는 고객",
+        "evidence_hash": "sha256:8111a3f6c00919dfdb3e71e2230a3863e3c0f020e75256d1080961ca33834a01",
+        "snapshot_hash": "sha256:fa7560e52dda5788bce3f3eb73e06b2dbf7fbefbd19d96b757c9c6fb513dac73",
+        "source_url": "https://zloan.kbstar.com/quics?page=C110940"
+      }
+    },
+    {
+      "fact_id": "fact:boss-plus-overdraft:max_limit_individual_krw",
+      "fact_key": "max_limit_individual_krw",
+      "subject_type": "SOLE_PROPRIETOR",
+      "value_type": "INTEGER",
+      "value": 100000000,
+      "unit": "KRW",
+      "source_locator": {
+        "strategy": "LABELED_ADJACENT_TEXT",
+        "selector": "p.tit3 + p.p-text",
+        "label": "대출한도",
+        "evidence_text": "- 최대 1억원 범위 내 · 대출한도는 고객 신용등급, 월 평균 카드매출, 업종 등에 따라 다르게 산출됩니다.",
+        "evidence_hash": "sha256:f67becbaf285cf9e0e51c8d2ff551af68203dd2462d5cc13cf2aad66d611aed1",
+        "snapshot_hash": "sha256:fa7560e52dda5788bce3f3eb73e06b2dbf7fbefbd19d96b757c9c6fb513dac73",
+        "source_url": "https://zloan.kbstar.com/quics?page=C110940"
+      }
+    },
+    {
+      "fact_id": "fact:boss-plus-overdraft:product_name",
+      "fact_key": "product_name",
+      "subject_type": "PRODUCT",
+      "value_type": "TEXT",
+      "value": "KB사장님+ 마이너스통장",
+      "unit": "TEXT",
+      "source_locator": {
+        "strategy": "CSS_ATTRIBUTE",
+        "selector": "input[name=\"브랜드상품명\"]",
+        "label": "상품명",
+        "evidence_text": "KB사장님+ 마이너스통장",
+        "evidence_hash": "sha256:3411185e5da58045833ac9f2f0efa85c9d13f3259dae324650d78c83592751c8",
+        "snapshot_hash": "sha256:fa7560e52dda5788bce3f3eb73e06b2dbf7fbefbd19d96b757c9c6fb513dac73",
+        "source_url": "https://zloan.kbstar.com/quics?page=C110940"
+      }
+    },
+    {
+      "fact_id": "fact:boss-plus-overdraft:repayment_method_text",
+      "fact_key": "repayment_method_text",
+      "subject_type": "PRODUCT",
+      "value_type": "TEXT",
+      "value": "- 대출기간 : 1년 이내 (기한연장 시 최대 5년까지 연장 가능) - 상환방법 : 만기일시상환 (대출기간 중에는 매월 이자만 납부하고, 만기에 전액 상환하는 방법)",
+      "unit": "TEXT",
+      "source_locator": {
+        "strategy": "LABELED_ADJACENT_TEXT",
+        "selector": "p.tit3 + p.p-text",
+        "label": "대출기간과 상환방법",
+        "evidence_text": "- 대출기간 : 1년 이내 (기한연장 시 최대 5년까지 연장 가능) - 상환방법 : 만기일시상환 (대출기간 중에는 매월 이자만 납부하고, 만기에 전액 상환하는 방법)",
+        "evidence_hash": "sha256:506db8801acb9a1c1ca83d1237c9f478d0a897f290d7fb5dff8cfbdf66f5a6d8",
+        "snapshot_hash": "sha256:fa7560e52dda5788bce3f3eb73e06b2dbf7fbefbd19d96b757c9c6fb513dac73",
+        "source_url": "https://zloan.kbstar.com/quics?page=C110940"
+      }
+    },
+    {
+      "fact_id": "fact:boss-plus-overdraft:sale_status",
+      "fact_key": "sale_status",
+      "subject_type": "PRODUCT",
+      "value_type": "STATUS",
+      "value": "SELLING",
+      "unit": "STATUS",
+      "source_locator": {
+        "strategy": "LABELED_ADJACENT_TEXT",
+        "selector": "p.tit3 + p.p-text",
+        "label": "상품판매여부",
+        "evidence_text": "- 판매 중",
+        "evidence_hash": "sha256:400cfb7c01c9ad69e0cce5ead920c783e20d9230892b753ee2869f899f805c12",
+        "snapshot_hash": "sha256:fa7560e52dda5788bce3f3eb73e06b2dbf7fbefbd19d96b757c9c6fb513dac73",
+        "source_url": "https://zloan.kbstar.com/quics?page=C110940"
+      }
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/public-product-version.schema.json",
+  "title": "TrustAgent Public KB Product Version",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dataset_class",
+    "synthetic",
+    "product_version_id",
+    "product_key",
+    "fact_set_hash",
+    "observed_at",
+    "effective_from",
+    "effective_to",
+    "source_manifest_path",
+    "source_snapshot_hash",
+    "source_url",
+    "parser_version",
+    "facts"
+  ],
+  "properties": {
+    "dataset_class": {"const": "PUBLIC_KB"},
+    "synthetic": {"const": false},
+    "product_version_id": {
+      "type": "string",
+      "pattern": "^pv:[a-z0-9-]+:sha256:[a-f0-9]{64}$"
+    },
+    "product_key": {
+      "enum": ["small-business-credit", "boss-plus-overdraft", "kb-seller-loan"]
+    },
+    "fact_set_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "effective_from": {"type": ["string", "null"], "format": "date"},
+    "effective_to": {"type": ["string", "null"], "format": "date"},
+    "source_manifest_path": {
+      "type": "string",
+      "pattern": "^datasets/public/kb/manifests/[0-9]{4}-[0-9]{2}-[0-9]{2}/[a-z0-9-]+.*\\.json$"
+    },
+    "source_snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "source_url": {"type": "string", "pattern": "^https://([a-z0-9-]+\\.)*kbstar\\.com/"},
+    "parser_version": {"const": "public-kb-html-v1"},
+    "facts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "object"}
+    }
+  }
+}

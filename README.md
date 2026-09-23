@@ -4,7 +4,7 @@
 
 ## 현재 상태
 
-공개 상품 snapshot 수집 경로를 완성했습니다. Catalog의 공식 KB URL을 검증하고 raw HTML을 비공개 content-addressed artifact로 저장하며, SHA-256 manifest를 자동 생성합니다. 동일 원문은 중복 저장하지 않고 실패 시 기존 데이터를 보존합니다. 정규화된 product version과 fact, 애플리케이션 서비스는 아직 구현하지 않았습니다.
+공개 상품 snapshot 수집과 정규화 경로를 완성했습니다. Catalog의 공식 KB URL을 검증하고 raw HTML을 비공개 content-addressed artifact로 저장하며, SHA-256 manifest를 자동 생성합니다. 검증된 snapshot에서 정규화된 product fact와 의미 단위 product version을 생성하고 각 fact에 원문 locator와 evidence hash를 연결합니다. Spring Boot, DB 적재와 요청 기준일 조회 API는 아직 구현하지 않았습니다.
 
 검증 명령은 다음과 같습니다.
 
@@ -18,13 +18,23 @@ python3 -m unittest discover -s tests -v
 TRUSTAGENT_REQUIRE_PRIVATE_SNAPSHOTS=1 python3 -m unittest discover -s tests -v
 ```
 
-2026-09-22 실행 결과 23개 테스트가 모두 통과했습니다. 상세 증거는 `docs/evidence/DAY_02_EVIDENCE.md`에 기록합니다.
+2026-09-23 실행 결과 비공개 원문을 포함한 36개 테스트가 모두 통과했습니다. 상세 증거는 `docs/evidence/DAY_03_EVIDENCE.md`에 기록합니다.
 
 공개 상품 3개를 수집하는 명령은 다음과 같습니다.
 
 ```bash
 python3 scripts/collect_public_kb_snapshots.py --all
 ```
+
+검증된 snapshot에서 product version과 fact를 생성하는 명령은 다음과 같습니다.
+
+```bash
+python3 scripts/extract_public_kb_product_facts.py --all
+```
+
+## 후속 운영 방향
+
+향후 공개 상품 변경 감지용 Spring Batch Job과 담당자 검토 흐름을 추가합니다. 실제 업무에서는 내부 공문을 공식 변경 기준으로 사용하고, 공개 상품 정보는 공문 내용의 교차 검증과 고객 공개 정보 변경 감지에 활용합니다. Batch가 감지한 변경은 자동 적용하지 않고 검토 대기 상태로 저장하는 방향으로 구현합니다.
 
 ## 2주 MVP 목표
 
@@ -54,10 +64,12 @@ python3 scripts/collect_public_kb_snapshots.py --all
 - 프로젝트 기준: `docs/PROJECT_CONTEXT.md`
 - 첫날 계획: `docs/DAY_01_PLAN.md`
 - 둘째 날 계획: `docs/DAY_02_PLAN.md`
+- 셋째 날 계획: `docs/DAY_03_PLAN.md`
 - 기술 결정: `docs/adr/`
 - 데이터 계약: `contracts/`
 - 첫날 검증 증거: `docs/evidence/DAY_01_EVIDENCE.md`
 - 둘째 날 검증 증거: `docs/evidence/DAY_02_EVIDENCE.md`
+- 셋째 날 검증 증거: `docs/evidence/DAY_03_EVIDENCE.md`
 
 ## 구현 상태 기록 원칙
 
