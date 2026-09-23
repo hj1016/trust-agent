@@ -62,7 +62,7 @@ python3 scripts/extract_public_kb_product_facts.py --all
 ## 프로젝트 기록
 
 - 프로젝트 기준: `docs/PROJECT_CONTEXT.md`
-- CI와 AI 리뷰 기준: `docs/CI_AND_AI_REVIEW.md`
+- CI와 리뷰 기준: `docs/CI_AND_AI_REVIEW.md`
 - 첫날 계획: `docs/DAY_01_PLAN.md`
 - 둘째 날 계획: `docs/DAY_02_PLAN.md`
 - 셋째 날 계획: `docs/DAY_03_PLAN.md`
