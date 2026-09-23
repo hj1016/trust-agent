@@ -61,7 +61,8 @@ CI workflow가 한 번 실행된 후 `main` ruleset에 다음 기준을 적용�
 ## 권한과 안전 기준
 
 - CI workflow는 `contents: read`만 사용합니다.
-- Claude workflow는 repository content 읽기와 pull request 및 issue comment 작성만 허용합니다.
+- Claude 자동 리뷰 workflow는 repository content와 CI 결과 읽기, pull request comment 작성만 허용합니다.
+- Claude mention workflow는 repository content 읽기와 pull request 및 issue comment 작성만 허용합니다.
 - `contents: write` 권한을 부여하지 않아 Claude가 code commit이나 branch push를 수행하지 못하게 합니다.
 - 별도 GitHub App이나 장기 GitHub token 대신 workflow 단위의 단기 `GITHUB_TOKEN`을 사용합니다.
 - 외부 pull request의 code로 secret 권한을 실행할 수 있는 `pull_request_target`을 사용하지 않습니다.

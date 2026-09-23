@@ -8,6 +8,7 @@ on:
       - reopened
 
 permissions:
+  actions: read
   contents: read
   pull-requests: write
 
@@ -33,7 +34,8 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          track_progress: true
+          additional_permissions: |
+            actions: read
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
