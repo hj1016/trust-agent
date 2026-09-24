@@ -1,5 +1,9 @@
 # 셋째 날 완료 증거
 
+> 이 문서는 최초 Day 3 구현 당시의 실행 결과를 보존합니다. 이후 광고 금리 quote와
+> 상품 조건 version을 분리한 hardening으로 active contract와 baseline이 변경됐습니다.
+> 현재 결과와 정정 내용은 `DAY_03_HARDENING_EVIDENCE.md`를 기준으로 봅니다.
+
 ## 검증 시점
 
 - 실행일: 2026-09-23
@@ -101,3 +105,7 @@ Snapshot마다 version을 만들면 구현은 단순하지만 화면 구성 변�
 ## 다음 작업
 
 Spring Boot 프로젝트 골격과 저장 계층을 만들고 product version과 fact를 적재합니다. 그다음 요청 기준일에 유효한 version을 선택하는 조회 API를 구현하되, 원문에 effective date가 없는 현재 baseline은 임의로 유효 기간을 추정하지 않는 정책을 먼저 정의해야 합니다.
+
+위 다음 작업에 앞서 발견된 관측·quote·실패 이력 문제는 ADR-006과 Day 3 hardening에서
+해결했습니다. Spring 구현은 신규 ProductTermsVersion 및 freshness contract를 입력으로
+사용합니다.

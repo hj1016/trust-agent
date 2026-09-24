@@ -1,0 +1,12 @@
+{
+  "dataset_class": "DERIVED",
+  "collection_attempt_id": "collect:boss-plus-overdraft:e01815c5f5f55ae7b0b2fcfbf95a721f",
+  "collection_run_id": "run:c85c3aa2b2525055bb330533a7285ba8",
+  "product_key": "boss-plus-overdraft",
+  "attempt_sequence": 1,
+  "attempted_at": "2026-09-21T05:11:37Z",
+  "status": "SUCCEEDED",
+  "observation_id": "obs:boss-plus-overdraft:1b5623e2dfd35a6e9088dfb83d4a477d",
+  "error_code": null,
+  "error_message": null
+}

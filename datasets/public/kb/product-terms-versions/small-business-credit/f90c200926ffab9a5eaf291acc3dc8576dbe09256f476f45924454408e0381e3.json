@@ -1,0 +1,51 @@
+{
+  "dataset_class": "PUBLIC_KB",
+  "synthetic": false,
+  "product_terms_version_id": "ptv:small-business-credit:sha256:f90c200926ffab9a5eaf291acc3dc8576dbe09256f476f45924454408e0381e3",
+  "product_key": "small-business-credit",
+  "terms_hash": "sha256:f90c200926ffab9a5eaf291acc3dc8576dbe09256f476f45924454408e0381e3",
+  "effective_from": null,
+  "effective_to": null,
+  "facts": [
+    {
+      "fact_id": "fact:small-business-credit:applicant_eligibility_text",
+      "fact_key": "applicant_eligibility_text",
+      "subject_type": "PRODUCT",
+      "value_type": "TEXT",
+      "value": "- 다음 조건을 모두 만족하는 개인사업자 (공동사업자 제외) · 현 사업기간 1년 이상 경과한 고객 · 연소득금액 1천만원 이상 · KB국민은행 신용등급 6등급 이상",
+      "unit": "TEXT"
+    },
+    {
+      "fact_id": "fact:small-business-credit:max_limit_individual_krw",
+      "fact_key": "max_limit_individual_krw",
+      "subject_type": "SOLE_PROPRIETOR",
+      "value_type": "INTEGER",
+      "value": 200000000,
+      "unit": "KRW"
+    },
+    {
+      "fact_id": "fact:small-business-credit:product_name",
+      "fact_key": "product_name",
+      "subject_type": "PRODUCT",
+      "value_type": "TEXT",
+      "value": "KB소상공인 신용대출",
+      "unit": "TEXT"
+    },
+    {
+      "fact_id": "fact:small-business-credit:repayment_method_text",
+      "fact_key": "repayment_method_text",
+      "subject_type": "PRODUCT",
+      "value_type": "TEXT",
+      "value": "- 만기일시상환 · 대출기간 : 1년 (1년 단위로 최대 5년까지 연장 가능합니다) (단, 신용등급 BBB(소매형소호 3등급)이상인 경우 최대 10년 이내 기한연장 가능) · 대출기간 중에는 매월 이자만 납부하고, 만기에 전액 상환하는 방법입니다 - 원금균등분할상환 · 대출기간 : 최대 5년 이내 (대출기간이 1년을 초과하는 경우 총 대출기간의 3분의 1범위 내에서 원금은 상환하지 않고 이자만 납부하는 거치기간을 설정할 수 있습니다) · 원금을 매달 같은금액으로 나누어 갚고, 대출 잔액에 해당하는 이자를 매달 납부하는 방법입니다",
+      "unit": "TEXT"
+    },
+    {
+      "fact_id": "fact:small-business-credit:sale_status",
+      "fact_key": "sale_status",
+      "subject_type": "PRODUCT",
+      "value_type": "STATUS",
+      "value": "SELLING",
+      "unit": "STATUS"
+    }
+  ]
+}

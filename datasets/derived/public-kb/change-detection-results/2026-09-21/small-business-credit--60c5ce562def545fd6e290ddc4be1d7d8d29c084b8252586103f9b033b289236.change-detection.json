@@ -1,0 +1,13 @@
+{
+  "dataset_class": "DERIVED",
+  "change_detection_result_id": "change:small-business-credit:60c5ce562def545fd6e290ddc4be1d7d8d29c084b8252586103f9b033b289236",
+  "product_key": "small-business-credit",
+  "observation_id": "obs:small-business-credit:99a7ade532745830859c524ba3a85c83",
+  "previous_observation_id": null,
+  "evaluated_at": "2026-09-21T05:11:37Z",
+  "policy_version": "public-kb-change-v1",
+  "classifications": [
+    "BASELINE_ESTABLISHED"
+  ],
+  "supersedes_result_id": null
+}

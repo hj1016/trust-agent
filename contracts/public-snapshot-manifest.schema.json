@@ -1,57 +1,19 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://trustagent.local/contracts/public-snapshot-manifest.schema.json",
-  "title": "TrustAgent Public KB Snapshot Manifest",
+  "title": "TrustAgent Public KB Snapshot",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "dataset_class",
-    "product_key",
-    "source_url",
-    "collected_at",
-    "acquisition_method",
-    "snapshot_storage",
-    "snapshot_object_key",
-    "content_type",
-    "byte_size",
-    "snapshot_hash",
-    "parser_version",
-    "synthetic"
-  ],
+  "required": ["dataset_class", "product_key", "source_url", "snapshot_storage", "snapshot_object_key", "content_type", "byte_size", "snapshot_hash", "synthetic"],
   "properties": {
     "dataset_class": {"const": "PUBLIC_KB"},
-    "product_key": {
-      "type": "string",
-      "enum": ["small-business-credit", "boss-plus-overdraft", "kb-seller-loan"]
-    },
-    "source_url": {
-      "type": "string",
-      "pattern": "^https://([a-z0-9-]+\\.)*kbstar\\.com/"
-    },
-    "collected_at": {"type": "string", "format": "date-time"},
-    "acquisition_method": {"enum": ["HTTP_DOWNLOAD", "MANUAL_DOWNLOAD"]},
-    "acquisition_note": {"type": "string", "minLength": 1},
+    "product_key": {"enum": ["small-business-credit", "boss-plus-overdraft", "kb-seller-loan"]},
+    "source_url": {"type": "string", "pattern": "^https://([a-z0-9-]+\\.)*kbstar\\.com/"},
     "snapshot_storage": {"enum": ["LOCAL_PRIVATE", "PRIVATE_OBJECT_STORAGE"]},
-    "snapshot_object_key": {
-      "type": "string",
-      "pattern": "^public-kb/sha256/[a-f0-9]{64}\\.html$"
-    },
+    "snapshot_object_key": {"type": "string", "pattern": "^public-kb/sha256/[a-f0-9]{64}\\.html$"},
     "content_type": {"const": "text/html"},
     "byte_size": {"type": "integer", "minimum": 1},
-    "published_or_reviewed_at": {"type": ["string", "null"], "format": "date"},
-    "effective_from": {"type": ["string", "null"], "format": "date"},
-    "effective_to": {"type": ["string", "null"], "format": "date"},
     "snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
-    "parser_version": {"type": "string", "minLength": 1},
     "synthetic": {"const": false}
-  },
-  "allOf": [
-    {
-      "if": {
-        "properties": {"acquisition_method": {"const": "MANUAL_DOWNLOAD"}},
-        "required": ["acquisition_method"]
-      },
-      "then": {"required": ["acquisition_note"]}
-    }
-  ]
+  }
 }

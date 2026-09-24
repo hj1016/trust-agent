@@ -1,0 +1,13 @@
+{
+  "dataset_class": "DERIVED",
+  "change_detection_result_id": "change:boss-plus-overdraft:64276bcddb11436072a581bec186e62bd087636e295343cf326dcf04892b7e1d",
+  "product_key": "boss-plus-overdraft",
+  "observation_id": "obs:boss-plus-overdraft:1b5623e2dfd35a6e9088dfb83d4a477d",
+  "previous_observation_id": null,
+  "evaluated_at": "2026-09-21T05:11:37Z",
+  "policy_version": "public-kb-change-v1",
+  "classifications": [
+    "BASELINE_ESTABLISHED"
+  ],
+  "supersedes_result_id": null
+}

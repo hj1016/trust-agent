@@ -10,11 +10,18 @@ Pull request마다 반복 가능한 자동 검증을 실행하고, 테스트 결
 
 - Python 3.11 dependency 설치
 - 비공개 raw HTML이 없는 Public Git 조건의 contract 및 unit test
+- 커밋된 공개·정제 audit baseline의 schema와 참조 무결성 검사
 - 모든 contract와 dataset JSON 문법 검사
 - Python source compile 검사
 - raw HTML, 비공개 artifact, 환경 파일과 생성 파일의 Git 유입 차단
 
 GitHub branch protection 또는 ruleset에는 `Python contracts` check를 필수로 지정합니다. Spring Boot 프로젝트가 추가되면 같은 CI에 Gradle test를 별도 필수 job으로 추가합니다.
+
+Public CI에서는 raw HTML이 필요한 artifact hash, golden 재추출과 migration 재현 테스트만
+명시적으로 skip합니다. 로컬 private 검증에서는
+`TRUSTAGENT_REQUIRE_PRIVATE_SNAPSHOTS=1`을 사용해 이 세 테스트도 필수로 실행합니다.
+Live KB 페이지를 CI에서 다시 수집하지 않으며, 커밋된 합성 fixture와 공개·정제
+baseline으로 결정적인 검증을 유지합니다.
 
 ## AI 자동 리뷰 상태
 

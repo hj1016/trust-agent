@@ -1,5 +1,9 @@
 # 셋째 날 계획
 
+> 이 계획은 최초 Day 3 범위를 기록합니다. 광고 금리 기준일을 version identity에 넣은
+> 결정과 재관측·실패 이력 누락은 `DAY_03_HARDENING_PLAN.md`와 ADR-006에서 정정했습니다.
+> active contract와 완료 조건은 hardening 계획을 따릅니다.
+
 ## 목표
 
 검증된 공개 snapshot에서 서비스가 조회할 수 있는 정규화된 product fact를 생성하고, 의미 있는 fact 변경 단위로 product version을 구분합니다.
@@ -58,7 +62,9 @@ Product fact pipeline은 raw HTML과 Spring 서비스 사이의 변환 계층입
 - 여러 위치에 같은 label이 생길 수 있음: 후보가 정확히 한 건일 때만 추출합니다.
 - 금액 단위 변환 오류가 발생할 수 있음: 억원 변환과 KB 셀러론 20억원 회귀 테스트를 둡니다.
 - Source locator가 DOM 변경에 약할 수 있음: label, selector, evidence text와 evidence hash를 함께 저장합니다.
-- 원문 표시 날짜가 매일 바뀔 수 있음: 해당 날짜가 fact에 포함되면 새 version으로, 근거 외 변경이면 같은 version으로 판정합니다.
+- 원문 표시 날짜가 매일 바뀔 수 있음: 최초 구현은 이를 새 version으로 판정했지만,
+  hardening에서는 광고 금리 문구와 기준일을 Observation-scoped quote로 분리해 terms
+  version identity에서 제외합니다.
 
 ## 다음 작업과의 연결
 

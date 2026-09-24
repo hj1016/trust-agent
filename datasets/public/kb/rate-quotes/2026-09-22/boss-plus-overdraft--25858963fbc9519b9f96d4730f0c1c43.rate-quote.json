@@ -1,0 +1,27 @@
+{
+  "dataset_class": "PUBLIC_KB",
+  "synthetic": false,
+  "rate_quote_id": "quote:boss-plus-overdraft:25858963fbc9519b9f96d4730f0c1c43",
+  "observation_id": "obs:boss-plus-overdraft:c66d19b4b4f1573aa7521d9059cc3583",
+  "product_key": "boss-plus-overdraft",
+  "advertised_rate_text": "최저 연 3.72% ~ 최고 연 6.14%",
+  "advertised_rate_reference_date": "2026-09-22",
+  "text_locator": {
+    "strategy": "CSS_TEXT_MATCH",
+    "selector": "span.txt",
+    "label": "광고 금리 문구",
+    "evidence_text": "최저 연 3.72% ~ 최고 연 6.14%",
+    "evidence_hash": "sha256:663ee5300382d5e90177b4a3b287ca6a2d7dc8a6e9c93f141b475534cd575833",
+    "snapshot_hash": "sha256:fa7560e52dda5788bce3f3eb73e06b2dbf7fbefbd19d96b757c9c6fb513dac73",
+    "source_url": "https://zloan.kbstar.com/quics?page=C110940"
+  },
+  "reference_date_locator": {
+    "strategy": "CSS_TEXT_MATCH",
+    "selector": "span",
+    "label": "광고 금리 기준일",
+    "evidence_text": "(2026.09.22, 신용등급 1등급 기준)",
+    "evidence_hash": "sha256:685dec9d16151d77d42cada7df5e593bad87a4542d3a2f39c0de320bb7a8e9dd",
+    "snapshot_hash": "sha256:fa7560e52dda5788bce3f3eb73e06b2dbf7fbefbd19d96b757c9c6fb513dac73",
+    "source_url": "https://zloan.kbstar.com/quics?page=C110940"
+  }
+}

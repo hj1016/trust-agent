@@ -1,0 +1,91 @@
+{
+  "dataset_class": "PUBLIC_KB",
+  "synthetic": false,
+  "version_evidence_id": "evidence:small-business-credit:dcb09d57d20553d7a57bbe9fc356aa19",
+  "observation_id": "obs:small-business-credit:99a7ade532745830859c524ba3a85c83",
+  "product_terms_version_id": "ptv:small-business-credit:sha256:f90c200926ffab9a5eaf291acc3dc8576dbe09256f476f45924454408e0381e3",
+  "product_key": "small-business-credit",
+  "snapshot_hash": "sha256:25ae7dd8c18f06578ee0b26e6116f689754d175b1a9c8baed4574c9c7ee1cf2d",
+  "parser_version": "public-kb-html-v2",
+  "fact_evidence": [
+    {
+      "fact_id": "fact:small-business-credit:applicant_eligibility_text",
+      "locators": [
+        {
+          "strategy": "LABELED_ADJACENT_TEXT",
+          "selector": "p.tit3 + p.p-text",
+          "label": "가입대상",
+          "evidence_text": "- 다음 조건을 모두 만족하는 개인사업자 (공동사업자 제외) · 현 사업기간 1년 이상 경과한 고객 · 연소득금액 1천만원 이상 · KB국민은행 신용등급 6등급 이상",
+          "evidence_hash": "sha256:6043da0211d222a625e0ba0dbd961f398c57f3b082503bf12175e322e8128e15",
+          "snapshot_hash": "sha256:25ae7dd8c18f06578ee0b26e6116f689754d175b1a9c8baed4574c9c7ee1cf2d",
+          "source_url": "https://zloan.kbstar.com/quics?CooperCD=A000092&page=C106666"
+        }
+      ]
+    },
+    {
+      "fact_id": "fact:small-business-credit:max_limit_individual_krw",
+      "locators": [
+        {
+          "strategy": "LABELED_ADJACENT_TEXT",
+          "selector": "p.tit3 + p.p-text",
+          "label": "가입대상",
+          "evidence_text": "- 다음 조건을 모두 만족하는 개인사업자 (공동사업자 제외) · 현 사업기간 1년 이상 경과한 고객 · 연소득금액 1천만원 이상 · KB국민은행 신용등급 6등급 이상",
+          "evidence_hash": "sha256:6043da0211d222a625e0ba0dbd961f398c57f3b082503bf12175e322e8128e15",
+          "snapshot_hash": "sha256:25ae7dd8c18f06578ee0b26e6116f689754d175b1a9c8baed4574c9c7ee1cf2d",
+          "source_url": "https://zloan.kbstar.com/quics?CooperCD=A000092&page=C106666"
+        },
+        {
+          "strategy": "LABELED_ADJACENT_TEXT",
+          "selector": "p.tit3 + p.p-text",
+          "label": "대출한도",
+          "evidence_text": "- 최대 2억원 · 대출한도는 고객 신용등급, 소득금액 등에 따라 다르게 적용됩니다",
+          "evidence_hash": "sha256:63a465ccebdccf4f8ab72c6a7d2c08bfc7a75fd5da74f3abf2cfe5f4bca14f5e",
+          "snapshot_hash": "sha256:25ae7dd8c18f06578ee0b26e6116f689754d175b1a9c8baed4574c9c7ee1cf2d",
+          "source_url": "https://zloan.kbstar.com/quics?CooperCD=A000092&page=C106666"
+        }
+      ]
+    },
+    {
+      "fact_id": "fact:small-business-credit:product_name",
+      "locators": [
+        {
+          "strategy": "CSS_ATTRIBUTE",
+          "selector": "input[name=\"상세웹상품명\"]",
+          "label": "상품명",
+          "evidence_text": "KB소상공인 신용대출",
+          "evidence_hash": "sha256:a0ca11df4a93e3c54d39e4f4ff6737ac1ac49f3402426fae8889507c1d2e44e0",
+          "snapshot_hash": "sha256:25ae7dd8c18f06578ee0b26e6116f689754d175b1a9c8baed4574c9c7ee1cf2d",
+          "source_url": "https://zloan.kbstar.com/quics?CooperCD=A000092&page=C106666"
+        }
+      ]
+    },
+    {
+      "fact_id": "fact:small-business-credit:repayment_method_text",
+      "locators": [
+        {
+          "strategy": "LABELED_ADJACENT_TEXT",
+          "selector": "p.tit3 + p.p-text",
+          "label": "대출기간과 상환방법",
+          "evidence_text": "- 만기일시상환 · 대출기간 : 1년 (1년 단위로 최대 5년까지 연장 가능합니다) (단, 신용등급 BBB(소매형소호 3등급)이상인 경우 최대 10년 이내 기한연장 가능) · 대출기간 중에는 매월 이자만 납부하고, 만기에 전액 상환하는 방법입니다 - 원금균등분할상환 · 대출기간 : 최대 5년 이내 (대출기간이 1년을 초과하는 경우 총 대출기간의 3분의 1범위 내에서 원금은 상환하지 않고 이자만 납부하는 거치기간을 설정할 수 있습니다) · 원금을 매달 같은금액으로 나누어 갚고, 대출 잔액에 해당하는 이자를 매달 납부하는 방법입니다",
+          "evidence_hash": "sha256:bd71776450a6ad392b242ca02022613dde2b3d64e77e431f51e1ee8b6b40da45",
+          "snapshot_hash": "sha256:25ae7dd8c18f06578ee0b26e6116f689754d175b1a9c8baed4574c9c7ee1cf2d",
+          "source_url": "https://zloan.kbstar.com/quics?CooperCD=A000092&page=C106666"
+        }
+      ]
+    },
+    {
+      "fact_id": "fact:small-business-credit:sale_status",
+      "locators": [
+        {
+          "strategy": "LABELED_ADJACENT_TEXT",
+          "selector": "p.tit3 + p.p-text",
+          "label": "상품판매여부",
+          "evidence_text": "판매중",
+          "evidence_hash": "sha256:c9afb02fae13019902f6dced95bd7c031c0e173ab5367050264549170f408641",
+          "snapshot_hash": "sha256:25ae7dd8c18f06578ee0b26e6116f689754d175b1a9c8baed4574c9c7ee1cf2d",
+          "source_url": "https://zloan.kbstar.com/quics?CooperCD=A000092&page=C106666"
+        }
+      ]
+    }
+  ]
+}

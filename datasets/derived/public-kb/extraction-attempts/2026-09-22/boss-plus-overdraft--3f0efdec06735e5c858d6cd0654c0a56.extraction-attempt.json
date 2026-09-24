@@ -1,0 +1,16 @@
+{
+  "dataset_class": "DERIVED",
+  "extraction_attempt_id": "extract:boss-plus-overdraft:3f0efdec06735e5c858d6cd0654c0a56",
+  "extraction_run_id": "run:cfab60d1673952ee8378160fd3005a3b",
+  "observation_id": "obs:boss-plus-overdraft:c66d19b4b4f1573aa7521d9059cc3583",
+  "product_key": "boss-plus-overdraft",
+  "attempt_sequence": 2,
+  "attempted_at": "2026-09-22T14:00:36.992221Z",
+  "parser_version": "public-kb-html-v2",
+  "status": "SUCCEEDED",
+  "product_terms_version_id": "ptv:boss-plus-overdraft:sha256:eb46f7bfb5f9c1cd63dfdb3f4028c2162c3c754d004fe303bffafd18865c7111",
+  "version_evidence_id": "evidence:boss-plus-overdraft:a6a77be95d235612a1d562312683e7fe",
+  "rate_quote_id": "quote:boss-plus-overdraft:25858963fbc9519b9f96d4730f0c1c43",
+  "error_code": null,
+  "error_message": null
+}

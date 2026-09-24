@@ -1,0 +1,12 @@
+{
+  "dataset_class": "DERIVED",
+  "collection_attempt_id": "collect:small-business-credit:c5cc562b00605ef68aeeb673bae0c0ff",
+  "collection_run_id": "run:c85c3aa2b2525055bb330533a7285ba8",
+  "product_key": "small-business-credit",
+  "attempt_sequence": 1,
+  "attempted_at": "2026-09-21T05:11:37Z",
+  "status": "SUCCEEDED",
+  "observation_id": "obs:small-business-credit:99a7ade532745830859c524ba3a85c83",
+  "error_code": null,
+  "error_message": null
+}

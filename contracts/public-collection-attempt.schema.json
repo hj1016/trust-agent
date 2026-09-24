@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/public-collection-attempt.schema.json",
+  "title": "TrustAgent Public KB Collection Attempt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset_class", "collection_attempt_id", "collection_run_id", "product_key", "attempt_sequence", "attempted_at", "status", "observation_id", "error_code", "error_message"],
+  "properties": {
+    "dataset_class": {"const": "DERIVED"},
+    "collection_attempt_id": {"type": "string", "pattern": "^collect:[a-z0-9-]+:[a-f0-9]{32}$"},
+    "collection_run_id": {"type": "string", "pattern": "^run:[a-f0-9]{32}$"},
+    "product_key": {"enum": ["small-business-credit", "boss-plus-overdraft", "kb-seller-loan"]},
+    "attempt_sequence": {"type": "integer", "minimum": 1},
+    "attempted_at": {"type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"},
+    "status": {"enum": ["SUCCEEDED", "FAILED"]},
+    "observation_id": {"type": ["string", "null"], "pattern": "^obs:[a-z0-9-]+:[a-f0-9]{32}$"},
+    "error_code": {"type": ["string", "null"], "pattern": "^[A-Z][A-Z0-9_]*$"},
+    "error_message": {"type": ["string", "null"], "minLength": 1, "maxLength": 300}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "SUCCEEDED"}}, "required": ["status"]},
+      "then": {"properties": {"observation_id": {"type": "string"}, "error_code": {"type": "null"}, "error_message": {"type": "null"}}}
+    },
+    {
+      "if": {"properties": {"status": {"const": "FAILED"}}, "required": ["status"]},
+      "then": {"properties": {"observation_id": {"type": "null"}, "error_code": {"type": "string"}, "error_message": {"type": "string"}}}
+    }
+  ]
+}

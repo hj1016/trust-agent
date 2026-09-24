@@ -1,0 +1,51 @@
+{
+  "dataset_class": "PUBLIC_KB",
+  "synthetic": false,
+  "product_terms_version_id": "ptv:boss-plus-overdraft:sha256:eb46f7bfb5f9c1cd63dfdb3f4028c2162c3c754d004fe303bffafd18865c7111",
+  "product_key": "boss-plus-overdraft",
+  "terms_hash": "sha256:eb46f7bfb5f9c1cd63dfdb3f4028c2162c3c754d004fe303bffafd18865c7111",
+  "effective_from": null,
+  "effective_to": null,
+  "facts": [
+    {
+      "fact_id": "fact:boss-plus-overdraft:applicant_eligibility_text",
+      "fact_key": "applicant_eligibility_text",
+      "subject_type": "PRODUCT",
+      "value_type": "TEXT",
+      "value": "- 아래 요건을 모두 충족하는 개인사업자 고객 · 소매형SOHO 6C등급 이상 고객 · KB국민은행으로 카드가맹점 결제계좌를 이용 중이거나 신청한 고객 · 최근 3개월 간 연속하여 발생한 카드매출이 있는 고객",
+      "unit": "TEXT"
+    },
+    {
+      "fact_id": "fact:boss-plus-overdraft:max_limit_individual_krw",
+      "fact_key": "max_limit_individual_krw",
+      "subject_type": "SOLE_PROPRIETOR",
+      "value_type": "INTEGER",
+      "value": 100000000,
+      "unit": "KRW"
+    },
+    {
+      "fact_id": "fact:boss-plus-overdraft:product_name",
+      "fact_key": "product_name",
+      "subject_type": "PRODUCT",
+      "value_type": "TEXT",
+      "value": "KB사장님+ 마이너스통장",
+      "unit": "TEXT"
+    },
+    {
+      "fact_id": "fact:boss-plus-overdraft:repayment_method_text",
+      "fact_key": "repayment_method_text",
+      "subject_type": "PRODUCT",
+      "value_type": "TEXT",
+      "value": "- 대출기간 : 1년 이내 (기한연장 시 최대 5년까지 연장 가능) - 상환방법 : 만기일시상환 (대출기간 중에는 매월 이자만 납부하고, 만기에 전액 상환하는 방법)",
+      "unit": "TEXT"
+    },
+    {
+      "fact_id": "fact:boss-plus-overdraft:sale_status",
+      "fact_key": "sale_status",
+      "subject_type": "PRODUCT",
+      "value_type": "STATUS",
+      "value": "SELLING",
+      "unit": "STATUS"
+    }
+  ]
+}

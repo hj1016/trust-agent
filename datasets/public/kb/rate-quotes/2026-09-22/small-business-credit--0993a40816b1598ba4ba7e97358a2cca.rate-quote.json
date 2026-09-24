@@ -1,0 +1,27 @@
+{
+  "dataset_class": "PUBLIC_KB",
+  "synthetic": false,
+  "rate_quote_id": "quote:small-business-credit:0993a40816b1598ba4ba7e97358a2cca",
+  "observation_id": "obs:small-business-credit:3aad2aab1ffa5171a5b39b1c3b806c6c",
+  "product_key": "small-business-credit",
+  "advertised_rate_text": "최저 연 3.72% ~ 최고 연 5.73%",
+  "advertised_rate_reference_date": "2026-09-22",
+  "text_locator": {
+    "strategy": "CSS_TEXT_MATCH",
+    "selector": "span.txt",
+    "label": "광고 금리 문구",
+    "evidence_text": "최저 연 3.72% ~ 최고 연 5.73%",
+    "evidence_hash": "sha256:91034cc8ca6088b1a5b78e7daec713a8c069a4b2de3d0f03dc442d8b92ee6bf8",
+    "snapshot_hash": "sha256:08d48f15e16d98ce8db9e6d399defd12cbb47bc673243666f34bc386cb701c90",
+    "source_url": "https://zloan.kbstar.com/quics?CooperCD=A000092&page=C106666"
+  },
+  "reference_date_locator": {
+    "strategy": "CSS_TEXT_MATCH",
+    "selector": "span",
+    "label": "광고 금리 기준일",
+    "evidence_text": "(2026.09.22, 신용등급 1등급 기준)",
+    "evidence_hash": "sha256:685dec9d16151d77d42cada7df5e593bad87a4542d3a2f39c0de320bb7a8e9dd",
+    "snapshot_hash": "sha256:08d48f15e16d98ce8db9e6d399defd12cbb47bc673243666f34bc386cb701c90",
+    "source_url": "https://zloan.kbstar.com/quics?CooperCD=A000092&page=C106666"
+  }
+}

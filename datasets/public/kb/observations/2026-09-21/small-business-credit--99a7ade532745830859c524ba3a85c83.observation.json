@@ -1,0 +1,14 @@
+{
+  "dataset_class": "PUBLIC_KB",
+  "synthetic": false,
+  "observation_id": "obs:small-business-credit:99a7ade532745830859c524ba3a85c83",
+  "collection_attempt_id": "collect:small-business-credit:c5cc562b00605ef68aeeb673bae0c0ff",
+  "collection_run_id": "run:c85c3aa2b2525055bb330533a7285ba8",
+  "product_key": "small-business-credit",
+  "source_url": "https://zloan.kbstar.com/quics?CooperCD=A000092&page=C106666",
+  "final_url": null,
+  "observed_at": "2026-09-21T05:11:37Z",
+  "acquisition_method": "HTTP_DOWNLOAD",
+  "snapshot_manifest_path": "datasets/public/kb/manifests/2026-09-21/small-business-credit.manifest.json",
+  "snapshot_hash": "sha256:25ae7dd8c18f06578ee0b26e6116f689754d175b1a9c8baed4574c9c7ee1cf2d"
+}
