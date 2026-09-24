@@ -2,7 +2,11 @@
 
 ## 상태
 
-승인
+ADR-006으로 대체됨
+
+ADR-006은 광고 금리 quote를 상품 조건 identity에서 분리하고 Observation과
+VersionEvidence를 추가합니다. 이 문서는 기존 Day 3 구현의 결정 기록으로
+보존합니다.
 
 ## 배경
 

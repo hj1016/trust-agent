@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/public-product-term-fact.schema.json",
+  "title": "TrustAgent Public KB Product Term Fact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["fact_id", "fact_key", "subject_type", "value_type", "value", "unit"],
+  "properties": {
+    "fact_id": {"type": "string", "pattern": "^fact:[a-z0-9-]+:[a-z0-9_]+$"},
+    "fact_key": {"enum": ["product_name", "applicant_eligibility_text", "max_limit_individual_krw", "max_limit_corporate_krw", "repayment_method_text", "sale_status"]},
+    "subject_type": {"enum": ["PRODUCT", "SOLE_PROPRIETOR", "CORPORATION"]},
+    "value_type": {"enum": ["TEXT", "INTEGER", "STATUS"]},
+    "value": {"type": ["string", "integer"]},
+    "unit": {"enum": ["TEXT", "KRW", "STATUS"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"value_type": {"const": "INTEGER"}}, "required": ["value_type"]},
+      "then": {"properties": {"value": {"type": "integer"}, "unit": {"const": "KRW"}}}
+    },
+    {
+      "if": {"properties": {"fact_key": {"const": "sale_status"}}, "required": ["fact_key"]},
+      "then": {"properties": {"value_type": {"const": "STATUS"}, "value": {"enum": ["SELLING", "DISCONTINUED"]}, "unit": {"const": "STATUS"}}}
+    }
+  ]
+}

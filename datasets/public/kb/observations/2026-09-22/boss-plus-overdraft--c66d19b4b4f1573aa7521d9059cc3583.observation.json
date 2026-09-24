@@ -1,0 +1,14 @@
+{
+  "dataset_class": "PUBLIC_KB",
+  "synthetic": false,
+  "observation_id": "obs:boss-plus-overdraft:c66d19b4b4f1573aa7521d9059cc3583",
+  "collection_attempt_id": "collect:boss-plus-overdraft:077f188646535ce1a1275d8db3870e80",
+  "collection_run_id": "run:c85c3aa2b2525055bb330533a7285ba8",
+  "product_key": "boss-plus-overdraft",
+  "source_url": "https://zloan.kbstar.com/quics?page=C110940",
+  "final_url": null,
+  "observed_at": "2026-09-22T14:00:36.992221Z",
+  "acquisition_method": "HTTP_DOWNLOAD",
+  "snapshot_manifest_path": "datasets/public/kb/manifests/2026-09-22/boss-plus-overdraft--fa7560e52dda5788bce3f3eb73e06b2dbf7fbefbd19d96b757c9c6fb513dac73.manifest.json",
+  "snapshot_hash": "sha256:fa7560e52dda5788bce3f3eb73e06b2dbf7fbefbd19d96b757c9c6fb513dac73"
+}

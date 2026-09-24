@@ -1,0 +1,13 @@
+{
+  "dataset_class": "DERIVED",
+  "change_detection_result_id": "change:kb-seller-loan:8a33c466d2a1449c208a798231ec9e633fa5c9101ad186f0c64b580758c8773d",
+  "product_key": "kb-seller-loan",
+  "observation_id": "obs:kb-seller-loan:bfb9f700adf85398bf41bb7c87e758bb",
+  "previous_observation_id": null,
+  "evaluated_at": "2026-09-21T05:11:37Z",
+  "policy_version": "public-kb-change-v1",
+  "classifications": [
+    "BASELINE_ESTABLISHED"
+  ],
+  "supersedes_result_id": null
+}

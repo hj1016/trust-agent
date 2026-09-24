@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/public-rate-quote.schema.json",
+  "title": "TrustAgent Public KB Observed Rate Quote",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset_class", "synthetic", "rate_quote_id", "observation_id", "product_key", "advertised_rate_text", "advertised_rate_reference_date", "text_locator", "reference_date_locator"],
+  "properties": {
+    "dataset_class": {"const": "PUBLIC_KB"},
+    "synthetic": {"const": false},
+    "rate_quote_id": {"type": "string", "pattern": "^quote:[a-z0-9-]+:[a-f0-9]{32}$"},
+    "observation_id": {"type": "string", "pattern": "^obs:[a-z0-9-]+:[a-f0-9]{32}$"},
+    "product_key": {"enum": ["small-business-credit", "boss-plus-overdraft", "kb-seller-loan"]},
+    "advertised_rate_text": {"type": "string", "minLength": 1},
+    "advertised_rate_reference_date": {"type": ["string", "null"], "format": "date"},
+    "text_locator": {"$ref": "#/$defs/sourceLocator"},
+    "reference_date_locator": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sourceLocator"}]}
+  },
+  "$defs": {
+    "sourceLocator": {
+      "type": "object", "additionalProperties": false,
+      "required": ["strategy", "selector", "label", "evidence_text", "evidence_hash", "snapshot_hash", "source_url"],
+      "properties": {
+        "strategy": {"enum": ["CSS_ATTRIBUTE", "LABELED_ADJACENT_TEXT", "CSS_TEXT_MATCH"]},
+        "selector": {"type": "string", "minLength": 1}, "label": {"type": "string", "minLength": 1},
+        "evidence_text": {"type": "string", "minLength": 1}, "evidence_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "source_url": {"type": "string", "pattern": "^https://([a-z0-9-]+\\.)*kbstar\\.com/"}
+      }
+    }
+  }
+}

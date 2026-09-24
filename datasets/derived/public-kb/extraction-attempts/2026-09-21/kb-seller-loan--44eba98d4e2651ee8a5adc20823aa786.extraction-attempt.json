@@ -1,0 +1,16 @@
+{
+  "dataset_class": "DERIVED",
+  "extraction_attempt_id": "extract:kb-seller-loan:44eba98d4e2651ee8a5adc20823aa786",
+  "extraction_run_id": "run:cfab60d1673952ee8378160fd3005a3b",
+  "observation_id": "obs:kb-seller-loan:bfb9f700adf85398bf41bb7c87e758bb",
+  "product_key": "kb-seller-loan",
+  "attempt_sequence": 1,
+  "attempted_at": "2026-09-21T05:11:37Z",
+  "parser_version": "public-kb-html-v2",
+  "status": "SUCCEEDED",
+  "product_terms_version_id": "ptv:kb-seller-loan:sha256:647d5d3588b9d16dce6e4bd91044018a5ab0287c174ac7a945b85bc14abd031d",
+  "version_evidence_id": "evidence:kb-seller-loan:02a5d4f2929b5d1493ad766513d539a2",
+  "rate_quote_id": "quote:kb-seller-loan:c0a4d61023eb58e5a60733795c863a71",
+  "error_code": null,
+  "error_message": null
+}

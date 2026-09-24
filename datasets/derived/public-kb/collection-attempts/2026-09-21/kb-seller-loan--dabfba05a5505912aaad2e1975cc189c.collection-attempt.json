@@ -1,0 +1,12 @@
+{
+  "dataset_class": "DERIVED",
+  "collection_attempt_id": "collect:kb-seller-loan:dabfba05a5505912aaad2e1975cc189c",
+  "collection_run_id": "run:c85c3aa2b2525055bb330533a7285ba8",
+  "product_key": "kb-seller-loan",
+  "attempt_sequence": 1,
+  "attempted_at": "2026-09-21T05:11:37Z",
+  "status": "SUCCEEDED",
+  "observation_id": "obs:kb-seller-loan:bfb9f700adf85398bf41bb7c87e758bb",
+  "error_code": null,
+  "error_message": null
+}

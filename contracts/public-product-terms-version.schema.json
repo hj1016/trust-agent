@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/public-product-terms-version.schema.json",
+  "title": "TrustAgent Public KB Product Terms Version",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset_class", "synthetic", "product_terms_version_id", "product_key", "terms_hash", "effective_from", "effective_to", "facts"],
+  "properties": {
+    "dataset_class": {"const": "PUBLIC_KB"},
+    "synthetic": {"const": false},
+    "product_terms_version_id": {"type": "string", "pattern": "^ptv:[a-z0-9-]+:sha256:[a-f0-9]{64}$"},
+    "product_key": {"enum": ["small-business-credit", "boss-plus-overdraft", "kb-seller-loan"]},
+    "terms_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "effective_from": {"type": ["string", "null"], "format": "date"},
+    "effective_to": {"type": ["string", "null"], "format": "date"},
+    "facts": {"type": "array", "minItems": 1, "items": {"type": "object"}}
+  }
+}

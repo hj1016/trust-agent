@@ -2,16 +2,10 @@
   "dataset_class": "PUBLIC_KB",
   "product_key": "boss-plus-overdraft",
   "source_url": "https://zloan.kbstar.com/quics?page=C110940",
-  "collected_at": "2026-09-22T14:00:36.992221Z",
-  "acquisition_method": "HTTP_DOWNLOAD",
   "snapshot_storage": "LOCAL_PRIVATE",
   "snapshot_object_key": "public-kb/sha256/fa7560e52dda5788bce3f3eb73e06b2dbf7fbefbd19d96b757c9c6fb513dac73.html",
   "content_type": "text/html",
   "byte_size": 98953,
-  "published_or_reviewed_at": null,
-  "effective_from": null,
-  "effective_to": null,
   "snapshot_hash": "sha256:fa7560e52dda5788bce3f3eb73e06b2dbf7fbefbd19d96b757c9c6fb513dac73",
-  "parser_version": "raw-html-v1",
   "synthetic": false
 }

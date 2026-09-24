@@ -11,6 +11,7 @@ from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_ROOT = ROOT / "datasets/public/kb/manifests"
+OBSERVATION_ROOT = ROOT / "datasets/public/kb/observations"
 BASELINE_MANIFEST_DIR = MANIFEST_ROOT / "2026-09-21"
 PRIVATE_ARTIFACT_ROOT = Path(
     os.environ.get("TRUSTAGENT_PRIVATE_ARTIFACT_ROOT", ROOT / ".private-artifacts")
@@ -113,12 +114,14 @@ class PublicSnapshotContractTest(unittest.TestCase):
             validate_schema(manifest, "public-snapshot-manifest.schema.json")
 
     def test_manual_acquisition_requires_a_note(self) -> None:
-        manifest = copy.deepcopy(self.manifests()[0][1])
-        manifest["acquisition_method"] = "MANUAL_DOWNLOAD"
-        manifest.pop("acquisition_note", None)
+        observation = copy.deepcopy(
+            load_json(next(OBSERVATION_ROOT.rglob("*.observation.json")))
+        )
+        observation["acquisition_method"] = "MANUAL_DOWNLOAD"
+        observation.pop("acquisition_note", None)
 
         with self.assertRaises(ValidationError):
-            validate_schema(manifest, "public-snapshot-manifest.schema.json")
+            validate_schema(observation, "public-observation.schema.json")
 
     def test_private_artifacts_match_manifest_hashes(self) -> None:
         manifests = self.manifests()
