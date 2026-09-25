@@ -461,6 +461,7 @@ def extract_observation(
     extraction_run_id: str,
     attempt_sequence: int = 1,
     attempted_at: datetime | None = None,
+    attempted_at_source: str = "MEASURED",
     parser_version: str = PARSER_VERSION,
 ) -> ExtractionResult:
     observation = _load_json(observation_path)
@@ -581,6 +582,7 @@ def extract_observation(
             "product_key": product_key,
             "attempt_sequence": attempt_sequence,
             "attempted_at": attempted_text,
+            "attempted_at_source": attempted_at_source,
             "parser_version": parser_version,
             "status": "SUCCEEDED",
             "product_terms_version_id": terms_id,
@@ -601,6 +603,7 @@ def extract_observation(
             "product_key": product_key,
             "attempt_sequence": attempt_sequence,
             "attempted_at": attempted_text,
+            "attempted_at_source": attempted_at_source,
             "parser_version": parser_version,
             "status": "FAILED",
             "product_terms_version_id": None,

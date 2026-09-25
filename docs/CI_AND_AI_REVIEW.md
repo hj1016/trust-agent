@@ -14,8 +14,14 @@ Pull request마다 반복 가능한 자동 검증을 실행하고, 테스트 결
 - 모든 contract와 dataset JSON 문법 검사
 - Python source compile 검사
 - raw HTML, 비공개 artifact, 환경 파일과 생성 파일의 Git 유입 차단
+- Java 21과 커밋된 Gradle Wrapper를 사용하는 Spring 단위·PostgreSQL 통합 테스트
+- Spring Boot executable jar 생성
+- Gradle Wrapper JAR와 distribution checksum, dependency lockfile 및 verification
+  metadata 검증
 
-GitHub branch protection 또는 ruleset에는 `Python contracts` check를 필수로 지정합니다. Spring Boot 프로젝트가 추가되면 같은 CI에 Gradle test를 별도 필수 job으로 추가합니다.
+GitHub branch protection 또는 ruleset에는 `Python contracts`와 `Gradle tests` check를
+필수로 지정합니다. 두 job은 서로 독립적으로 실행하며 하나의 성공이 다른 쪽 실패를
+가리지 않습니다.
 
 Public CI에서는 raw HTML이 필요한 artifact hash, golden 재추출과 migration 재현 테스트만
 명시적으로 skip합니다. 로컬 private 검증에서는
@@ -43,6 +49,7 @@ CI workflow가 한 번 실행된 후 `main` ruleset에 다음 기준을 적용�
 
 - Pull request를 통한 변경만 허용
 - `Python contracts` status check 필수
+- `Gradle tests` status check 필수
 - Merge 전 branch 최신화 권장
 - Force push와 branch 삭제 차단
 - AI review를 필수 approval로 지정하지 않음

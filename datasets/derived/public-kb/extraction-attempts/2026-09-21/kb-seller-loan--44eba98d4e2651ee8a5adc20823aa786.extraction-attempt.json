@@ -6,6 +6,7 @@
   "product_key": "kb-seller-loan",
   "attempt_sequence": 1,
   "attempted_at": "2026-09-21T05:11:37Z",
+  "attempted_at_source": "BACKFILLED_FROM_OBSERVATION",
   "parser_version": "public-kb-html-v2",
   "status": "SUCCEEDED",
   "product_terms_version_id": "ptv:kb-seller-loan:sha256:647d5d3588b9d16dce6e4bd91044018a5ab0287c174ac7a945b85bc14abd031d",

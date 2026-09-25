@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: ${TRUST_AGENT_DB_URL}
+    username: ${TRUST_AGENT_DB_USERNAME}
+    password: ${TRUST_AGENT_DB_PASSWORD}
+
+trust-agent:
+  schema:
+    expected-version: ${TRUST_AGENT_SCHEMA_EXPECTED_VERSION}

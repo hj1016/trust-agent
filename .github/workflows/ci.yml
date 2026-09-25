@@ -53,3 +53,26 @@ jobs:
             exit 1
           fi
 
+  gradle-tests:
+    name: Gradle tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Java
+        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5.1.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Verify Gradle Wrapper
+        shell: bash
+        run: |
+          echo "7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172  gradle/wrapper/gradle-wrapper.jar" | sha256sum --check --strict
+
+      - name: Run Gradle tests and build executable jar
+        run: ./gradlew test bootJar --no-daemon

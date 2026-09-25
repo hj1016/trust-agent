@@ -6,6 +6,7 @@
   "product_key": "small-business-credit",
   "attempt_sequence": 1,
   "attempted_at": "2026-09-21T05:11:37Z",
+  "attempted_at_source": "BACKFILLED_FROM_OBSERVATION",
   "parser_version": "public-kb-html-v2",
   "status": "SUCCEEDED",
   "product_terms_version_id": "ptv:small-business-credit:sha256:f90c200926ffab9a5eaf291acc3dc8576dbe09256f476f45924454408e0381e3",

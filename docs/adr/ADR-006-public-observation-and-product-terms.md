@@ -151,8 +151,11 @@ ExtractionAttempt에 보존합니다.
 
 - Extractor를 실행할 때마다 Observation을 참조하는 append-only
   ExtractionAttempt를 기록합니다.
-- ExtractionAttempt는 attempt ID, observation ID, attempted at, parser version,
-  `SUCCEEDED` 또는 `FAILED` 상태를 보존합니다.
+- ExtractionAttempt는 attempt ID, observation ID, attempted at, attempted at source,
+  parser version, `SUCCEEDED` 또는 `FAILED` 상태를 보존합니다.
+- `attempted_at_source`는 실행 중 측정한 값이면 `MEASURED`, 과거 migration에서
+  Observation 시각을 복사한 값이면 `BACKFILLED_FROM_OBSERVATION`입니다. 두 값을 같은
+  신뢰 수준의 실제 처리 시각으로 해석하지 않습니다.
 - 실패 record는 안정적인 error code와 민감정보를 포함하지 않는 제한된 error
   message를 보존합니다.
 - 성공 record는 생성하거나 재사용한 ProductTermsVersion, VersionEvidence와
@@ -291,6 +294,9 @@ Quote fact를 ProductTermsVersion에서 제거하면 기존 fact set hash를 유
   수집 횟수로 해석하지 않습니다.
 - 기존 manifest의 각 성공 수집에 대응하는 CollectionAttempt도 생성합니다. 과거 실패
   attempt는 근거가 없으므로 추정해 만들지 않습니다.
+- Migration으로 만든 ExtractionAttempt 5건은 실제 추출 시각을 복원할 근거가 없어
+  `attempted_at`에 Observation의 `observed_at`을 복사하고
+  `attempted_at_source=BACKFILLED_FROM_OBSERVATION`으로 표시합니다.
 - 각 Observation에서 VersionEvidence와 ObservedRateQuote를 생성합니다.
 - 각 상품의 관측 시간축에 ChangeDetectionResult를 생성합니다. 현재 baseline은
   `kb-seller-loan`의 `BASELINE_ESTABLISHED`와 나머지 두 상품의 최초
