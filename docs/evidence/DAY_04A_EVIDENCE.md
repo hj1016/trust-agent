@@ -148,6 +148,14 @@ Suite별 결과는 `PublicProductSchemaIntegrationTest=7`,
 verification metadata를 생성했습니다. 이후 CI는 새로운 checksum을 자동 승인하지
 않으며 dependency 변경 시 lockfile과 verification metadata diff를 함께 검토합니다.
 
+PR 최초 실행에서는 깨끗한 GitHub runner가 plugin classpath의 부모 POM과 BOM module
+metadata를 추가로 해석하면서 미등록 artifact 3건을 차단했습니다. 기존 checksum
+불일치가 아니라 허용 목록 누락이었습니다. 별도의 빈 `GRADLE_USER_HOME`에서 CI와 같은
+`test bootJar` 전체 configuration을 해석해 metadata를 보강했습니다. Diff는 111줄 추가,
+삭제 0줄이며 새 항목은 POM과 module metadata뿐이고 JAR 추가는 없습니다. 같은 임시
+Gradle home에서 생성 옵션 없이 `clean test bootJar`를 다시 실행해 strict dependency
+verification, Java 테스트 19개와 executable jar 생성을 모두 통과했습니다.
+
 2026-09-25 재검토에서 `current_query()` 문자열 검색을 우회해 trigger를 비활성화할 수
 있는 문제를 재현했습니다. 문자열 검사를 제거하고 실제 catalog 상태 검사로 교체했으며,
 같은 소유권으로 가능한 `TRUNCATE` 우회도 추가로 차단했습니다. 이 보강 전 14개 테스트
