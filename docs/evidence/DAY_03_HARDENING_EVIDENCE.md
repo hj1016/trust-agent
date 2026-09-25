@@ -84,6 +84,12 @@ Observation 5건은 확인 가능한 하한선입니다. 기존 collector가 동
 기록하지 않았으므로 이 수를 과거 실제 수집 횟수로 해석하지 않습니다. 기존 manifest에
 없던 final URL도 추정하지 않고 migration Observation에서 `null`로 유지했습니다.
 
+Migration이 만든 ExtractionAttempt 5건의 `attempted_at`은 실제 추출 시각을 측정한
+값이 아닙니다. 결정적인 과거 baseline을 만들기 위해 각 Observation의 `observed_at`을
+복사했으며 `attempted_at_source=BACKFILLED_FROM_OBSERVATION`으로 표시합니다. 실제
+재추출은 2026-09-23부터 2026-09-24 사이의 migration 실행 중에 수행됐습니다. 따라서
+이 5건의 `attempted_at`을 실제 처리 시각으로 해석하지 않습니다.
+
 ## 변경 판정 evidence
 
 | product_key | 관측 | 분류 |
@@ -182,3 +188,14 @@ Day 4 Spring Boot는 신규 schema만 적재하고 ProductTermsVersion, 최신 V
 attempt와 freshness projection을 조회 모델로 사용합니다. DB migration과 API를 구현할 때
 Core 승인 API가 stale, pending, failed와 unavailable 상태를 차단하고 수기 checklist는
 계속 제공하는지 통합 테스트로 증명해야 합니다.
+
+## Day 4 설계 검토 후 보강
+
+2026-09-24 Day 4 설계 검토에서 migration ExtractionAttempt의 시각 출처가 명시되지
+않은 문제를 확인했습니다. Contract와 baseline에 `attempted_at_source`를 추가하고,
+일반 추출은 `MEASURED`, 기존 5건은 `BACKFILLED_FROM_OBSERVATION`으로 구분했습니다.
+
+보강 후 private artifact 필수 모드는 50개 테스트가 모두 통과했고, Public Git 모드는
+50개 중 private 전용 3개가 skip되고 나머지 47개가 통과했습니다. 기존 49개 실행 기록은
+당시 결과로 유지하며, 추가된 1개 contract test가 migration attempt 5건의 출처와
+Observation 시각 복사 관계를 검증합니다.

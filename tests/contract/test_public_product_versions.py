@@ -105,6 +105,18 @@ class PublicProductPipelineContractTest(unittest.TestCase):
             self.changes, "public-change-detection-result.schema.json"
         )
 
+    def test_migrated_extraction_attempt_times_are_marked_as_backfilled(self) -> None:
+        self.assertEqual(
+            {"BACKFILLED_FROM_OBSERVATION"},
+            {item["attempted_at_source"] for item in self.extraction_attempts},
+        )
+        observations = {item["observation_id"]: item for item in self.observations}
+        for attempt in self.extraction_attempts:
+            self.assertEqual(
+                observations[attempt["observation_id"]]["observed_at"],
+                attempt["attempted_at"],
+            )
+
     def test_terms_hashes_are_unique_and_reproducible(self) -> None:
         seen = set()
         for version in self.terms:
@@ -215,6 +227,7 @@ class PublicProductPipelineContractTest(unittest.TestCase):
                     extraction_run_id=migration.EXTRACTION_RUN_ID,
                     attempt_sequence=sequences[key],
                     attempted_at=extractor._parse_instant(observation["observed_at"]),
+                    attempted_at_source="BACKFILLED_FROM_OBSERVATION",
                 )
             extractor.rebuild_change_detection(
                 observation_root=PUBLIC_ROOT / "observations",

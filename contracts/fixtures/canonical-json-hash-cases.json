@@ -1,0 +1,41 @@
+{
+  "cases": [
+    {
+      "name": "object-key-order-and-unicode",
+      "input": {
+        "b": 2,
+        "a": "한글",
+        "nested": {
+          "z": null,
+          "a": true
+        }
+      },
+      "expected_canonical_json": "{\"a\":\"한글\",\"b\":2,\"nested\":{\"a\":true,\"z\":null}}",
+      "expected_sha256": "sha256:f939acdcf624612e02facfbdcc29fcf580f19f95eab258d9d5a98c90f53c34ea"
+    },
+    {
+      "name": "array-order-and-nested-object",
+      "input": {
+        "items": [
+          {
+            "b": 2,
+            "a": 1
+          },
+          "é"
+        ],
+        "count": 2
+      },
+      "expected_canonical_json": "{\"count\":2,\"items\":[{\"a\":1,\"b\":2},\"é\"]}",
+      "expected_sha256": "sha256:6d5f564de280a9efe1973439b569cea5bbabb5c6ce4d375a54f2146f099a6cf6"
+    }
+  ],
+  "rejected_cases": [
+    {
+      "name": "floating-point-number",
+      "input": {
+        "rate": 0.1
+      },
+      "reason": "FLOATING_POINT_NOT_ALLOWED"
+    }
+  ]
+}

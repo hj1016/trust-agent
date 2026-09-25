@@ -212,6 +212,7 @@ def migrate(
             extraction_run_id=EXTRACTION_RUN_ID,
             attempt_sequence=extraction_sequences[product_key],
             attempted_at=extractor._parse_instant(observation["observed_at"]),
+            attempted_at_source="BACKFILLED_FROM_OBSERVATION",
         )
         results[observation["observation_id"]] = result
 

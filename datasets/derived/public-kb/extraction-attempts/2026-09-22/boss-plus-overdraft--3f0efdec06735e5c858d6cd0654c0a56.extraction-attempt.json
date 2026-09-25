@@ -6,6 +6,7 @@
   "product_key": "boss-plus-overdraft",
   "attempt_sequence": 2,
   "attempted_at": "2026-09-22T14:00:36.992221Z",
+  "attempted_at_source": "BACKFILLED_FROM_OBSERVATION",
   "parser_version": "public-kb-html-v2",
   "status": "SUCCEEDED",
   "product_terms_version_id": "ptv:boss-plus-overdraft:sha256:eb46f7bfb5f9c1cd63dfdb3f4028c2162c3c754d004fe303bffafd18865c7111",

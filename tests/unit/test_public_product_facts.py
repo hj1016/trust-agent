@@ -199,6 +199,7 @@ class PublicProductFactsTest(unittest.TestCase):
             self.assertEqual(1, len(attempts))
             attempt = json.loads(attempts[0].read_text())
             self.assertEqual("FAILED", attempt["status"])
+            self.assertEqual("MEASURED", attempt["attempted_at_source"])
             self.assertEqual("UNKNOWN_SALE_STATUS", attempt["error_code"])
             self.assertNotIn(str(root), attempt["error_message"])
             self.assertEqual([], list((root / "datasets/public/kb/product-terms-versions").rglob("*.json")))
@@ -244,6 +245,9 @@ class PublicProductFactsTest(unittest.TestCase):
                 for path in roots["attempt_root"].rglob("*.extraction-attempt.json")
             ]
             self.assertEqual({"FAILED", "SUCCEEDED"}, {item["status"] for item in attempts})
+            self.assertEqual(
+                {"MEASURED"}, {item["attempted_at_source"] for item in attempts}
+            )
             self.assertEqual(
                 {"public-kb-html-v2", "public-kb-html-v3"},
                 {item["parser_version"] for item in attempts},

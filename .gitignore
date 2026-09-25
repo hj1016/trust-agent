@@ -3,6 +3,8 @@
 .env.*
 !.env.example
 *.log
+.gradle/
+**/build/
 node_modules/
 .venv/
 __pycache__/
