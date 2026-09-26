@@ -33,7 +33,7 @@ class PublicProductSchemaIntegrationTest {
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
                 .cleanDisabled(true)
                 .load();
-        assertEquals(2, flyway.migrate().migrationsExecuted);
+        assertEquals(3, flyway.migrate().migrationsExecuted);
         assertEquals(0, flyway.migrate().migrationsExecuted);
 
         try (Connection connection = adminConnection(); Statement statement = connection.createStatement()) {
@@ -73,7 +73,7 @@ class PublicProductSchemaIntegrationTest {
     }
 
     @Test
-    void migrationCreatesFourteenApplicationTablesAndVersionTwo() throws SQLException {
+    void migrationCreatesFourteenApplicationTablesAndVersionThree() throws SQLException {
         try (Connection connection = adminConnection(); Statement statement = connection.createStatement()) {
             try (ResultSet result = statement.executeQuery("""
                     SELECT count(*)
@@ -92,7 +92,7 @@ class PublicProductSchemaIntegrationTest {
                     LIMIT 1
                     """)) {
                 assertTrue(result.next());
-                assertEquals("2", result.getString(1));
+                assertEquals("3", result.getString(1));
             }
             try (ResultSet result = statement.executeQuery("""
                     SELECT count(*)
@@ -213,6 +213,23 @@ class PublicProductSchemaIntegrationTest {
             assertThrows(SQLException.class, () -> statement.execute("TRUNCATE public_product CASCADE"));
             assertThrows(SQLException.class, () -> statement.execute("CREATE TABLE importer_forbidden(id int)"));
             assertThrows(SQLException.class, () -> statement.executeQuery("select * from maintenance_change_audit"));
+        }
+    }
+
+    @Test
+    void observedStateQueryIndexesAreCreated() throws SQLException {
+        try (Connection connection = adminConnection(); Statement statement = connection.createStatement();
+                ResultSet result = statement.executeQuery("""
+                        select count(*) from pg_indexes
+                        where schemaname = 'public' and indexname in (
+                          'public_observation_product_time_idx',
+                          'extraction_attempt_observation_time_idx',
+                          'extraction_attempt_product_success_time_idx',
+                          'collection_attempt_product_time_idx'
+                        )
+                        """)) {
+            assertTrue(result.next());
+            assertEquals(4, result.getInt(1));
         }
     }
 

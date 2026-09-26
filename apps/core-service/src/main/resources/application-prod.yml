@@ -5,6 +5,9 @@ spring:
     password: ${TRUST_AGENT_DB_PASSWORD}
 
 trust-agent:
+  public-evidence:
+    freshness-policy-version: ${TRUST_AGENT_FRESHNESS_POLICY_VERSION}
+    max-confirmation-age: ${TRUST_AGENT_MAX_CONFIRMATION_AGE}
   baseline-import:
     datasource:
       url: ${TRUST_AGENT_IMPORT_DB_URL}

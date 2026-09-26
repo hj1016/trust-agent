@@ -1,12 +1,76 @@
 # Core Service
 
-Spring Boot 기반 핵심 서비스입니다. Day 4a의 애플리케이션 골격, PostgreSQL schema,
-append-only 권한·감사 trigger, datasource timeout과 readiness component에 이어 Day
-4b의 baseline importer를 구현했습니다.
+Spring Boot 기반 핵심 서비스입니다. Day 4a의 애플리케이션 골격과 감사 저장 기반,
+Day 4b의 baseline importer에 이어 Day 4c의 공개 상품 관측 상태 조회와 freshness 및
+confirmation policy를 구현했습니다. 일반 서버 기동 중에는 baseline importer bean을
+만들거나 데이터를 자동 적재하지 않습니다.
 
-아직 구현하지 않은 범위는 공개 상품 조회 endpoint, freshness와 confirmation
-policy입니다. 일반 서버 기동 중에는 baseline importer bean을 만들거나 데이터를 자동
-적재하지 않습니다.
+## 공개 상품 관측 상태 조회
+
+```text
+GET /api/v1/public-products/{productKey}/observed-state?asOf={RFC3339 instant}
+```
+
+`asOf`는 그 시각까지 시스템에 들어와 있던 사건만 보여 주는 기준입니다. 생략하면 요청을
+시작할 때 한 번 읽은 현재 시각을 사용합니다. Freshness는 과거의 `asOf`가 아니라 실제
+평가 시각인 `evaluatedAt`을 기준으로 계산합니다.
+
+- 미래 `asOf`: `400 FUTURE_AS_OF_NOT_ALLOWED`
+- 잘못되거나 빈 `asOf`: `400 INVALID_AS_OF`
+- 등록되지 않은 상품: `404 PRODUCT_NOT_FOUND`
+- 과거 조회: 조회는 허용하지만 `publicEvidenceConfirmationAllowed=false`와
+  `HISTORICAL_AS_OF` 반환
+- DB 장애: freshness의 `UNAVAILABLE`로 숨기지 않고
+  `503 DATABASE_UNAVAILABLE` 반환
+- 근거 무결성 오류: `500 EVIDENCE_INTEGRITY_VIOLATION`
+- 그 밖의 예상하지 못한 오류: `500 INTERNAL_ERROR`
+
+모든 API 응답에는 `X-Trace-Id` header가 있습니다. 오류 응답은 같은 값을 Problem
+Detail의 `traceId`로 반환하고, 요청 완료 로그에도 기록합니다. 서버의 예외 메시지,
+내부 경로와 DB 접속 정보는 오류 응답에 포함하지 않습니다. 오류 code와 HTTP status는
+명시적인 매핑으로 관리하며, 등록되지 않은 code는 안전하게 `500`으로 처리합니다.
+
+Observation을 먼저 수집하고 나중에 추출한 경우, 성공 ExtractionAttempt의
+`attempted_at` 전에는 새 terms, quote와 evidence를 반환하지 않습니다. 응답의
+`lastConfirmedAt`은 근거가 설명하는 Observation의 `observed_at`이고, evidence의
+`availableAt`은 시스템이 근거를 만든 `attempted_at`입니다.
+
+운영에서는 다음 설정을 명시해야 합니다.
+
+```text
+TRUST_AGENT_FRESHNESS_POLICY_VERSION=public-evidence-confirmation-v1
+TRUST_AGENT_MAX_CONFIRMATION_AGE=24h
+```
+
+`publicEvidenceConfirmationAllowed`는 공개 근거의 최신성 조건 하나만 나타냅니다. 전체 AI
+확정이나 업무 승인을 허용하는 값이 아니며, 실제 승인 use case는 아직 구현하지
+않았습니다.
+
+응답 구조의 축약 예시는 다음과 같습니다.
+
+```json
+{
+  "productKey": "kb-seller-loan",
+  "asOf": "2026-09-23T12:00:00Z",
+  "evaluatedAt": "2026-09-23T12:00:00Z",
+  "historicalQuery": false,
+  "lastConfirmedAt": "2026-09-23T09:00:00Z",
+  "latestObservationAt": "2026-09-23T09:00:00Z",
+  "freshnessStatus": "CONFIRMED",
+  "blockingReasons": [],
+  "warningReasons": [],
+  "publicEvidenceConfirmationAllowed": true,
+  "confirmationBlockingReasons": [],
+  "freshnessPolicyVersion": "public-evidence-confirmation-v1",
+  "maxConfirmationAge": "PT24H",
+  "terms": { "productTermsVersionId": "...", "facts": [] },
+  "confirmedObservation": { "observationId": "...", "snapshotHash": "sha256:..." },
+  "rateQuote": { "advertisedRateText": "...", "advertisedRateReferenceDate": null },
+  "evidence": { "versionEvidenceId": "...", "availableAt": "...", "facts": [] }
+}
+```
+
+전체 DB 관계는 `docs/PUBLIC_PRODUCT_ERD.md`에 정리했습니다.
 
 ## Baseline 적재
 
@@ -57,9 +121,11 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew clean test bootJar --offline
 테스트는 digest로 고정한 PostgreSQL 18.6 Testcontainer에서 Flyway와 DB 권한을 직접
 검증합니다. 운영 DB의 URL, username과 password는 환경 변수로 주입하며 저장소에
 커밋하지 않습니다. 구현 범위와 검증 결과는
-`docs/evidence/DAY_04A_EVIDENCE.md`와 `docs/evidence/DAY_04B_EVIDENCE.md`에 기록합니다.
+`docs/evidence/DAY_04A_EVIDENCE.md`, `docs/evidence/DAY_04B_EVIDENCE.md`와
+`docs/evidence/DAY_04C_EVIDENCE.md`에 기록합니다.
 
 Management endpoint는 기본적으로 `127.0.0.1:8081`에 별도로 열립니다. 배포 환경에서
 address를 바꿀 때는 외부 ingress에 노출하지 않고 내부 probe와 운영자 경로만 허용해야
-합니다. `prod` profile은 DB URL, username, password와 기대 schema version이 모두
-명시되지 않으면 기동하지 않습니다.
+합니다. `prod` profile은 DB URL, username, password, 기대 schema version,
+freshness policy version과 max confirmation age가 모두 명시되지 않으면 기동하지
+않습니다.

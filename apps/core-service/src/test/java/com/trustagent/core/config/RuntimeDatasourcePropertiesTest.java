@@ -50,9 +50,9 @@ class RuntimeDatasourcePropertiesTest {
     @Test
     void configuredSchemaVersionMatchesTheLatestClasspathMigration() {
         var validator = new ClasspathSchemaVersionValidator(
-                new PathMatchingResourcePatternResolver(), "2");
+                new PathMatchingResourcePatternResolver(), "3");
 
-        assertEquals("2", validator.classpathVersion());
+        assertEquals("3", validator.classpathVersion());
         assertThrows(
                 IllegalStateException.class,
                 () -> new ClasspathSchemaVersionValidator(
@@ -69,11 +69,21 @@ class RuntimeDatasourcePropertiesTest {
             assertThrows(RuntimeException.class, missingContext::refresh);
         }
 
+        try (var missingPolicyContext = productionContext(Map.of(
+                "TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent",
+                "TRUST_AGENT_DB_USERNAME", "runtime",
+                "TRUST_AGENT_DB_PASSWORD", "secret",
+                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "3"))) {
+            assertThrows(RuntimeException.class, missingPolicyContext::refresh);
+        }
+
         try (var configuredContext = productionContext(Map.of(
                 "TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent",
                 "TRUST_AGENT_DB_USERNAME", "runtime",
                 "TRUST_AGENT_DB_PASSWORD", "secret",
-                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "2"))) {
+                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "3",
+                "TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1",
+                "TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h"))) {
             configuredContext.refresh();
         }
     }
@@ -84,7 +94,9 @@ class RuntimeDatasourcePropertiesTest {
                 "TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent",
                 "TRUST_AGENT_DB_USERNAME", "runtime",
                 "TRUST_AGENT_DB_PASSWORD", "runtime-secret",
-                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "2",
+                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "3",
+                "TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1",
+                "TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h",
                 "trust-agent.baseline-import.enabled", "true");
         try (var missingImporterContext = productionContext(runtimeOnly)) {
             assertThrows(RuntimeException.class, missingImporterContext::refresh);

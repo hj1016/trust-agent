@@ -13,7 +13,9 @@ public class ProductionRequiredSettingsConfiguration {
             "TRUST_AGENT_DB_URL",
             "TRUST_AGENT_DB_USERNAME",
             "TRUST_AGENT_DB_PASSWORD",
-            "TRUST_AGENT_SCHEMA_EXPECTED_VERSION");
+            "TRUST_AGENT_SCHEMA_EXPECTED_VERSION",
+            "TRUST_AGENT_FRESHNESS_POLICY_VERSION",
+            "TRUST_AGENT_MAX_CONFIRMATION_AGE");
     static final List<String> REQUIRED_BASELINE_IMPORT_SETTINGS = List.of(
             "TRUST_AGENT_IMPORT_DB_URL",
             "TRUST_AGENT_IMPORT_DB_USERNAME",
