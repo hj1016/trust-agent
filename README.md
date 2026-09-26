@@ -10,7 +10,11 @@
 광고 금리는 ObservedRateQuote로 분리하고 각 관측의 근거와 처리 이력을 append-only
 record로 보존합니다. Day 4a에서는 Java 21과 Spring Boot 기반 Core service 골격,
 PostgreSQL Flyway schema, append-only 권한·감사 trigger와 분리된 readiness를
-구현했습니다. Baseline importer와 공개 상품 조회·승인 API는 아직 구현하지 않았습니다.
+구현했습니다. Day 4b에서는 커밋된 공개·정제 JSON 39개를 검증한 뒤 PostgreSQL에
+하나의 transaction으로 넣는 baseline importer를 추가했습니다. 같은 baseline은 전체
+record hash와 하위 행을 다시 확인한 뒤 중복 없이 처리하고, 같은 ID의 다른 내용이나
+다른 baseline fingerprint는 덮어쓰지 않고 거부합니다. 공개 상품 조회 endpoint와
+freshness 및 confirmation policy는 아직 구현하지 않았습니다.
 
 검증 명령은 다음과 같습니다.
 
@@ -24,7 +28,7 @@ python3 -m unittest discover -s tests -v
 TRUSTAGENT_REQUIRE_PRIVATE_SNAPSHOTS=1 python3 -m unittest discover -s tests -v
 ```
 
-2026-09-24 실행 결과 비공개 원문을 포함한 51개 테스트가 모두 통과했습니다. 비공개
+2026-09-25 실행 결과 비공개 원문을 포함한 51개 테스트가 모두 통과했습니다. 비공개
 원문이 없는 Public Git 조건에서는 51개 중 private artifact 전용 3개가 의도대로
 skip되고 나머지 48개가 통과했습니다. 상세 증거는
 `docs/evidence/DAY_03_HARDENING_EVIDENCE.md`에 기록합니다.
@@ -36,8 +40,9 @@ PostgreSQL 18.6 image digest를 사용합니다.
 JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew clean test bootJar --offline --no-daemon
 ```
 
-Day 4a 보강 후 로컬 검증에서는 Java 테스트 19개와 executable jar 생성이 통과했습니다. 상세
-증거는 `docs/evidence/DAY_04A_EVIDENCE.md`에 기록합니다.
+Day 4b 로컬 검증에서는 Java 테스트 37개와 executable jar 생성이 통과했습니다. 상세
+증거는 `docs/evidence/DAY_04A_EVIDENCE.md`와
+`docs/evidence/DAY_04B_EVIDENCE.md`에 기록합니다.
 
 공개 상품 3개를 수집하는 명령은 다음과 같습니다.
 
@@ -95,6 +100,7 @@ python3 scripts/extract_public_kb_product_facts.py --all
 - 셋째 날 검증 증거: `docs/evidence/DAY_03_EVIDENCE.md`
 - 셋째 날 hardening 증거: `docs/evidence/DAY_03_HARDENING_EVIDENCE.md`
 - 넷째 날 A단계 검증 증거: `docs/evidence/DAY_04A_EVIDENCE.md`
+- 넷째 날 B단계 검증 증거: `docs/evidence/DAY_04B_EVIDENCE.md`
 
 ## 구현 상태 기록 원칙
 

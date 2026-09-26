@@ -230,6 +230,9 @@ Spring Boot 골격, CI, schema, 권한, immutable trigger, maintenance audit와 
 Baseline importer, record hash, 멱등성, 충돌 처리와 baseline 교체 절차를 구현합니다.
 조회 API와 freshness policy는 아직 구현하지 않습니다.
 
+구현 상태: 완료. 검증 명령, 정확한 적재 건수와 남은 제한사항은
+`docs/evidence/DAY_04B_EVIDENCE.md`에 기록합니다.
+
 ## 작업 4 재현 가능한 baseline importer
 
 ### 서비스에서 담당하는 역할
@@ -271,9 +274,12 @@ DB로 전달합니다.
 - Observation, 처리 시도, 상품 조건, 금리와 근거의 외래 키 연결 확인
 - 입력 경로, SHA-256과 재현 가능한 기준 데이터 지문을 감사 기록에 남겼는지 확인
 - 같은 기준 데이터를 두 번 적재해도 업무 데이터 행 수가 변하지 않는지 확인
+- 같은 fingerprint 재적재는 runtime ingestion 전의 baseline-only DB에서만 허용하고,
+  입력에 없는 행이 있으면 `RUNTIME_DATA_PRESENT`로 거부하는지 확인
 - 기존 ID의 `source_record_hash`가 같을 때만 멱등 성공하는지 확인
-- 같은 ID와 다른 canonical JSON을 넣으면 `SOURCE_RECORD_CONFLICT`로 전체 rollback하는지
-  확인
+- 다른 fingerprint와 동일 ID의 다른 내용이 함께 있어도 `BASELINE_MISMATCH`를 먼저
+  반환하고, 같은 fingerprint의 저장 hash가 다를 때 `SOURCE_RECORD_CONFLICT`로 전체
+  rollback하는지 확인
 - 같은 parent hash인데 하위 행이 빠졌거나 달라진 DB 상태를 성공으로 숨기지 않는지 확인
 - 같은 기준 데이터 재시도의 실행 ID는 다르지만 지문은 같은지 확인
 - 실패 시 업무 데이터를 모두 rollback하고 별도 실패 감사 기록만 남기는지 확인
@@ -288,6 +294,8 @@ DB로 전달합니다.
   보존하는 절차 기록
 - Runtime ingestion이 시작된 DB에는 baseline-only 새 DB 재구축 절차를 적용하지 않는다는
   운영 경계 확인
+- Production importer가 runtime 자격증명으로 fallback하지 않고 `trust_agent_importer`
+  권한 범위의 별도 계정을 요구하는지 확인
 
 ### 다음 작업과의 연결
 

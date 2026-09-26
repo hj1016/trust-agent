@@ -50,13 +50,13 @@ class RuntimeDatasourcePropertiesTest {
     @Test
     void configuredSchemaVersionMatchesTheLatestClasspathMigration() {
         var validator = new ClasspathSchemaVersionValidator(
-                new PathMatchingResourcePatternResolver(), "1");
+                new PathMatchingResourcePatternResolver(), "2");
 
-        assertEquals("1", validator.classpathVersion());
+        assertEquals("2", validator.classpathVersion());
         assertThrows(
                 IllegalStateException.class,
                 () -> new ClasspathSchemaVersionValidator(
-                        new PathMatchingResourcePatternResolver(), "2"));
+                        new PathMatchingResourcePatternResolver(), "1"));
     }
 
     @Test
@@ -73,7 +73,28 @@ class RuntimeDatasourcePropertiesTest {
                 "TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent",
                 "TRUST_AGENT_DB_USERNAME", "runtime",
                 "TRUST_AGENT_DB_PASSWORD", "secret",
-                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "1"))) {
+                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "2"))) {
+            configuredContext.refresh();
+        }
+    }
+
+    @Test
+    void productionImporterRequiresCredentialsSeparateFromRuntimeSettings() {
+        Map<String, Object> runtimeOnly = Map.of(
+                "TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent",
+                "TRUST_AGENT_DB_USERNAME", "runtime",
+                "TRUST_AGENT_DB_PASSWORD", "runtime-secret",
+                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "2",
+                "trust-agent.baseline-import.enabled", "true");
+        try (var missingImporterContext = productionContext(runtimeOnly)) {
+            assertThrows(RuntimeException.class, missingImporterContext::refresh);
+        }
+
+        var allSettings = new java.util.HashMap<String, Object>(runtimeOnly);
+        allSettings.put("TRUST_AGENT_IMPORT_DB_URL", "jdbc:postgresql://db/trust_agent");
+        allSettings.put("TRUST_AGENT_IMPORT_DB_USERNAME", "importer");
+        allSettings.put("TRUST_AGENT_IMPORT_DB_PASSWORD", "importer-secret");
+        try (var configuredContext = productionContext(allSettings)) {
             configuredContext.refresh();
         }
     }

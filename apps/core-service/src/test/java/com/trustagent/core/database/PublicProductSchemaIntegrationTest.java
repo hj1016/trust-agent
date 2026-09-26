@@ -33,7 +33,7 @@ class PublicProductSchemaIntegrationTest {
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
                 .cleanDisabled(true)
                 .load();
-        assertEquals(1, flyway.migrate().migrationsExecuted);
+        assertEquals(2, flyway.migrate().migrationsExecuted);
         assertEquals(0, flyway.migrate().migrationsExecuted);
 
         try (Connection connection = adminConnection(); Statement statement = connection.createStatement()) {
@@ -43,6 +43,8 @@ class PublicProductSchemaIntegrationTest {
             statement.execute("GRANT trust_agent_maintenance TO trust_agent_maintenance_test");
             statement.execute("CREATE ROLE trust_agent_migration_test LOGIN PASSWORD 'migration-password'");
             statement.execute("GRANT trust_agent_migration TO trust_agent_migration_test");
+            statement.execute("CREATE ROLE trust_agent_importer_test LOGIN PASSWORD 'importer-password'");
+            statement.execute("GRANT trust_agent_importer TO trust_agent_importer_test");
             statement.execute("""
                     INSERT INTO public_product (
                         product_key, dataset_class, synthetic, display_name,
@@ -71,7 +73,7 @@ class PublicProductSchemaIntegrationTest {
     }
 
     @Test
-    void migrationCreatesFourteenApplicationTablesAndVersionOne() throws SQLException {
+    void migrationCreatesFourteenApplicationTablesAndVersionTwo() throws SQLException {
         try (Connection connection = adminConnection(); Statement statement = connection.createStatement()) {
             try (ResultSet result = statement.executeQuery("""
                     SELECT count(*)
@@ -90,7 +92,7 @@ class PublicProductSchemaIntegrationTest {
                     LIMIT 1
                     """)) {
                 assertTrue(result.next());
-                assertEquals("1", result.getString(1));
+                assertEquals("2", result.getString(1));
             }
             try (ResultSet result = statement.executeQuery("""
                     SELECT count(*)
@@ -162,7 +164,10 @@ class PublicProductSchemaIntegrationTest {
                             pg_has_role('trust_agent_runtime', 'trust_agent_audit_owner', 'member'),
                             pg_has_role('trust_agent_migration', 'trust_agent_audit_owner', 'member'),
                             pg_has_role('trust_agent_maintenance', 'trust_agent_audit_owner', 'member'),
-                            (SELECT rolcanlogin FROM pg_roles WHERE rolname = 'trust_agent_audit_owner')
+                            pg_has_role('trust_agent_importer', 'trust_agent_maintenance', 'member'),
+                            pg_has_role('trust_agent_importer', 'trust_agent_audit_owner', 'member'),
+                            (SELECT rolcanlogin FROM pg_roles WHERE rolname = 'trust_agent_audit_owner'),
+                            (SELECT rolcanlogin FROM pg_roles WHERE rolname = 'trust_agent_importer')
                         """)) {
             assertTrue(result.next());
             assertEquals(false, result.getBoolean(1));
@@ -171,6 +176,43 @@ class PublicProductSchemaIntegrationTest {
             assertEquals(false, result.getBoolean(4));
             assertEquals(false, result.getBoolean(5));
             assertEquals(false, result.getBoolean(6));
+            assertEquals(false, result.getBoolean(7));
+            assertEquals(false, result.getBoolean(8));
+            assertEquals(false, result.getBoolean(9));
+        }
+    }
+
+    @Test
+    void importerRoleCanOnlyReadAndInsertBaselineRows() throws SQLException {
+        try (Connection connection = roleConnection("trust_agent_importer_test", "importer-password");
+                Statement statement = connection.createStatement()) {
+            try (ResultSet result = statement.executeQuery("select count(*) from public_product")) {
+                assertTrue(result.next());
+            }
+            assertEquals(1, statement.executeUpdate("""
+                    INSERT INTO public_product (
+                        product_key, dataset_class, synthetic, display_name,
+                        source_marker, source_url, source_record_hash
+                    ) VALUES (
+                        'importer-permission-product', 'PUBLIC_KB', false, '권한 검증 상품',
+                        '권한검증', 'https://obank.kbstar.com/importer-permission', '%s'
+                    )
+                    """.formatted(HASH)));
+            assertThrows(
+                    SQLException.class,
+                    () -> statement.executeUpdate("""
+                            UPDATE public_product SET display_name = '변조'
+                            WHERE product_key = 'importer-permission-product'
+                            """));
+            assertThrows(
+                    SQLException.class,
+                    () -> statement.executeUpdate("""
+                            DELETE FROM public_product
+                            WHERE product_key = 'importer-permission-product'
+                            """));
+            assertThrows(SQLException.class, () -> statement.execute("TRUNCATE public_product CASCADE"));
+            assertThrows(SQLException.class, () -> statement.execute("CREATE TABLE importer_forbidden(id int)"));
+            assertThrows(SQLException.class, () -> statement.executeQuery("select * from maintenance_change_audit"));
         }
     }
 

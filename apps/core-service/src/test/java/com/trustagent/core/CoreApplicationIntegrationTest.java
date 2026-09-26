@@ -27,6 +27,7 @@ import org.springframework.boot.health.contributor.Status;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -86,6 +87,9 @@ class CoreApplicationIntegrationTest {
     @Autowired
     private Environment environment;
 
+    @Autowired
+    private ApplicationContext applicationContext;
+
     @Value("${local.server.port}")
     private int applicationPort;
 
@@ -130,7 +134,7 @@ class CoreApplicationIntegrationTest {
         assertEquals(Status.DOWN, mismatch.getStatus());
         assertEquals("SCHEMA_VERSION_MISMATCH", mismatch.getDetails().get("code"));
         assertEquals("999", mismatch.getDetails().get("expectedVersion"));
-        assertEquals("1", mismatch.getDetails().get("actualVersion"));
+        assertEquals("2", mismatch.getDetails().get("actualVersion"));
     }
 
     @Test
@@ -145,7 +149,7 @@ class CoreApplicationIntegrationTest {
                 .send(applicationHealthRequest, HttpResponse.BodyHandlers.ofString());
         assertEquals(404, applicationHealthResponse.statusCode());
 
-        jdbcClient.sql("update flyway_schema_history set version = '999' where version = '1'")
+        jdbcClient.sql("update flyway_schema_history set version = '999' where version = '2'")
                 .update();
         try {
             var request = HttpRequest.newBuilder()
@@ -161,7 +165,7 @@ class CoreApplicationIntegrationTest {
             assertTrue(response.body().contains("schemaCompatibility"));
             assertTrue(response.body().contains("SCHEMA_VERSION_MISMATCH"));
         } finally {
-            jdbcClient.sql("update flyway_schema_history set version = '1' where version = '999'")
+            jdbcClient.sql("update flyway_schema_history set version = '2' where version = '999'")
                     .update();
         }
     }
@@ -189,5 +193,17 @@ class CoreApplicationIntegrationTest {
         assertFalse(exposed.contains("beans"));
         assertFalse(exposed.contains("heapdump"));
         assertFalse(output.getAll().contains(POSTGRES.getPassword()));
+    }
+
+    @Test
+    void normalServerStartupDoesNotCreateOrRunTheBaselineImporter() {
+        assertEquals(
+                0,
+                applicationContext.getBeanNamesForType(
+                                com.trustagent.core.publicproduct.baseline.BaselineImporter.class)
+                        .length);
+        assertEquals(0, jdbcClient.sql("select count(*) from baseline_import_run")
+                .query(Integer.class)
+                .single());
     }
 }
