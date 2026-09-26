@@ -1,0 +1,157 @@
+{
+  "policy_version": "public-evidence-confirmation-v1",
+  "cases": [
+    {
+      "name": "confirmation-age-boundary-before",
+      "evaluated_at": "2026-09-23T12:00:00Z",
+      "as_of": "2026-09-23T12:00:00Z",
+      "max_confirmation_age_seconds": 86400,
+      "last_confirmed_at": "2026-09-22T12:00:01Z",
+      "latest_observation_at": "2026-09-22T12:00:01Z",
+      "has_newer_observation": false,
+      "latest_observation_extraction_status": "SUCCEEDED",
+      "latest_collection_status": "SUCCEEDED",
+      "expected": {
+        "freshness_status": "CONFIRMED",
+        "blocking_reasons": [],
+        "warning_reasons": [],
+        "historical_query": false,
+        "public_evidence_confirmation_allowed": true,
+        "confirmation_blocking_reasons": []
+      }
+    },
+    {
+      "name": "confirmation-age-boundary-equal",
+      "evaluated_at": "2026-09-23T12:00:00Z",
+      "as_of": "2026-09-23T12:00:00Z",
+      "max_confirmation_age_seconds": 86400,
+      "last_confirmed_at": "2026-09-22T12:00:00Z",
+      "latest_observation_at": "2026-09-22T12:00:00Z",
+      "has_newer_observation": false,
+      "latest_observation_extraction_status": "SUCCEEDED",
+      "latest_collection_status": "SUCCEEDED",
+      "expected": {
+        "freshness_status": "CONFIRMED",
+        "blocking_reasons": [],
+        "warning_reasons": [],
+        "historical_query": false,
+        "public_evidence_confirmation_allowed": true,
+        "confirmation_blocking_reasons": []
+      }
+    },
+    {
+      "name": "confirmation-age-boundary-after",
+      "evaluated_at": "2026-09-23T12:00:00Z",
+      "as_of": "2026-09-23T12:00:00Z",
+      "max_confirmation_age_seconds": 86400,
+      "last_confirmed_at": "2026-09-22T11:59:59Z",
+      "latest_observation_at": "2026-09-22T11:59:59Z",
+      "has_newer_observation": false,
+      "latest_observation_extraction_status": "SUCCEEDED",
+      "latest_collection_status": "SUCCEEDED",
+      "expected": {
+        "freshness_status": "STALE",
+        "blocking_reasons": ["CONFIRMATION_AGE_EXCEEDED"],
+        "warning_reasons": [],
+        "historical_query": false,
+        "public_evidence_confirmation_allowed": false,
+        "confirmation_blocking_reasons": ["CONFIRMATION_AGE_EXCEEDED"]
+      }
+    },
+    {
+      "name": "pending-extraction-beats-stale",
+      "evaluated_at": "2026-09-23T12:00:00Z",
+      "as_of": "2026-09-23T12:00:00Z",
+      "max_confirmation_age_seconds": 86400,
+      "last_confirmed_at": "2026-09-20T12:00:00Z",
+      "latest_observation_at": "2026-09-23T11:00:00Z",
+      "has_newer_observation": true,
+      "latest_observation_extraction_status": null,
+      "latest_collection_status": "SUCCEEDED",
+      "expected": {
+        "freshness_status": "PENDING_EXTRACTION",
+        "blocking_reasons": ["CONFIRMATION_AGE_EXCEEDED", "LATEST_OBSERVATION_NOT_EXTRACTED"],
+        "warning_reasons": [],
+        "historical_query": false,
+        "public_evidence_confirmation_allowed": false,
+        "confirmation_blocking_reasons": ["CONFIRMATION_AGE_EXCEEDED", "LATEST_OBSERVATION_NOT_EXTRACTED"]
+      }
+    },
+    {
+      "name": "extraction-failure-beats-stale-with-collection-warning",
+      "evaluated_at": "2026-09-23T12:00:00Z",
+      "as_of": "2026-09-23T12:00:00Z",
+      "max_confirmation_age_seconds": 86400,
+      "last_confirmed_at": "2026-09-20T12:00:00Z",
+      "latest_observation_at": "2026-09-23T11:00:00Z",
+      "has_newer_observation": true,
+      "latest_observation_extraction_status": "FAILED",
+      "latest_collection_status": "FAILED",
+      "expected": {
+        "freshness_status": "UNCONFIRMED_AFTER_FAILURE",
+        "blocking_reasons": ["CONFIRMATION_AGE_EXCEEDED", "LATEST_EXTRACTION_FAILED"],
+        "warning_reasons": ["LATEST_COLLECTION_FAILED"],
+        "historical_query": false,
+        "public_evidence_confirmation_allowed": false,
+        "confirmation_blocking_reasons": ["CONFIRMATION_AGE_EXCEEDED", "LATEST_EXTRACTION_FAILED"]
+      }
+    },
+    {
+      "name": "unavailable-has-highest-priority",
+      "evaluated_at": "2026-09-23T12:00:00Z",
+      "as_of": "2026-09-23T12:00:00Z",
+      "max_confirmation_age_seconds": 86400,
+      "last_confirmed_at": null,
+      "latest_observation_at": "2026-09-23T11:00:00Z",
+      "has_newer_observation": true,
+      "latest_observation_extraction_status": "FAILED",
+      "latest_collection_status": "FAILED",
+      "expected": {
+        "freshness_status": "UNAVAILABLE",
+        "blocking_reasons": ["NO_CONFIRMED_TERMS"],
+        "warning_reasons": ["LATEST_COLLECTION_FAILED"],
+        "historical_query": false,
+        "public_evidence_confirmation_allowed": false,
+        "confirmation_blocking_reasons": ["NO_CONFIRMED_TERMS"]
+      }
+    },
+    {
+      "name": "same-observed-at-different-observation-is-pending",
+      "evaluated_at": "2026-09-23T12:00:00Z",
+      "as_of": "2026-09-23T12:00:00Z",
+      "max_confirmation_age_seconds": 86400,
+      "last_confirmed_at": "2026-09-23T10:00:00Z",
+      "latest_observation_at": "2026-09-23T10:00:00Z",
+      "has_newer_observation": true,
+      "latest_observation_extraction_status": null,
+      "latest_collection_status": "SUCCEEDED",
+      "expected": {
+        "freshness_status": "PENDING_EXTRACTION",
+        "blocking_reasons": ["LATEST_OBSERVATION_NOT_EXTRACTED"],
+        "warning_reasons": [],
+        "historical_query": false,
+        "public_evidence_confirmation_allowed": false,
+        "confirmation_blocking_reasons": ["LATEST_OBSERVATION_NOT_EXTRACTED"]
+      }
+    },
+    {
+      "name": "historical-query-blocks-confirmed-evidence",
+      "evaluated_at": "2026-09-23T12:00:00Z",
+      "as_of": "2026-09-23T11:00:00Z",
+      "max_confirmation_age_seconds": 86400,
+      "last_confirmed_at": "2026-09-23T10:00:00Z",
+      "latest_observation_at": "2026-09-23T10:00:00Z",
+      "has_newer_observation": false,
+      "latest_observation_extraction_status": "SUCCEEDED",
+      "latest_collection_status": "SUCCEEDED",
+      "expected": {
+        "freshness_status": "CONFIRMED",
+        "blocking_reasons": [],
+        "warning_reasons": [],
+        "historical_query": true,
+        "public_evidence_confirmation_allowed": false,
+        "confirmation_blocking_reasons": ["HISTORICAL_AS_OF"]
+      }
+    }
+  ]
+}

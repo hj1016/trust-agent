@@ -306,6 +306,10 @@ DB에 적재된 기준 데이터를 대상으로 관측 상태 조회와 최신�
 관측 상태 조회, event visibility, freshness, confirmation policy와 공유 정답표를
 구현합니다. Day 4a와 4b의 검증이 모두 끝난 뒤 시작합니다.
 
+구현 상태: 완료. Endpoint, 공통 정책 정답표, V3 query index, API 설명, Flyway 기준
+ERD와 `docs/evidence/DAY_04C_EVIDENCE.md`를 작성하고 전체 회귀 테스트와 외부 검토를
+마쳤습니다. 오류 응답의 추적 ID, 안정적인 오류 code와 status 매핑도 검증했습니다.
+
 ## 작업 5 공개 상품 관측 상태 조회 API
 
 ### 서비스에서 담당하는 역할
@@ -360,6 +364,10 @@ DB에 적재된 기준 데이터를 대상으로 관측 상태 조회와 최신�
 - 원문 위치와 근거 해시 반환
 - `effective_from`, `effective_to` 임의 생성 없음
 - DB 장애를 `UNAVAILABLE`로 숨기지 않고 `5xx` 반환
+- 오류 응답 본문과 `X-Trace-Id` header의 추적 ID 일치
+- DB 장애 `503 DATABASE_UNAVAILABLE`, 근거 무결성 오류
+  `500 EVIDENCE_INTEGRITY_VIOLATION`, 예상하지 못한 오류 `500 INTERNAL_ERROR`
+- 내부 예외 메시지와 접속 정보의 오류 응답 비노출
 
 ### 다음 작업과의 연결
 

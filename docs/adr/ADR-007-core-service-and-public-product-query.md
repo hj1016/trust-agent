@@ -420,6 +420,10 @@ GET /api/v1/public-products/{productKey}/observed-state?asOf={RFC3339 instant}
   `attempted_at <= asOf` ExtractionAttempt 상태를 사용합니다.
 - 최신 Observation에 추출 시도가 없으면 상태는 `null`이고
   `PENDING_EXTRACTION`입니다.
+- Observation 시각이 같을 때는 Observation ID 내림차순으로 최신 사건을 안정적으로
+  선택합니다. 최신 Observation ID와 마지막 성공 Observation ID가 다르면 시각이 같아도
+  처리되지 않은 새 관측으로 판단합니다. Freshness를 시각의 `>` 비교만으로 결정하지
+  않습니다.
 - 더 최신 Observation이 실패 또는 대기 상태여도 마지막으로 확인한 상품 조건과 근거를
   경고와 함께 반환할 수 있습니다.
 - 상품 조건을 한 번도 성공적으로 확인하지 못했다면, 등록된 상품에 대해
@@ -477,6 +481,13 @@ GET /api/v1/public-products/{productKey}/observed-state?asOf={RFC3339 instant}
 - API 오류는 일관된 Problem Detail 형식을 사용합니다.
 - 내부 경로, 원문 HTML, 인증 정보, 예외 호출 경로와 DB SQL을 응답에 포함하지 않습니다.
 - 오류에는 바뀌지 않는 애플리케이션 오류 코드와 요청 추적 ID를 포함합니다.
+- 추적 ID는 응답의 `X-Trace-Id` header, Problem Detail의 `traceId`와 요청 완료 로그에서
+  같은 값을 사용합니다. 클라이언트가 보낸 값을 신뢰하지 않고 서비스가 생성합니다.
+- 오류 code와 HTTP status는 명시적인 매핑으로 관리합니다. DB 접근 실패는
+  `503 DATABASE_UNAVAILABLE`, evidence 무결성 오류는
+  `500 EVIDENCE_INTEGRITY_VIOLATION`, 그 밖의 예상하지 못한 오류는
+  `500 INTERNAL_ERROR`를 사용합니다. 매핑되지 않은 업무 오류 code는 안전하게
+  `500`으로 처리합니다.
 - PUBLIC_KB, SYNTHETIC_INTERNAL, SYNTHETIC_WORK와 DERIVED 값을 하나의 무표시 응답으로
   합치지 않습니다.
 

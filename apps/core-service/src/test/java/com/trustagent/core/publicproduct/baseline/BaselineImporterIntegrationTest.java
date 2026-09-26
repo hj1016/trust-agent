@@ -388,6 +388,24 @@ class BaselineImporterIntegrationTest {
         assertFailedRun(database.jdbc(), "baseline:dddddddddddddddddddddddddddddddd", "INVALID_BASELINE");
     }
 
+    @Test
+    void extractionAttemptBeforeItsObservationIsRejected(@TempDir Path tempDir) throws Exception {
+        TestDatabase database = newDatabase();
+        Path baseline = copyBaseline(tempDir);
+        Path attempt = firstJson(baseline.resolve("datasets/derived/public-kb/extraction-attempts"));
+        ObjectNode attemptJson = (ObjectNode) JSON.readTree(Files.readAllBytes(attempt));
+        attemptJson.put("attempted_at", "2000-01-01T00:00:00Z");
+        Files.writeString(attempt, JSON.writeValueAsString(attemptJson));
+
+        BaselineImportException error = assertThrows(
+                BaselineImportException.class,
+                () -> database.importer().importBaseline(
+                        baseline, "baseline:dededededededededededededededede"));
+        assertEquals("INVALID_BASELINE", error.code());
+        assertNoBusinessRows(database.jdbc());
+        assertFailedRun(database.jdbc(), "baseline:dededededededededededededededede", "INVALID_BASELINE");
+    }
+
     private static TestDatabase newDatabase() throws SQLException {
         String name = "day4b_" + DATABASE_SEQUENCE.incrementAndGet();
         try (Connection connection = DriverManager.getConnection(
