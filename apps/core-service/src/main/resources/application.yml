@@ -10,6 +10,16 @@ spring:
     clean-disabled: true
 
 trust-agent:
+  baseline-import:
+    enabled: false
+    datasource:
+      url: ${TRUST_AGENT_IMPORT_DB_URL:${spring.datasource.url}}
+      username: ${TRUST_AGENT_IMPORT_DB_USERNAME:${spring.datasource.username}}
+      password: ${TRUST_AGENT_IMPORT_DB_PASSWORD:${spring.datasource.password}}
+      connection-timeout: ${TRUST_AGENT_IMPORT_DB_CONNECTION_TIMEOUT:5s}
+      validation-timeout: ${TRUST_AGENT_IMPORT_DB_VALIDATION_TIMEOUT:2s}
+      statement-timeout: ${TRUST_AGENT_IMPORT_DB_STATEMENT_TIMEOUT:30s}
+      maximum-pool-size: ${TRUST_AGENT_IMPORT_DB_MAX_POOL_SIZE:2}
   datasource:
     connection-timeout: ${TRUST_AGENT_DB_CONNECTION_TIMEOUT:2s}
     validation-timeout: ${TRUST_AGENT_DB_VALIDATION_TIMEOUT:1s}
@@ -17,7 +27,7 @@ trust-agent:
     readiness-query-timeout: ${TRUST_AGENT_DB_READINESS_QUERY_TIMEOUT:1s}
     maximum-pool-size: ${TRUST_AGENT_DB_MAX_POOL_SIZE:5}
   schema:
-    expected-version: ${TRUST_AGENT_SCHEMA_EXPECTED_VERSION:1}
+    expected-version: ${TRUST_AGENT_SCHEMA_EXPECTED_VERSION:2}
 
 management:
   server:

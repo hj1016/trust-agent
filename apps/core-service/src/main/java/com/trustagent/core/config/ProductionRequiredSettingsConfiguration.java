@@ -14,13 +14,21 @@ public class ProductionRequiredSettingsConfiguration {
             "TRUST_AGENT_DB_USERNAME",
             "TRUST_AGENT_DB_PASSWORD",
             "TRUST_AGENT_SCHEMA_EXPECTED_VERSION");
+    static final List<String> REQUIRED_BASELINE_IMPORT_SETTINGS = List.of(
+            "TRUST_AGENT_IMPORT_DB_URL",
+            "TRUST_AGENT_IMPORT_DB_USERNAME",
+            "TRUST_AGENT_IMPORT_DB_PASSWORD");
 
     public ProductionRequiredSettingsConfiguration(Environment environment) {
         validate(environment);
     }
 
     static void validate(Environment environment) {
-        var missing = REQUIRED_ENVIRONMENT_SETTINGS.stream()
+        var required = new java.util.ArrayList<>(REQUIRED_ENVIRONMENT_SETTINGS);
+        if (environment.getProperty("trust-agent.baseline-import.enabled", Boolean.class, false)) {
+            required.addAll(REQUIRED_BASELINE_IMPORT_SETTINGS);
+        }
+        var missing = required.stream()
                 .filter(name -> {
                     String value = environment.getProperty(name);
                     return value == null || value.isBlank();

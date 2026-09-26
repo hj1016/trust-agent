@@ -308,6 +308,13 @@ break-glass 절차로만 수행합니다.
 - Hibernate DDL, `schema.sql`, `data.sql`과 애플리케이션 기동 시 임의 DDL을 함께
   사용하지 않습니다.
 - Flyway migration 파일은 `classpath:db/migration`에 둡니다.
+- 보호 테이블을 추가하는 후속 migration은 `CREATE TABLE`, append-only trigger,
+  truncate trigger, `trust_agent_protected_tables()` 갱신, owner 변경 순서로 작성합니다.
+  보호 테이블 목록을 먼저 갱신하면 `ddl_command_end` 검사가 아직 trigger가 없는 테이블을
+  감지해 migration이 실패합니다.
+- 이미 적용된 migration 파일은 주석만 추가하는 경우에도 수정하지 않습니다. Flyway
+  checksum과 기존 DB의 검증 가능성을 보존하기 위해 새 migration과 ADR에 후속 규칙을
+  기록합니다.
 - 로컬과 테스트 환경에서는 애플리케이션이 Flyway migration을 실행할 수 있습니다.
 - 운영 환경에서는 배포 단계의 migration 작업과 제한된 migration role이 Flyway를
   실행합니다. Runtime role에는 DDL, 트리거 변경과 테이블 소유 권한을 부여하지
@@ -351,10 +358,18 @@ Baseline importer는 운영 데이터 동기화 도구가 아니라 빈 DB를 �
 도구입니다.
 
 - 업무 테이블이 비어 있으면 승인된 baseline을 처음 적재합니다.
-- 같은 `baseline_fingerprint`를 다시 실행하면 전체 record hash와 하위 행을 검증한 뒤
-  멱등 성공으로 처리합니다.
+- 같은 `baseline_fingerprint`를 다시 실행하는 멱등 경로는 runtime ingestion이 시작되기
+  전, DB가 baseline 행만 가진 동안에만 유효합니다. 이때 전체 record hash와 하위 행을
+  검증한 뒤 성공으로 처리합니다.
+- 같은 fingerprint이더라도 입력에 없는 행이 하나라도 있으면 건수 검증을 느슨하게 하지
+  않고 `RUNTIME_DATA_PRESENT`로 거부합니다. 이는 데이터 손상과 운영 데이터 존재를 서로
+  다른 진단으로 알려 주며, bootstrap importer가 운영 동기화 도구로 사용되는 일을
+  막습니다.
 - 업무 테이블이 비어 있지 않은데 다른 `baseline_fingerprint`를 넣으려 하면
   `BASELINE_MISMATCH`로 실패하고 어떤 기존 행도 변경하지 않습니다.
+- Fingerprint 경계를 개별 record hash보다 먼저 확인합니다. 다른 baseline이면
+  `BASELINE_MISMATCH`를 우선 반환하고, 같은 fingerprint의 DB 행이 손상됐을 때만
+  `SOURCE_RECORD_CONFLICT`를 반환합니다.
 - Contract 변경이나 과거 baseline 정정으로 fingerprint가 바뀌면 새 DB 또는 새 schema를
   만들고 전체 baseline을 다시 적재합니다. 검증 후 연결 대상을 전환하고, 이전 DB는
   보존 정책에 따라 read-only 감사 자료로 보관합니다.
@@ -517,8 +532,12 @@ Day 4에서 반드시 구현하거나 자동 검증할 운영 기준은 다음�
   `pool size × 최대 instance 수 + 운영 여유분 <= DB connection budget`을 만족해야
   하며 부하 테스트 근거 없이 키우지 않습니다.
 - Baseline importer와 migration은 runtime datasource를 공유하지 않고 작업 성격에 맞는
-  별도 timeout을 사용합니다. Readiness DB 확인은 1초 안에 끝나는 전용 query를
-  사용합니다.
+  별도 timeout을 사용합니다. `trust_agent_importer`는 LOGIN할 수 없는 권한 묶음이며
+  baseline 테이블의 `SELECT`와 `INSERT`만 가집니다. 운영 importer 로그인 계정은 이
+  role만 상속하고 runtime, migration, maintenance 또는 audit owner role을 상속하지
+  않습니다. `prod` profile에서 importer를 켜면 runtime 자격증명으로 fallback하지 않고
+  importer URL, username과 password를 모두 명시해야 합니다. Readiness DB 확인은 1초 안에
+  끝나는 전용 query를 사용합니다.
 - Actuator API는 상태와 필요한 측정값만 최소한으로 공개합니다. 환경 변수, 전체 설정,
   메모리 덤프와 전체 Spring bean 정보는 기본적으로 공개하지 않습니다.
 - 모든 API 요청에 추적 ID를 부여하고 감사 기록 ID와 연결할 수 있는 구조화 로그를
