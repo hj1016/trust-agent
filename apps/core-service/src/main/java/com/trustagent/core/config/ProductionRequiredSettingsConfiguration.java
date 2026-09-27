@@ -15,11 +15,17 @@ public class ProductionRequiredSettingsConfiguration {
             "TRUST_AGENT_DB_PASSWORD",
             "TRUST_AGENT_SCHEMA_EXPECTED_VERSION",
             "TRUST_AGENT_FRESHNESS_POLICY_VERSION",
-            "TRUST_AGENT_MAX_CONFIRMATION_AGE");
+            "TRUST_AGENT_MAX_CONFIRMATION_AGE",
+            "TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE",
+            "TRUST_AGENT_INTERNAL_TIMEZONE_POLICY_VERSION");
     static final List<String> REQUIRED_BASELINE_IMPORT_SETTINGS = List.of(
             "TRUST_AGENT_IMPORT_DB_URL",
             "TRUST_AGENT_IMPORT_DB_USERNAME",
             "TRUST_AGENT_IMPORT_DB_PASSWORD");
+    static final List<String> REQUIRED_SYNTHETIC_IMPORT_SETTINGS = List.of(
+            "TRUST_AGENT_SYNTHETIC_IMPORT_DB_URL",
+            "TRUST_AGENT_SYNTHETIC_IMPORT_DB_USERNAME",
+            "TRUST_AGENT_SYNTHETIC_IMPORT_DB_PASSWORD");
 
     public ProductionRequiredSettingsConfiguration(Environment environment) {
         validate(environment);
@@ -29,6 +35,9 @@ public class ProductionRequiredSettingsConfiguration {
         var required = new java.util.ArrayList<>(REQUIRED_ENVIRONMENT_SETTINGS);
         if (environment.getProperty("trust-agent.baseline-import.enabled", Boolean.class, false)) {
             required.addAll(REQUIRED_BASELINE_IMPORT_SETTINGS);
+        }
+        if (environment.getProperty("trust-agent.synthetic-internal-import.enabled", Boolean.class, false)) {
+            required.addAll(REQUIRED_SYNTHETIC_IMPORT_SETTINGS);
         }
         var missing = required.stream()
                 .filter(name -> {

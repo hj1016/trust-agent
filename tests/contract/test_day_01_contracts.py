@@ -167,7 +167,13 @@ class SyntheticFixtureContractTest(unittest.TestCase):
         manifest_hashes = {
             load_json(path)["snapshot_hash"] for path in MANIFEST_ROOT.rglob("*.json")
         }
-        self.assertIn(notice["references"][0]["snapshot_hash"], manifest_hashes)
+        referenced_hashes = {
+            rule["public_cross_check"]["snapshot_hash"]
+            for rule in notice["rules"]
+            if rule["public_cross_check"] is not None
+        }
+        self.assertTrue(referenced_hashes)
+        self.assertTrue(referenced_hashes.issubset(manifest_hashes))
 
     def test_all_dataset_json_files_obey_path_boundaries(self) -> None:
         for path in sorted((ROOT / "datasets").rglob("*.json")):

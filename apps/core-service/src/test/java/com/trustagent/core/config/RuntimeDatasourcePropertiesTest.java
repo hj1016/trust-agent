@@ -50,9 +50,9 @@ class RuntimeDatasourcePropertiesTest {
     @Test
     void configuredSchemaVersionMatchesTheLatestClasspathMigration() {
         var validator = new ClasspathSchemaVersionValidator(
-                new PathMatchingResourcePatternResolver(), "3");
+                new PathMatchingResourcePatternResolver(), "4");
 
-        assertEquals("3", validator.classpathVersion());
+        assertEquals("4", validator.classpathVersion());
         assertThrows(
                 IllegalStateException.class,
                 () -> new ClasspathSchemaVersionValidator(
@@ -73,7 +73,7 @@ class RuntimeDatasourcePropertiesTest {
                 "TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent",
                 "TRUST_AGENT_DB_USERNAME", "runtime",
                 "TRUST_AGENT_DB_PASSWORD", "secret",
-                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "3"))) {
+                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "4"))) {
             assertThrows(RuntimeException.class, missingPolicyContext::refresh);
         }
 
@@ -81,9 +81,11 @@ class RuntimeDatasourcePropertiesTest {
                 "TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent",
                 "TRUST_AGENT_DB_USERNAME", "runtime",
                 "TRUST_AGENT_DB_PASSWORD", "secret",
-                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "3",
+                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "4",
                 "TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1",
-                "TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h"))) {
+                "TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h",
+                "TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE", "Asia/Seoul",
+                "TRUST_AGENT_INTERNAL_TIMEZONE_POLICY_VERSION", "internal-business-time-v1"))) {
             configuredContext.refresh();
         }
     }
@@ -94,9 +96,11 @@ class RuntimeDatasourcePropertiesTest {
                 "TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent",
                 "TRUST_AGENT_DB_USERNAME", "runtime",
                 "TRUST_AGENT_DB_PASSWORD", "runtime-secret",
-                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "3",
+                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "4",
                 "TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1",
                 "TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h",
+                "TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE", "Asia/Seoul",
+                "TRUST_AGENT_INTERNAL_TIMEZONE_POLICY_VERSION", "internal-business-time-v1",
                 "trust-agent.baseline-import.enabled", "true");
         try (var missingImporterContext = productionContext(runtimeOnly)) {
             assertThrows(RuntimeException.class, missingImporterContext::refresh);
@@ -108,6 +112,29 @@ class RuntimeDatasourcePropertiesTest {
         allSettings.put("TRUST_AGENT_IMPORT_DB_PASSWORD", "importer-secret");
         try (var configuredContext = productionContext(allSettings)) {
             configuredContext.refresh();
+        }
+    }
+
+    @Test
+    void productionSyntheticImporterRequiresItsOwnCredentials() {
+        var settings = new java.util.HashMap<String, Object>();
+        settings.put("TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent");
+        settings.put("TRUST_AGENT_DB_USERNAME", "runtime");
+        settings.put("TRUST_AGENT_DB_PASSWORD", "runtime-secret");
+        settings.put("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "4");
+        settings.put("TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1");
+        settings.put("TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h");
+        settings.put("TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE", "Asia/Seoul");
+        settings.put("TRUST_AGENT_INTERNAL_TIMEZONE_POLICY_VERSION", "internal-business-time-v1");
+        settings.put("trust-agent.synthetic-internal-import.enabled", "true");
+        try (var context = productionContext(settings)) {
+            assertThrows(RuntimeException.class, context::refresh);
+        }
+        settings.put("TRUST_AGENT_SYNTHETIC_IMPORT_DB_URL", "jdbc:postgresql://db/trust_agent");
+        settings.put("TRUST_AGENT_SYNTHETIC_IMPORT_DB_USERNAME", "synthetic-importer");
+        settings.put("TRUST_AGENT_SYNTHETIC_IMPORT_DB_PASSWORD", "synthetic-secret");
+        try (var context = productionContext(settings)) {
+            context.refresh();
         }
     }
 

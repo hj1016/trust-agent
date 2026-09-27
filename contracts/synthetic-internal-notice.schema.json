@@ -1,59 +1,52 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://trustagent.local/contracts/synthetic-internal-notice.schema.json",
-  "title": "TrustAgent Synthetic Internal Notice",
+  "title": "TrustAgent Synthetic Internal Notice Version",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "dataset_class",
-    "synthetic",
-    "disclaimer",
-    "notice_id",
-    "family_id",
-    "version",
-    "title",
-    "issued_at",
-    "effective_from",
-    "status",
-    "references",
-    "checklist_changes"
-  ],
+  "required": ["dataset_class", "synthetic", "disclaimer", "notice_id", "family_id", "version", "title", "document_status", "issued_on", "effective_from", "effective_to", "supersedes_notice_id", "rules"],
   "properties": {
     "dataset_class": {"const": "SYNTHETIC_INTERNAL"},
     "synthetic": {"const": true},
-    "disclaimer": {"type": "string", "minLength": 10},
-    "notice_id": {"type": "string", "pattern": "^SIN-[A-Z0-9-]+-V[0-9]+$"},
+    "disclaimer": {"type": "string", "minLength": 20},
+    "notice_id": {"type": "string", "pattern": "^SIN-[A-Z0-9-]+-V[1-9][0-9]*$"},
     "family_id": {"type": "string", "pattern": "^SIN-[A-Z0-9-]+$"},
     "version": {"type": "integer", "minimum": 1},
     "title": {"type": "string", "minLength": 1},
-    "issued_at": {"type": "string", "format": "date"},
+    "document_status": {"const": "ISSUED"},
+    "issued_on": {"type": "string", "format": "date"},
     "effective_from": {"type": "string", "format": "date"},
-    "status": {"enum": ["DRAFT", "APPROVED", "RETIRED"]},
-    "references": {
-      "type": "array",
-      "minItems": 1,
+    "effective_to": {"type": ["string", "null"], "format": "date"},
+    "supersedes_notice_id": {"type": ["string", "null"], "pattern": "^SIN-[A-Z0-9-]+-V[1-9][0-9]*$"},
+    "rules": {
+      "type": "array", "minItems": 1,
       "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["dataset_class", "product_key", "snapshot_hash"],
+        "type": "object", "additionalProperties": false,
+        "required": ["rule_key", "instruction", "evidence_required", "public_cross_check"],
         "properties": {
-          "dataset_class": {"const": "PUBLIC_KB"},
-          "product_key": {"type": "string"},
-          "snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
-        }
-      }
-    },
-    "checklist_changes": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["change_id", "instruction", "evidence_required"],
-        "properties": {
-          "change_id": {"type": "string"},
+          "rule_key": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"},
           "instruction": {"type": "string", "minLength": 1},
-          "evidence_required": {"type": "boolean"}
+          "evidence_required": {"type": "boolean"},
+          "public_cross_check": {
+            "oneOf": [
+              {"type": "null"},
+              {
+                "type": "object", "additionalProperties": false,
+                "required": ["dataset_class", "product_key", "snapshot_hash", "fact_key", "subject_type", "value_type", "expected_value", "unit", "evidence_requirement"],
+                "properties": {
+                  "dataset_class": {"const": "PUBLIC_KB"},
+                  "product_key": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+                  "snapshot_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+                  "fact_key": {"const": "max_limit_corporate_krw"},
+                  "subject_type": {"const": "CORPORATION"},
+                  "value_type": {"const": "INTEGER"},
+                  "expected_value": {"type": "integer", "minimum": 1},
+                  "unit": {"const": "KRW"},
+                  "evidence_requirement": {"enum": ["REQUIRED", "INFORMATIONAL"]}
+                }
+              }
+            ]
+          }
         }
       }
     }

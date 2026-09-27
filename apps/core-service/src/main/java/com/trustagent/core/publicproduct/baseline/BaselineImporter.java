@@ -1,5 +1,7 @@
 package com.trustagent.core.publicproduct.baseline;
 
+import static com.trustagent.core.bootstrap.AppendOnlyBootstrapChecks.requireAllowedIdentifier;
+import static com.trustagent.core.bootstrap.AppendOnlyBootstrapChecks.verifyExactCounts;
 import static com.trustagent.core.publicproduct.baseline.BaselineDataset.RecordType.CHANGE_DETECTION_RESULT;
 import static com.trustagent.core.publicproduct.baseline.BaselineDataset.RecordType.COLLECTION_ATTEMPT;
 import static com.trustagent.core.publicproduct.baseline.BaselineDataset.RecordType.EXTRACTION_ATTEMPT;
@@ -20,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -537,26 +540,7 @@ public class BaselineImporter {
     }
 
     private void verifyGlobalCounts(Map<String, Integer> expected) {
-        Map<String, Integer> actual = new LinkedHashMap<>();
-        expected.keySet().forEach(table -> actual.put(table, tableCount(table)));
-        List<String> tablesWithExtraRows = expected.keySet().stream()
-                .filter(table -> actual.get(table) > expected.get(table))
-                .toList();
-        if (!tablesWithExtraRows.isEmpty()) {
-            throw new BaselineImportException(
-                    "RUNTIME_DATA_PRESENT",
-                    "baseline에 없는 runtime 행이 있어 재적재할 수 없습니다: "
-                            + String.join(", ", tablesWithExtraRows));
-        }
-        List<String> tablesWithMissingRows = expected.keySet().stream()
-                .filter(table -> actual.get(table) < expected.get(table))
-                .toList();
-        if (!tablesWithMissingRows.isEmpty()) {
-            throw new BaselineImportException(
-                    "BASELINE_CONTENT_MISMATCH",
-                    "DB의 baseline 행 개수가 입력보다 적습니다: "
-                            + String.join(", ", tablesWithMissingRows));
-        }
+        verifyExactCounts(expected, this::tableCount, BaselineImportException::new);
     }
 
     private void verifyFacts(List<BaselineDataset.SourceRecord> records) {
@@ -640,16 +624,12 @@ public class BaselineImporter {
     }
 
     static void requireBusinessTableIdentifier(String table) {
-        if (!BUSINESS_TABLES.contains(table)) {
-            throw new IllegalArgumentException("허용되지 않은 baseline table 식별자입니다: " + table);
-        }
+        requireAllowedIdentifier(table, Set.copyOf(BUSINESS_TABLES), "baseline table");
     }
 
     static void requireSourceIdentifier(String table, String idColumn) {
-        if (!idColumn.equals(SOURCE_ID_COLUMNS.get(table))) {
-            throw new IllegalArgumentException(
-                    "허용되지 않은 baseline source 식별자입니다: " + table + "." + idColumn);
-        }
+        com.trustagent.core.bootstrap.AppendOnlyBootstrapChecks.requireSourceIdentifier(
+                table, idColumn, SOURCE_ID_COLUMNS, "baseline");
     }
 
     private void recordFailure(
