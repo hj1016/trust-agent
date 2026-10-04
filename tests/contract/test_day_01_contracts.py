@@ -56,7 +56,7 @@ def validate_dataset_boundary(relative_path: Path, record: dict) -> None:
 
 
 class GitBaselineContractTest(unittest.TestCase):
-    def test_git_baseline_commit_exists_and_contains_day_one_baseline(self) -> None:
+    def test_git_baseline_commit_contains_current_guidance_and_data_contract(self) -> None:
         commit = subprocess.run(
             ["git", "rev-parse", "--verify", "HEAD^{commit}"],
             cwd=ROOT,
@@ -74,7 +74,13 @@ class GitBaselineContractTest(unittest.TestCase):
             text=True,
         ).stdout.splitlines()
         self.assertIn("README.md", tracked)
-        self.assertIn("docs/DAY_01_PLAN.md", tracked)
+        for guidance in (
+            "CLAUDE.md",
+            "docs/development/DEVELOPMENT_RULES.md",
+            "docs/development/TASK_TEMPLATE.md",
+            "docs/development/REVIEW_CHECKLIST.md",
+        ):
+            self.assertIn(guidance, tracked)
         self.assertIn("contracts/public-snapshot-manifest.schema.json", tracked)
 
 
