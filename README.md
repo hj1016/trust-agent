@@ -93,14 +93,11 @@ python3 scripts/extract_public_kb_product_facts.py --all
 
 ## 프로젝트 기록
 
-- 프로젝트 기준: `docs/PROJECT_CONTEXT.md`
-- CI와 리뷰 기준: `docs/CI_AND_AI_REVIEW.md`
-- 첫날 계획: `docs/DAY_01_PLAN.md`
-- 둘째 날 계획: `docs/DAY_02_PLAN.md`
-- 셋째 날 계획: `docs/DAY_03_PLAN.md`
-- 셋째 날 hardening 계획: `docs/DAY_03_HARDENING_PLAN.md`
-- 넷째 날 계획: `docs/DAY_04_PLAN.md`
-- 다섯째 날 계획: `docs/DAY_05_PLAN.md`
+- 개발 기준: [CLAUDE.md](CLAUDE.md), [개발 규칙](docs/development/DEVELOPMENT_RULES.md)
+- Task/검수: [Task 템플릿](docs/development/TASK_TEMPLATE.md), [검수 체크리스트](docs/development/REVIEW_CHECKLIST.md)
+- 첫 기준선 점검: [TASK-000](docs/tasks/TASK-000_초기-수집-자산-기준선-점검.md)
+- 폐기된 Pre-SDLC 계획 문서는 TASK-000의 DROP 기록과 Git history에서 확인합니다.
+
 - 기술 결정: `docs/adr/`
 - 데이터 계약: `contracts/`
 - 첫날 검증 증거: `docs/evidence/DAY_01_EVIDENCE.md`

@@ -1,6 +1,6 @@
 # TrustAgent 작업 규칙
 
-- 작업 전 `README.md`, `docs/PROJECT_CONTEXT.md`, `docs/DAY_01_PLAN.md`를 읽습니다.
+- 작업 전 `CLAUDE.md`, `docs/development/DEVELOPMENT_RULES.md`와 관련 최신 ADR/Task를 읽습니다.
 - 최종 기획서는 제품 기준선으로 사용하고 실제 구현 상태는 README와 ADR에 기록합니다.
 - `PUBLIC_KB`, `SYNTHETIC_INTERNAL`, `SYNTHETIC_WORK`, `DERIVED`를 경로, schema, API, 화면, 테스트에서 구분합니다.
 - 합성 공문, 규정, 기업, 신청, 상담, 승인 자료를 실제 KB 내부자료처럼 표현하지 않습니다.
