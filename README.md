@@ -33,7 +33,7 @@ python3 -m unittest discover -s tests -v
 TRUSTAGENT_REQUIRE_PRIVATE_SNAPSHOTS=1 python3 -m unittest discover -s tests -v
 ```
 
-2026-09-27 실행 결과 Python 57개 테스트가 모두 통과했습니다. 비공개 원문이 없는
+검증 결과 Python 57개 테스트가 모두 통과했습니다. 비공개 원문이 없는
 Public Git 조건에서는 57개 중 private artifact 전용 3개가 의도대로 skip되고 나머지
 54개가 통과했습니다. 상세 증거는
 `docs/evidence/DAY_03_HARDENING_EVIDENCE.md`와
