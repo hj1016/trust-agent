@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://trustagent.local/contracts/synthetic-internal-notice-receipt.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["dataset_class", "synthetic", "disclaimer", "receipt_id", "notice_id", "received_at", "business_timezone", "timezone_policy_version"],
+  "properties": {
+    "dataset_class": {"const": "SYNTHETIC_INTERNAL"}, "synthetic": {"const": true}, "disclaimer": {"type": "string", "minLength": 20},
+    "receipt_id": {"type": "string", "pattern": "^notice-receipt:[a-f0-9]{32}$"}, "notice_id": {"type": "string", "pattern": "^SIN-[A-Z0-9-]+-V[1-9][0-9]*$"},
+    "received_at": {"type": "string", "format": "date-time", "pattern": "Z$"}, "business_timezone": {"const": "Asia/Seoul"}, "timezone_policy_version": {"const": "internal-business-time-v1"}
+  }
+}

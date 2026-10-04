@@ -8,6 +8,14 @@ trust-agent:
   public-evidence:
     freshness-policy-version: ${TRUST_AGENT_FRESHNESS_POLICY_VERSION}
     max-confirmation-age: ${TRUST_AGENT_MAX_CONFIRMATION_AGE}
+  internal-policy:
+    business-timezone: ${TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE}
+    timezone-policy-version: ${TRUST_AGENT_INTERNAL_TIMEZONE_POLICY_VERSION}
+  synthetic-internal-import:
+    datasource:
+      url: ${TRUST_AGENT_SYNTHETIC_IMPORT_DB_URL}
+      username: ${TRUST_AGENT_SYNTHETIC_IMPORT_DB_USERNAME}
+      password: ${TRUST_AGENT_SYNTHETIC_IMPORT_DB_PASSWORD}
   baseline-import:
     datasource:
       url: ${TRUST_AGENT_IMPORT_DB_URL}

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://trustagent.local/contracts/synthetic-internal-policy-extraction.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["dataset_class", "extraction_attempt_id", "receipt_id", "notice_id", "attempted_at", "parser_version", "status"],
+  "properties": {
+    "dataset_class": {"const": "DERIVED"}, "extraction_attempt_id": {"type": "string", "pattern": "^policy-extract:[a-f0-9]{32}$"},
+    "receipt_id": {"type": "string", "pattern": "^notice-receipt:[a-f0-9]{32}$"}, "notice_id": {"type": "string", "pattern": "^SIN-[A-Z0-9-]+-V[1-9][0-9]*$"},
+    "attempted_at": {"type": "string", "format": "date-time", "pattern": "Z$"}, "parser_version": {"const": "synthetic-notice-json-v1"}, "status": {"const": "SUCCEEDED"}
+  }
+}

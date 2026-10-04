@@ -56,7 +56,7 @@ def validate_dataset_boundary(relative_path: Path, record: dict) -> None:
 
 
 class GitBaselineContractTest(unittest.TestCase):
-    def test_git_baseline_commit_exists_and_contains_day_one_baseline(self) -> None:
+    def test_git_baseline_commit_contains_current_guidance_and_data_contract(self) -> None:
         commit = subprocess.run(
             ["git", "rev-parse", "--verify", "HEAD^{commit}"],
             cwd=ROOT,
@@ -74,7 +74,13 @@ class GitBaselineContractTest(unittest.TestCase):
             text=True,
         ).stdout.splitlines()
         self.assertIn("README.md", tracked)
-        self.assertIn("docs/DAY_01_PLAN.md", tracked)
+        for guidance in (
+            "CLAUDE.md",
+            "docs/development/DEVELOPMENT_RULES.md",
+            "docs/development/TASK_TEMPLATE.md",
+            "docs/development/REVIEW_CHECKLIST.md",
+        ):
+            self.assertIn(guidance, tracked)
         self.assertIn("contracts/public-snapshot-manifest.schema.json", tracked)
 
 
@@ -167,7 +173,13 @@ class SyntheticFixtureContractTest(unittest.TestCase):
         manifest_hashes = {
             load_json(path)["snapshot_hash"] for path in MANIFEST_ROOT.rglob("*.json")
         }
-        self.assertIn(notice["references"][0]["snapshot_hash"], manifest_hashes)
+        referenced_hashes = {
+            rule["public_cross_check"]["snapshot_hash"]
+            for rule in notice["rules"]
+            if rule["public_cross_check"] is not None
+        }
+        self.assertTrue(referenced_hashes)
+        self.assertTrue(referenced_hashes.issubset(manifest_hashes))
 
     def test_all_dataset_json_files_obey_path_boundaries(self) -> None:
         for path in sorted((ROOT / "datasets").rglob("*.json")):
