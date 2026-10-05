@@ -177,6 +177,53 @@ class InternalPolicyApplicableRepository {
                 .optional();
     }
 
+    record ProposalRow(String proposalId, Instant createdAt) {}
+
+    record ValidationRow(String validationResultId, String status, Instant validatedAt) {}
+
+    /** knownAt까지 생성된 변경안 중 대상 공문의 최신 revision(보이는 후속 revision이 없는 것). */
+    Optional<ProposalRow> findLatestVisibleProposal(String familyId, String noticeId, Instant knownAt) {
+        return jdbc.sql("""
+                        select proposal.proposal_id, proposal.created_at
+                        from checklist_change_proposal proposal
+                        where proposal.family_id = :familyId
+                          and proposal.target_notice_id = :noticeId
+                          and proposal.created_at <= :knownAt
+                          and not exists (
+                              select 1 from checklist_change_proposal child
+                              where child.supersedes_proposal_id = proposal.proposal_id
+                                and child.created_at <= :knownAt
+                          )
+                        order by proposal.created_at desc, proposal.proposal_id desc
+                        limit 1
+                        """)
+                .param("familyId", familyId)
+                .param("noticeId", noticeId)
+                .param("knownAt", utc(knownAt))
+                .query((resultSet, rowNumber) -> new ProposalRow(
+                        resultSet.getString("proposal_id"), instant(resultSet, "created_at")))
+                .optional();
+    }
+
+    /** 그 변경안의 결과 중 validated_at <= knownAt인 최신 결과. 같은 시각이면 ID 순. */
+    Optional<ValidationRow> findLatestVisibleValidation(String proposalId, Instant knownAt) {
+        return jdbc.sql("""
+                        select validation_result_id, status, validated_at
+                        from automated_validation_result
+                        where proposal_id = :proposalId
+                          and validated_at <= :knownAt
+                        order by validated_at desc, validation_result_id desc
+                        limit 1
+                        """)
+                .param("proposalId", proposalId)
+                .param("knownAt", utc(knownAt))
+                .query((resultSet, rowNumber) -> new ValidationRow(
+                        resultSet.getString("validation_result_id"),
+                        resultSet.getString("status"),
+                        instant(resultSet, "validated_at")))
+                .optional();
+    }
+
     private static Instant instant(ResultSet resultSet, String column) throws SQLException {
         return resultSet.getObject(column, OffsetDateTime.class).toInstant();
     }

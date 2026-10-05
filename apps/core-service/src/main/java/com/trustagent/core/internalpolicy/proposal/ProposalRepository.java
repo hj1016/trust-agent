@@ -230,6 +230,126 @@ final class ProposalRepository {
                 .update();
     }
 
+    record ProposalRow(String proposalId, String familyId, String baseChecklistVersionId, String targetNoticeId,
+            String afterHash, String supersedesProposalId) {}
+
+    record ReferenceRow(String productKey, String factKey, String subjectType, String unit, long expectedValue,
+            String evidenceRequirement) {}
+
+    Optional<ProposalRow> findProposal(String proposalId) {
+        return jdbc.sql("""
+                        select proposal_id, family_id, base_checklist_version_id, target_notice_id, after_hash,
+                               supersedes_proposal_id
+                        from checklist_change_proposal where proposal_id = :id
+                        """)
+                .param("id", proposalId)
+                .query((rs, row) -> new ProposalRow(
+                        rs.getString("proposal_id"), rs.getString("family_id"), rs.getString("base_checklist_version_id"),
+                        rs.getString("target_notice_id"), rs.getString("after_hash"), rs.getString("supersedes_proposal_id")))
+                .optional();
+    }
+
+    List<ProposalValidator.ProposalItem> findProposalItems(String proposalId) {
+        return jdbc.sql("""
+                        select rule_key, change_type, before_json::text as before_json, after_json::text as after_json
+                        from checklist_change_proposal_item where proposal_id = :id order by item_order
+                        """)
+                .param("id", proposalId)
+                .query((rs, row) -> new ProposalValidator.ProposalItem(
+                        rs.getString("rule_key"),
+                        rs.getString("change_type"),
+                        rs.getString("before_json") == null ? null : mapper.readTree(rs.getString("before_json")),
+                        rs.getString("after_json") == null ? null : mapper.readTree(rs.getString("after_json"))))
+                .list();
+    }
+
+    /** 변경안이 다른 revision에 의해 대체됐는지. 대체된 변경안은 더 이상 최신이 아니다. */
+    boolean proposalSuperseded(String proposalId) {
+        return jdbc.sql("select count(*) from checklist_change_proposal where supersedes_proposal_id = :id")
+                .param("id", proposalId)
+                .query(Integer.class)
+                .single() > 0;
+    }
+
+    List<ReferenceRow> findReferences(String noticeId) {
+        return jdbc.sql("""
+                        select product_key, fact_key, subject_type, unit, expected_value, evidence_requirement
+                        from internal_notice_reference where notice_id = :noticeId order by reference_order
+                        """)
+                .param("noticeId", noticeId)
+                .query((rs, row) -> new ReferenceRow(
+                        rs.getString("product_key"), rs.getString("fact_key"), rs.getString("subject_type"),
+                        rs.getString("unit"), rs.getLong("expected_value"), rs.getString("evidence_requirement")))
+                .list();
+    }
+
+    java.util.Set<String> findProductKeys() {
+        return new java.util.HashSet<>(jdbc.sql("select product_key from public_product").query(String.class).list());
+    }
+
+    boolean validationRunExists(String runId) {
+        return jdbc.sql("select count(*) from validation_run where validation_run_id = :id")
+                .param("id", runId)
+                .query(Integer.class)
+                .single() > 0;
+    }
+
+    void insertValidation(
+            String resultId, ProposalRow proposal, String validatorVersion, ProposalValidator.Outcome outcome,
+            Instant validatedAt, JsonNode publicEvidenceRefs) {
+        jdbc.sql("""
+                        insert into automated_validation_result (
+                            validation_result_id, dataset_class, proposal_id, proposal_hash, validator_version, status,
+                            validated_at, public_evidence_refs)
+                        values (:id, 'DERIVED', :proposal, :hash, :validator, :status, :validatedAt, cast(:refs as jsonb))
+                        """)
+                .param("id", resultId)
+                .param("proposal", proposal.proposalId())
+                .param("hash", proposal.afterHash())
+                .param("validator", validatorVersion)
+                .param("status", outcome.status().name())
+                .param("validatedAt", utc(validatedAt))
+                .param("refs", mapper.writeValueAsString(publicEvidenceRefs))
+                .update();
+        int order = 0;
+        for (ProposalValidator.Issue issue : outcome.issues()) {
+            jdbc.sql("""
+                            insert into automated_validation_issue (
+                                validation_result_id, result_status, issue_order, severity, code, rule_key, message, details)
+                            values (:id, :status, :order, :severity, :code, :ruleKey, :message, cast(:details as jsonb))
+                            """)
+                    .param("id", resultId)
+                    .param("status", outcome.status().name())
+                    .param("order", order++)
+                    .param("severity", issue.severity().name())
+                    .param("code", issue.code())
+                    .param("ruleKey", issue.ruleKey())
+                    .param("message", issue.message())
+                    .param("details", mapper.writeValueAsString(issue.details()))
+                    .update();
+        }
+    }
+
+    void insertValidationRun(
+            String runId, String proposalId, String validatorVersion, String resultId,
+            Instant startedAt, Instant completedAt, String status, String errorCode) {
+        jdbc.sql("""
+                        insert into validation_run (
+                            validation_run_id, proposal_id, validator_version, validation_result_id,
+                            started_at, completed_at, status, error_code)
+                        values (:id, :proposal, :validator, :result, :started, :completed, :status, :error)
+                        """)
+                .param("id", runId)
+                .param("proposal", proposalId)
+                .param("validator", validatorVersion)
+                .param("result", resultId)
+                .param("started", utc(startedAt))
+                .param("completed", utc(completedAt))
+                .param("status", status)
+                .param("error", errorCode)
+                .update();
+    }
+
     private ChecklistItemContent content(ResultSet rs, int row) throws SQLException {
         return new ChecklistItemContent(
                 rs.getString("rule_key"),

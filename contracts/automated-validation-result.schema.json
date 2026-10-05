@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trust-agent.local/contracts/automated-validation-result.schema.json",
+  "title": "Automated validation result",
+  "description": "checklist 변경안 자동 검증 결과. DERIVED 데이터이며 승인이 아니다. FAIL 결과는 FAIL issue를, WARN 결과는 WARN issue를 하나 이상 가진다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset_class", "validation_result_id", "proposal_id", "proposal_hash", "validator_version", "status", "validated_at", "public_evidence_refs", "issues"],
+  "properties": {
+    "dataset_class": {"const": "DERIVED"},
+    "validation_result_id": {"type": "string", "pattern": "^validation:[a-f0-9]{32}$"},
+    "proposal_id": {"type": "string", "pattern": "^checklist-proposal:sha256:[a-f0-9]{64}$"},
+    "proposal_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "validator_version": {"type": "string", "pattern": "^[a-z][a-z0-9-]+$"},
+    "status": {"enum": ["PASS", "WARN", "FAIL"]},
+    "validated_at": {"type": "string", "format": "date-time"},
+    "public_evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["product_key", "fact_key", "subject_type", "confirmation_allowed", "freshness_status", "as_of"],
+        "properties": {
+          "product_key": {"type": "string"},
+          "fact_key": {"type": "string"},
+          "subject_type": {"type": "string"},
+          "confirmation_allowed": {"type": "boolean"},
+          "freshness_status": {"type": "string"},
+          "as_of": {"type": "string", "format": "date-time"},
+          "observation_id": {"type": "string"},
+          "product_terms_version_id": {"type": "string"},
+          "version_evidence_id": {"type": "string"},
+          "fact_id": {"type": "string"}
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["issue_order", "severity", "code", "rule_key", "message", "details"],
+        "properties": {
+          "issue_order": {"type": "integer", "minimum": 0},
+          "severity": {"enum": ["FAIL", "WARN", "INFO"]},
+          "code": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"},
+          "rule_key": {"type": ["string", "null"], "pattern": "^[A-Z][A-Z0-9_]+$"},
+          "message": {"type": "string", "minLength": 1},
+          "details": {"type": "object"}
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "FAIL"}}},
+      "then": {"properties": {"issues": {"contains": {"properties": {"severity": {"const": "FAIL"}}}}}}
+    },
+    {
+      "if": {"properties": {"status": {"const": "WARN"}}},
+      "then": {"properties": {"issues": {
+        "contains": {"properties": {"severity": {"const": "WARN"}}},
+        "items": {"properties": {"severity": {"enum": ["WARN", "INFO"]}}}
+      }}}
+    },
+    {
+      "if": {"properties": {"status": {"const": "PASS"}}},
+      "then": {"properties": {"issues": {"items": {"properties": {"severity": {"const": "INFO"}}}}}}
+    }
+  ]
+}

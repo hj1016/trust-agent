@@ -1,6 +1,6 @@
 # TASK-006 checklist 변경안의 자동 검증
 
-- 상태: **계획 검토 대기** (계획 작성 승인. 제안 3건 판단 반영. 구현 착수 승인은 아님)
+- 상태: **구현 중** (설계와 구현 착수 승인. 완료 확인 조건 15개 확정. 완료와 인간 검수는 미기록)
 - 담당자 / 인간 결정자: AI(계획, 구현, 자동 검증, self-review) / 사용자(범위, 완료 확인 조건 확정, 제안 판단, 착수 승인, 검수)
 - 요구사항 출처: [PLAN-001](PLAN-001_중도상환수수료-흐름-Task-분할-초안.md) TASK-006, [ADR-003](../adr/ADR-003-validation-and-human-approval.md) 자동 검증과 사람 승인 분리, [ADR-008](../adr/ADR-008-internal-notice-effective-policy-and-review.md) "자동 검증" 절, README MVP 목표 5단계 "숫자 및 시행일 오류 차단".
 - 관련: [TASK-005](TASK-005_checklist-변경-후보-proposal-생성.md)(입력인 변경안), 후속 TASK-007(사람 결정은 검증 결과를 입력으로 받는다)
@@ -82,7 +82,7 @@
 - 상태 매핑(선택된 공문에 승인 checklist가 없을 때): 변경안 없음 → `PENDING_VALIDATION`(기존). 변경안 있음, 보이는 검증 결과 없음 → `PENDING_VALIDATION`. 최신 결과 PASS 또는 WARN → `PENDING_REVIEW`. 최신 결과 FAIL → `VALIDATION_FAILED`. 최신 결과가 `max_validation_age`보다 오래됨 → `VALIDATION_STALE`.
 - 가시성: `created_at <= knownAt`인 변경안 중 최신 revision(supersedes 체인의 끝)을 고르고, 그 변경안의 결과 중 `validated_at <= knownAt`인 최신 것만 쓴다. 조회 기준 시각 이후의 결과는 보이지 않는다.
 - 사용 허용: 어떤 상태에서도 사람 결정(TASK-007) 전에는 `internalChecklistUseAllowed=false`. 차단 사유에 `HUMAN_REVIEW_PENDING`(PASS/WARN일 때) 또는 `VALIDATION_FAILED`/`VALIDATION_STALE`을 남긴다.
-- 어떤 변경안의 결과인지 구분: 응답에 **nullable 필드 2개**(`validatedProposalId`, `validationResultId`)를 추가한다(제안 1a, 판단 필요). TASK-005에서 보류한 `latestProposalId`를 이 형태로 대체한다. 필드 추가 외 기존 필드 의미는 바꾸지 않는다.
+- 어떤 변경안의 결과인지 구분: 응답에 nullable 필드 2개(`validatedProposalId`, `validationResultId`)를 추가한다(제안 1a 채택). 실제 조회에 사용한 검증 결과와 그 대상 변경안을 가리키며, 보이는 결과가 없으면 둘 다 null이다. 기존 필드 의미는 바꾸지 않는다.
 
 ## Acceptance Criteria (구현 전 고정, 수정안)
 
@@ -90,25 +90,25 @@
 
 | ID | 입력/상황 | 기대 결과 | 검증 방법 | 결과/evidence |
 |---|---|---|---|---|
-| AC-01 | 사례 1 | 결과 PASS, FAIL/WARN issue 0, INFO 2. `validator_version`, `proposal_id`, `proposal_hash`(after_hash), `validated_at` 저장 | 통합 테스트 | 미검증 |
-| AC-02 | 사례 2 | FAIL, issue `VALUE_MISMATCH`(rule_key, 공문 값과 변경안 값 세부) | 통합 테스트(테스트 SQL로 revision 삽입) | 미검증 |
-| AC-03 | 사례 3 | FAIL `EFFECTIVE_DATE_MISMATCH` | 통합 테스트 | 미검증 |
-| AC-04 | 사례 4 | FAIL `UNKNOWN_PRODUCT_KEY` | 통합 테스트 | 미검증 |
-| AC-05 | 사례 5, 6 | FAIL `INVALID_NUMERIC_VALUE`, FAIL `BEFORE_VALUE_MISMATCH` | 통합 테스트 | 미검증 |
-| AC-06 | 사례 7 | WARN `ITEM_REMOVED`, 결과 WARN | 통합 테스트 | 미검증 |
-| AC-07 | 사례 8, 9, 10 (셀러론 기준 checklist 예시 사용) | FAIL `PUBLIC_FACT_MISMATCH`, FAIL `PUBLIC_EVIDENCE_UNCONFIRMED`(필수), WARN(참고용). 결과에 사용한 공개 관측, 약관 version, 근거, fact ID 저장. 셀러론 예시는 `origin=FIXTURE`, 사람 검토 승인이 있으면 적재 거부, v1 기간 조회가 `AVAILABLE`이어도 사용 불가, production에서 적재 설정이 켜지면 기동 거부 | 통합 테스트 + 적용 공문 조회 테스트 + 컨텍스트 테스트 | 미검증 |
-| AC-08 | 사례 11, 12 | FAIL `BASE_CHECKLIST_STALE`, FAIL `TARGET_NOTICE_WITHDRAWN` | 통합 테스트 | 미검증 |
-| AC-09 | 같은 변경안 두 번 검증 | 결과 2건, 이전 결과 불변, 실행 기록 2건. 결과 ID가 다름 | 통합 테스트 | 미검증 |
-| AC-10 | 과거 검증 재조회 | 검증 뒤 공개 관측이 추가돼도 저장된 결과와 issue, 참조 ID는 그대로 | 통합 테스트 | 미검증 |
-| AC-11 | 원자성과 일관성 | (a) issue 저장 중 실패를 유도하면 결과, issue, 성공 실행 기록이 모두 없고 실패 실행 기록만 있음. (b) FAIL issue를 PASS 결과에 붙이면 DB가 거부(복합 FK + CHECK). (c) FAIL 결과를 FAIL issue 없이 commit하면 commit 시점 trigger가 거부. (d) 신규 3개 테이블 append-only 가드와 보호 목록(60 → 66) | 통합 테스트 + schema 테스트 | 미검증 |
-| AC-12 | 적용 공문 조회 반영 | (a) 변경안만 있음 `PENDING_VALIDATION`, PASS/WARN `PENDING_REVIEW`, FAIL `VALIDATION_FAILED`, 오래됨 `VALIDATION_STALE`. (b) `knownAt`을 검증 시각보다 앞으로 두면 그 결과가 보이지 않음. (c) 응답의 `validatedProposalId`, `validationResultId`가 쓰인 결과를 가리킴(제안 1a 채택 시). (d) 모든 경우 `internalChecklistUseAllowed=false`이고 PASS일 때 차단 사유 `HUMAN_REVIEW_PENDING`. (e) 기존 필드 의미 불변, 정답표 fixture 확장 | 통합 테스트 + 정답표 | 미검증 |
-| AC-13 | production | 검증 명령 설정 또는 셀러론 예시 적재 설정이 켜지면 기동 거부(`DEMO_FEATURE_ENABLED_IN_PROD`). `max_validation_age`와 validation policy version은 production 필수 설정이며 없거나 0 이하면 기동 거부 | 컨텍스트 테스트 | 미검증 |
-| AC-14 | 계약과 회귀 | 검증 결과 schema와 정답표 fixture Python 테스트. 기존 Java 106개와 Python 60개 유지 + 신규 통과, skip 0 | 로컬 + CI | 미검증 |
-| AC-15 | 문서 | README에 "자동 검증 구현, 사람 검수와 승인 미구현, 검증 통과는 사용 허용이 아님", core README에 명령, evidence | diff 검토 | 미검증 |
+| AC-01 | 사례 1 | 결과 PASS, FAIL/WARN issue 0, INFO 2. `validator_version`, `proposal_id`, `proposal_hash`(after_hash), `validated_at` 저장 | 통합 테스트 | 자동 검증 통과 (인간 검수 미실시) |
+| AC-02 | 사례 2 | FAIL, issue `VALUE_MISMATCH`(rule_key, 공문 값과 변경안 값 세부) | 통합 테스트(테스트 SQL로 revision 삽입) | 자동 검증 통과 (인간 검수 미실시) |
+| AC-03 | 사례 3 | FAIL `EFFECTIVE_DATE_MISMATCH` | 통합 테스트 | 자동 검증 통과 (인간 검수 미실시) |
+| AC-04 | 사례 4 | FAIL `UNKNOWN_PRODUCT_KEY` | 통합 테스트 | 자동 검증 통과 (인간 검수 미실시) |
+| AC-05 | 사례 5, 6 | FAIL `INVALID_NUMERIC_VALUE`, FAIL `BEFORE_VALUE_MISMATCH` | 통합 테스트 | 자동 검증 통과 (인간 검수 미실시) |
+| AC-06 | 사례 7 | WARN `ITEM_REMOVED`, 결과 WARN | 통합 테스트 | 자동 검증 통과 (인간 검수 미실시) |
+| AC-07 | 사례 8, 9, 10 (셀러론 기준 checklist 예시 사용) | 공개 근거가 확인되고 값이 같으면 INFO `PUBLIC_FACT_MATCH`. FAIL `PUBLIC_FACT_MISMATCH`, FAIL `PUBLIC_EVIDENCE_UNCONFIRMED`(필수), WARN(참고용). 결과에 사용한 공개 관측, 약관 version, 근거, fact ID 저장. 셀러론 예시는 `origin=FIXTURE`, 사람 검토 승인이 있으면 적재 거부, v1 기간 조회가 `AVAILABLE`이어도 사용 불가, production에서 적재 설정이 켜지면 기동 거부 | 통합 테스트 + 적용 공문 조회 테스트 + 컨텍스트 테스트. 참고용 WARN은 데이터에 참고용 참조가 없어 단위 테스트로 검증 | 자동 검증 통과 (인간 검수 미실시) |
+| AC-08 | 사례 11, 12 | FAIL `BASE_CHECKLIST_STALE`, FAIL `TARGET_NOTICE_WITHDRAWN` | 통합 테스트 | 자동 검증 통과 (인간 검수 미실시) |
+| AC-09 | 같은 변경안 두 번 검증, 그리고 새 변경안 revision | 결과 2건, 이전 결과 불변, 실행 기록 2건, 결과 ID가 다름. 새 revision(supersedes)을 만들면 이전 변경안의 결과가 새 revision의 결과로 쓰이지 않는다(조회는 새 revision 기준 `PENDING_VALIDATION`, 두 필드 null) | 통합 테스트 | 자동 검증 통과 (인간 검수 미실시) |
+| AC-10 | 과거 검증 재조회 | 검증 뒤 공개 관측이 추가돼도 저장된 결과와 issue, 참조 ID는 그대로 | 통합 테스트 | 자동 검증 통과 (인간 검수 미실시) |
+| AC-11 | 원자성과 일관성 | (a) issue 저장 중 실패를 유도하면 결과, issue, 성공 실행 기록이 모두 없고 실패 실행 기록만 있음. (b) FAIL issue를 PASS 결과에 붙이거나 WARN issue를 PASS 결과에 붙이면 DB가 거부(복합 FK + CHECK). (c) FAIL issue 없는 FAIL 결과, WARN issue 없는 WARN 결과를 commit하면 저장 완료 시점 검사(deferred constraint trigger)가 거부. (d) 신규 3개 테이블 append-only 가드와 보호 목록. 기존 코드 실제 수치 기준 애플리케이션 테이블 30 → 33, 보호 trigger 60 → 66 | 통합 테스트 + schema 테스트 | 자동 검증 통과 (인간 검수 미실시) |
+| AC-12 | 적용 공문 조회 반영 | (a) 변경안만 있음 `PENDING_VALIDATION`, PASS/WARN `PENDING_REVIEW`, FAIL `VALIDATION_FAILED`, 오래됨 `VALIDATION_STALE`. (b) 과거 조회: `knownAt`을 검증 시각보다 **이른 시각**으로 설정하면 그 결과가 보이지 않고 두 필드는 null. `knownAt`이 검증 시각과 **정확히 같으면** 보인다. (c) 응답의 `validatedProposalId`, `validationResultId`가 실제 조회에 사용한 결과와 대상 변경안을 가리키며, 보이는 결과가 없으면 둘 다 null. (d) 모든 경우 `internalChecklistUseAllowed=false`이고 PASS/WARN일 때 차단 사유 `HUMAN_REVIEW_PENDING`. (e) 기존 필드 의미 불변 | 통합 테스트 | 자동 검증 통과 (인간 검수 미실시) |
+| AC-13 | production | 검증 명령 설정 또는 셀러론 예시 적재 설정이 켜지면 기동 거부(`DEMO_FEATURE_ENABLED_IN_PROD`). `max_validation_age`와 validation policy version은 production 필수 설정이며 없거나 0 이하면 기동 거부 | 컨텍스트 테스트 | 자동 검증 통과 (인간 검수 미실시) |
+| AC-14 | 계약과 회귀 | 검증 결과 schema와 정답표 fixture Python 테스트. 기존 Java 106개와 Python 60개 유지 + 신규 통과. **비공개 자료를 제공한 로컬**: 전체 실행, skip 0. **공개 CI**: 비공개 자료가 필요한 Python 테스트만 정해진 사유("비공개 snapshot artifact가 제공되지 않았습니다")로 skip. 각 환경의 실행, 통과, 실패, 건너뜀 개수를 evidence에 기록 | 로컬 + CI | 자동 검증 통과 (인간 검수 미실시) |
+| AC-15 | 문서 | README에 "자동 검증 구현, 사람 검수와 승인 미구현, 검증 통과는 사용 허용이 아님", core README에 명령, evidence | diff 검토 | 자동 검증 통과 (인간 검수 미실시) |
 
 ## Implementation Plan (초안)
 
-1. **V7 migration.** `automated_validation_result(validation_result_id 'validation:' + run hex PK, dataset_class='DERIVED', proposal_id FK, proposal_hash, validator_version, status, validated_at, public_evidence_refs jsonb, UNIQUE (validation_result_id, status))`, `automated_validation_issue(validation_result_id, result_status, issue_order, severity, code, rule_key NULL, message, details jsonb, PK (result_id, issue_order), FK (result_id, result_status) → result, 심각도와 result_status CHECK)`, commit 시점 개수 검사 constraint trigger, `validation_run(...)`. 셀러론 예시 데이터 2개(TASK-005 형식). 보호 테이블 절차(60 → 66).
+1. **V7 migration.** `automated_validation_result(validation_result_id 'validation:' + run hex PK, dataset_class='DERIVED', proposal_id FK, proposal_hash, validator_version, status, validated_at, public_evidence_refs jsonb, UNIQUE (validation_result_id, status))`, `automated_validation_issue(validation_result_id, result_status, issue_order, severity, code, rule_key NULL, message, details jsonb, PK (result_id, issue_order), FK (result_id, result_status) → result, 심각도와 result_status CHECK)`, 저장 완료 시점 개수 검사 constraint trigger(FAIL 결과는 FAIL issue 1개 이상, WARN 결과는 WARN issue 1개 이상), `validation_run(...)`. 셀러론 예시 데이터 2개(TASK-005 형식). 보호 테이블 절차(테이블 30 → 33, trigger 60 → 66).
 2. **Validator.** 순수 Java `ProposalValidator`: 입력(변경안 항목, 대상 규칙, 기준 항목, 공문 상태, 공개 fact 조회 결과) → issue 목록과 판정. SQL 없음.
 3. **공개 교차 검증 연결.** 기존 `PublicProductObservedStateService`와 `PublicEvidenceConfirmationPolicy`를 `validated_at` 기준으로 호출. 사용한 ID를 결과에 저장.
 4. **저장.** 결과 + issue + 실행 기록 한 트랜잭션. 저장 전 서비스가 개수 일관성 검사.
@@ -118,7 +118,7 @@
 
 변경 파일 예상: V7 SQL 1, 계약 2, fixture 4~5, Java main 7~8, Java test 5~6, Python test 1, 문서 3.
 
-인간의 계획 판단 / 승인 범위: **계획 작성 승인, 제안 3건 판단 반영. 구현 착수는 별도.**
+인간의 계획 판단 / 승인 범위: **설계와 구현 착수 승인.** 제안 1a 채택, 제안 2 승인, 제안 3 조건 유지, 완료 확인 조건 15개 확정(AC-09, 11, 12, 14 보완). 검증 통과만으로 사용 허용 금지. 사람 승인 기능, 화면, AI 기능은 범위 밖. 커밋, push, PR 생성까지. 병합은 사용자. 완료와 인간 검수 통과는 미기록.
 
 ## AI 제안 및 인간 판단 기록
 
@@ -135,15 +135,16 @@
 내용: "어떤 변경안의 결과인지 구분" 조건을 응답에서 충족하려면 nullable 필드 2개가 필요하다. TASK-005에서 보류한 `latestProposalId`를 이 형태로 대체한다.
 대안: 차단 사유 문자열에만 포함(기계 판독 불가), 또는 필드 추가 없이 DB에서만 구분.
 **판단**
-- [ ] 채택 [ ] 수정 [ ] 거절
-- 판단자 / 검토 대상 revision 또는 PR: 사용자 / 판단 대기
+- [x] 채택
+- 판단자 / 검토 대상 revision 또는 PR: 사용자 / PR #19 이후 구현 착수 승인
+- 이유 / 승인 범위: 실제 조회에 사용한 검증 결과와 그 대상 변경안을 가리키고, 보이는 결과가 없으면 둘 다 null.
 
 ### 제안 2: 결과와 issue 일관성 보장 수단
 
 **판단**
 - [x] 수정
 - 판단자 / 검토 대상 revision 또는 PR: 사용자 / 이 문서 PR
-- 이유 / 승인 범위: 결과와 세부 오류를 한 트랜잭션으로 저장하고 중간 실패 시 전부 취소. 서비스 검사와 테스트만으로 충분한지와 DB 제약이 필요한 불일치의 근거를 제시(위 "결과와 issue 일관성" 절). AI 결론: 행 단위 불일치는 DB 복합 FK + CHECK, 개수 단위는 서비스 검사 + 테스트 + commit 시점 trigger.
+- 이유 / 승인 범위: 결과와 세부 오류를 한 트랜잭션으로 저장하고 중간 실패 시 전부 취소. DB 제약과 저장 완료 시점 검사로 모순된 기록을 막는 방식 승인(구현 착수 시). FAIL 오류 없는 FAIL 결과와 WARN 오류 없는 WARN 결과가 거부되는지 검증(AC-11c).
 
 ### 제안 3: 셀러론 기준 checklist 예시 추가
 
@@ -154,4 +155,22 @@
 
 ## Implementation Result / AI self-review / 인간 검수 / 결정 기록
 
-미실행 / 미기록. 구현은 사용자 착수 승인 뒤.
+### 구현 결과 (AI 작성, 사실)
+
+- 검증 대상: 브랜치 `feat/proposal-automated-validation`, PR(본문에 commit 기재). 상세: [검증 기록](../evidence/CHECKLIST_PROPOSAL_AUTOMATED_VALIDATION_EVIDENCE.md).
+- Java `./gradlew clean test bootJar --offline --no-daemon`: 130건 실행, 통과 130, 실패 0, 건너뜀 0 (기존 106 + 신규 24).
+- Python 로컬(비공개 artifact 제공): 62건 실행, 통과 62, 실패 0, 건너뜀 0. 공개 CI 조건(비공개 artifact 없음): 62건 실행, 통과 60, 건너뜀 2(사유 "비공개 snapshot artifact가 제공되지 않았습니다."). 공개 CI의 실제 실행은 PR checks로 확인.
+- 보호 수치(코드 기준): migration 7, 애플리케이션 테이블 33, 보호 trigger 66.
+- AC-01~15는 자동 검증을 통과했다. 인간 검수와 완료 판정은 미실시.
+
+### AI self-review
+
+- 검증 PASS가 사용 허용으로 이어지는 경로 없음: 조회 서비스는 정책에 `validationFresh=false`를 그대로 넘기고 PASS/WARN은 `HUMAN_REVIEW_PENDING`으로 차단된다(테스트로 확인).
+- 결과와 issue 모순 차단은 서비스 검사 + 복합 FK/CHECK + commit 시점 trigger 세 겹이며 각각 테스트가 있다.
+- 범위 밖 변경 없음: 사람 승인, 화면, AI 기능 미구현. 기존 응답 필드 의미 불변.
+- 기존 테스트 기대값 변경은 수치(schema 7, 33, 66)와 fixture family 수(2)에 한정했고 변경 목록을 evidence에 적었다.
+- 한계: CLI 전용, 참고용 공개 참조 데이터 없음(단위 테스트만), 유효 기간 기준은 평가 시각.
+
+### 인간 검수 / 결정
+
+미기록. 사용자 검수 뒤 기록.

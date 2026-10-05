@@ -1,0 +1,28 @@
+{
+  "dataset_class": "DERIVED",
+  "validation_result_id": "validation:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "proposal_id": "checklist-proposal:sha256:59ad46b87dbd57dc8dc26e6feae9502f6eb5310d68b643b231d63d0b7025d524",
+  "proposal_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "validator_version": "proposal-validator-v1",
+  "status": "PASS",
+  "validated_at": "2026-10-05T03:00:00Z",
+  "public_evidence_refs": [],
+  "issues": [
+    {
+      "issue_order": 0,
+      "severity": "INFO",
+      "code": "PUBLIC_CROSS_CHECK_NOT_APPLICABLE",
+      "rule_key": "CHECK_CUSTOMER_CONTRACT_DATE",
+      "message": "이 규칙에는 공개 근거 교차 검증 항목이 없습니다.",
+      "details": {}
+    },
+    {
+      "issue_order": 1,
+      "severity": "INFO",
+      "code": "PUBLIC_CROSS_CHECK_NOT_APPLICABLE",
+      "rule_key": "CHECK_PREPAYMENT_FEE_RATE",
+      "message": "이 규칙에는 공개 근거 교차 검증 항목이 없습니다.",
+      "details": {}
+    }
+  ]
+}

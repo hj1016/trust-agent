@@ -3,7 +3,7 @@ import json
 import unittest
 from pathlib import Path
 
-from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -54,8 +54,9 @@ class ChecklistProposalContractTest(unittest.TestCase):
     def test_fixture_checklist_is_marked_as_fixture_and_matches_schema(self):
         versions = [load(path) for path in sorted(FIXTURE_ROOT.glob("*.approved-checklist.json"))]
         schedules = [load(path) for path in sorted(FIXTURE_ROOT.glob("*.schedule.json"))]
-        self.assertEqual(1, len(versions))
-        self.assertEqual(1, len(schedules))
+        # TASK-005 중도상환수수료 + TASK-006 셀러론(공개 근거 교차 검증용)
+        self.assertEqual(2, len(versions))
+        self.assertEqual(2, len(schedules))
         for version in versions:
             validate(version, "synthetic-approved-checklist-fixture.schema.json")
             self.assertEqual("FIXTURE", version["origin"])
@@ -77,6 +78,41 @@ class ChecklistProposalContractTest(unittest.TestCase):
         for item, rule in zip(version["items"], notice["rules"]):
             self.assertEqual(content(rule), {key: item[key] for key in content(rule)})
             self.assertEqual("policy-rule:" + sha256(rule), item["source_rule_version_id"])
+
+    def test_seller_fixture_items_mirror_the_seller_v1_notice_rules(self):
+        # TASK-006 AC-07: 셀러론 예시도 같은 조건(FIXTURE 출처, 합성 고지, v1 규칙과 1:1)
+        version = load(FIXTURE_ROOT / "seller-loan-checklist-v1.approved-checklist.json")
+        notice = load(NOTICE_ROOT / "seller-loan-checklist-v1.json")
+        self.assertEqual("FIXTURE", version["origin"])
+        self.assertEqual(notice["notice_id"], version["notice_id"])
+        self.assertEqual("SIN-SELLER-CHECKLIST", version["family_id"])
+        self.assertEqual([rule["rule_key"] for rule in notice["rules"]], [item["rule_key"] for item in version["items"]])
+        for item, rule in zip(version["items"], notice["rules"]):
+            self.assertEqual(content(rule), {key: item[key] for key in content(rule)})
+            self.assertEqual("policy-rule:" + sha256(rule), item["source_rule_version_id"])
+        schedule = load(FIXTURE_ROOT / "seller-loan-checklist-v1.schedule.json")
+        self.assertEqual([version["approved_checklist_version_id"]], [entry["approved_checklist_version_id"] for entry in schedule["entries"]])
+        self.assertEqual(notice["effective_from"], schedule["entries"][0]["effective_from"])
+
+    def test_expected_validation_result_matches_schema_and_consistency_rules(self):
+        # TASK-006 AC-14: 검증 결과 계약. 정답표는 중도상환수수료 v2 변경안의 PASS 결과다.
+        expected = load(ROOT / "contracts" / "fixtures" / "prepayment-fee-v2-validation.expected.json")
+        validate(expected, "automated-validation-result.schema.json")
+        proposal = load(EXPECTED_PROPOSAL)
+        self.assertEqual(proposal["proposal_id"], expected["proposal_id"])
+        self.assertEqual("PASS", expected["status"])
+        self.assertEqual(["INFO", "INFO"], [issue["severity"] for issue in expected["issues"]])
+        self.assertEqual([item["rule_key"] for item in proposal["items"]], [issue["rule_key"] for issue in expected["issues"]])
+
+        fail_without_fail_issue = dict(expected, status="FAIL")
+        with self.assertRaises(ValidationError):
+            validate(fail_without_fail_issue, "automated-validation-result.schema.json")
+        warn_without_warn_issue = dict(expected, status="WARN")
+        with self.assertRaises(ValidationError):
+            validate(warn_without_warn_issue, "automated-validation-result.schema.json")
+        pass_with_fail_issue = dict(expected, issues=[dict(expected["issues"][0], severity="FAIL")])
+        with self.assertRaises(ValidationError):
+            validate(pass_with_fail_issue, "automated-validation-result.schema.json")
 
     def test_expected_proposal_matches_schema_and_recomputes_from_notices(self):
         expected = load(EXPECTED_PROPOSAL)

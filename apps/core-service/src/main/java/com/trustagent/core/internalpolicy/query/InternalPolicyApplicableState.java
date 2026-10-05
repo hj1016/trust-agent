@@ -26,7 +26,9 @@ public record InternalPolicyApplicableState(
         List<String> candidateNoticeIds,
         Notice selectedNotice,
         List<Rule> rules,
-        ApprovedChecklist approvedChecklist) {
+        ApprovedChecklist approvedChecklist,
+        String validatedProposalId,
+        String validationResultId) {
 
     public record Notice(
             String noticeId,
