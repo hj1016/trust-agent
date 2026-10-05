@@ -1,6 +1,6 @@
 # TASK-005 공문 변경에서 checklist 변경 후보(proposal) 생성
 
-- 상태: **검증/검수 대기.** 사용자 착수 승인 뒤 구현과 자동 검증 완료. PR 병합과 인간 검수, Explainability Gate 대기.
+- 상태: **완료.** 구현과 자동 검증 완료, PR #18 병합, 인간 검수와 Explainability Gate 통과(결정자 사용자). 승인 범위는 아래 결정 기록 참조.
 - 담당자 / 인간 결정자: AI(계획, 구현, 자동 검증, self-review) / 사용자(범위, AC 확정, 제안 판단, 착수 승인, 검수, Explainability Gate)
 - 요구사항 출처: [PLAN-001](PLAN-001_중도상환수수료-흐름-Task-분할-초안.md) TASK-005, [ADR-008](../adr/ADR-008-internal-notice-effective-policy-and-review.md) "체크리스트 변경 후보와 revision", [ADR-003](../adr/ADR-003-validation-and-human-approval.md), README MVP 목표 5단계 전반부. 최종 기획서 대표 시나리오(중도상환수수료율 1.2퍼센트 → 0.8퍼센트).
 - 관련 Issue / PR / ADR / 이전 Task: PR #11(기준선), [TASK-001](TASK-001_합성-공문-조회-자산-보존.md), ADR-009(PostgreSQL 유지), 후속 TASK-006(자동 검증), TASK-007(사람 결정)
@@ -174,7 +174,10 @@ Vertical slice: fixture 적재 → generate command → proposal 저장 → 조�
 
 ## 인간 검수와 Explainability Gate
 
-미기록. 아래 검수 자료는 AI가 작성한 확인용 자료이며 검수 통과 기록이 아니다.
+- REVIEW_CHECKLIST 적용 / 검수자 / 검수 대상 revision / 결과: [검수 체크리스트](../development/REVIEW_CHECKLIST.md) / 사용자 / PR #18(브랜치 `feat/checklist-change-proposal`, 커밋 `ef57cc7`, `8826995`) / **통과**
+- 인간이 확인한 내용: 아래 검수 자료의 대표 변경안 전후 값, 반복 실행 시 중복 방지, 기준 checklist가 없을 때의 처리, 테스트용 데이터가 실제 승인이나 사용 허용을 대신하지 않는다는 근거, production 차단 결과와 원격 CI 결과를 확인했고 동작과 한계를 이해했으며 승인한 범위에 부합한다고 기록했다.
+- Explainability Gate: **통과**(결정자 사용자).
+- 아래 검수 자료는 AI가 작성한 확인용 자료다.
 
 ### 인간 검수 자료
 
@@ -204,4 +207,7 @@ Vertical slice: fixture 적재 → generate command → proposal 저장 → 조�
 
 ## 결정 기록과 완료
 
-완료 판정 대기(사용자). 후속: TASK-006 자동 검증.
+- 최종 결정 / 결정자 / 승인 범위 / 검토 대상 revision 또는 PR: **완료** / 사용자 / 확정한 완료 확인 조건 25개와 계획대로의 구현(checklist 변경안 생성, 테스트용 승인 checklist 예시 적재, production demo 설정 차단, 적용 공문 조회 응답 계약 유지) / PR #18
+- Acceptance Criteria 충족 / evidence / ADR / PR: AC-01~AC-25 전부 통과. evidence `docs/evidence/CHECKLIST_PROPOSAL_GENERATION_EVIDENCE.md`. ADR-003, ADR-008. PR #18.
+- 이 완료는 **자동 검증, 인간 승인, 화면까지 완료됐다는 뜻이 아니다.**
+- 잔여 위험 / 후속 Task: 변경안이 있어도 사용 허용은 바뀌지 않음. TASK-006 자동 검증(계획 PR #19), TASK-007 사람 결정.
