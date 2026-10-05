@@ -21,5 +21,8 @@ trust-agent:
       url: ${TRUST_AGENT_IMPORT_DB_URL}
       username: ${TRUST_AGENT_IMPORT_DB_USERNAME}
       password: ${TRUST_AGENT_IMPORT_DB_PASSWORD}
+  validation-policy:
+    max-validation-age: ${TRUST_AGENT_VALIDATION_MAX_AGE}
+    policy-version: ${TRUST_AGENT_VALIDATION_POLICY_VERSION}
   schema:
     expected-version: ${TRUST_AGENT_SCHEMA_EXPECTED_VERSION}

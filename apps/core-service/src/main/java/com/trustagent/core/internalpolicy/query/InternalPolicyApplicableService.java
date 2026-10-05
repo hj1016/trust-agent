@@ -28,16 +28,19 @@ class InternalPolicyApplicableService {
     private final InternalPolicyApplicableRepository repository;
     private final InternalChecklistUsePolicy policy;
     private final BusinessTimePolicy businessTimePolicy;
+    private final com.trustagent.core.internalpolicy.InternalValidationPolicyProperties validationPolicy;
     private final Clock clock;
 
     InternalPolicyApplicableService(
             InternalPolicyApplicableRepository repository,
             InternalChecklistUsePolicy policy,
             BusinessTimePolicy businessTimePolicy,
+            com.trustagent.core.internalpolicy.InternalValidationPolicyProperties validationPolicy,
             Clock clock) {
         this.repository = repository;
         this.policy = policy;
         this.businessTimePolicy = businessTimePolicy;
+        this.validationPolicy = validationPolicy;
         this.clock = clock;
     }
 
@@ -68,6 +71,8 @@ class InternalPolicyApplicableService {
         List<String> warningReasons = new ArrayList<>();
         List<InternalPolicyApplicableState.Rule> rules = List.of();
         InternalPolicyApplicableState.ApprovedChecklist checklist = null;
+        String validatedProposalId = null;
+        String validationResultId = null;
 
         addTimeReasons(historicalKnownAt, futureBusinessDate, blockingReasons);
         addNoticeReasons(selection, blockingReasons);
@@ -91,8 +96,30 @@ class InternalPolicyApplicableService {
                 rules = repository.findRules(extraction.orElseThrow().extractionAttemptId());
                 checklist = findChecklist(familyId, selected.noticeId(), businessDate, knownAt).orElse(null);
                 if (checklist == null) {
-                    checklistConditions.add(ChecklistStatus.PENDING_VALIDATION);
-                    blockingReasons.add("CHECKLIST_VALIDATION_PENDING");
+                    // TASK-006: knownAt까지 보이는 최신 변경안의 최신 자동 검증 결과로 상태를 정한다.
+                    // 어떤 결과도 사람 승인을 대신하지 않으므로 사용 허용은 여전히 false다.
+                    var proposal = repository.findLatestVisibleProposal(familyId, selected.noticeId(), knownAt);
+                    var validation = proposal.flatMap(row ->
+                            repository.findLatestVisibleValidation(row.proposalId(), knownAt));
+                    if (validation.isEmpty()) {
+                        checklistConditions.add(ChecklistStatus.PENDING_VALIDATION);
+                        blockingReasons.add("CHECKLIST_VALIDATION_PENDING");
+                    } else {
+                        var result = validation.orElseThrow();
+                        validatedProposalId = proposal.orElseThrow().proposalId();
+                        validationResultId = result.validationResultId();
+                        if ("FAIL".equals(result.status())) {
+                            checklistConditions.add(ChecklistStatus.VALIDATION_FAILED);
+                            blockingReasons.add("VALIDATION_FAILED");
+                        } else if (!policy.validationFresh(
+                                result.validatedAt(), evaluatedAt, validationPolicy.maxValidationAge())) {
+                            checklistConditions.add(ChecklistStatus.VALIDATION_STALE);
+                            blockingReasons.add("VALIDATION_STALE");
+                        } else {
+                            checklistConditions.add(ChecklistStatus.PENDING_REVIEW);
+                            blockingReasons.add("HUMAN_REVIEW_PENDING");
+                        }
+                    }
                 } else {
                     checklistConditions.add(ChecklistStatus.AVAILABLE);
                     // Day 5c가 validation freshness, public evidence와 semantic match를 연결하기 전에는
@@ -131,7 +158,9 @@ class InternalPolicyApplicableService {
                 selection.candidateIds(),
                 toNotice(selection.selected()),
                 rules,
-                checklist);
+                checklist,
+                validatedProposalId,
+                validationResultId);
     }
 
     private Optional<InternalPolicyApplicableState.ApprovedChecklist> findChecklist(

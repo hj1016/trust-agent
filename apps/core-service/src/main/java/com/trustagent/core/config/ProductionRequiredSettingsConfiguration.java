@@ -17,7 +17,9 @@ public class ProductionRequiredSettingsConfiguration {
             "TRUST_AGENT_FRESHNESS_POLICY_VERSION",
             "TRUST_AGENT_MAX_CONFIRMATION_AGE",
             "TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE",
-            "TRUST_AGENT_INTERNAL_TIMEZONE_POLICY_VERSION");
+            "TRUST_AGENT_INTERNAL_TIMEZONE_POLICY_VERSION",
+            "TRUST_AGENT_VALIDATION_MAX_AGE",
+            "TRUST_AGENT_VALIDATION_POLICY_VERSION");
     static final List<String> REQUIRED_BASELINE_IMPORT_SETTINGS = List.of(
             "TRUST_AGENT_IMPORT_DB_URL",
             "TRUST_AGENT_IMPORT_DB_USERNAME",
@@ -30,7 +32,8 @@ public class ProductionRequiredSettingsConfiguration {
     /** test/demo 전용 기능. production에서 하나라도 켜져 있으면 기동을 거부한다. */
     static final List<String> DEMO_ONLY_SETTINGS = List.of(
             "trust-agent.proposal-generation.enabled",
-            "trust-agent.fixture-approved-checklist.enabled");
+            "trust-agent.fixture-approved-checklist.enabled",
+            "trust-agent.proposal-validation.enabled");
 
     public ProductionRequiredSettingsConfiguration(Environment environment) {
         validate(environment);
@@ -60,6 +63,15 @@ public class ProductionRequiredSettingsConfiguration {
                 .toList();
         if (!missing.isEmpty()) {
             throw new IllegalStateException("운영 필수 설정이 없습니다: " + String.join(", ", missing));
+        }
+        String maxValidationAge = environment.getProperty("TRUST_AGENT_VALIDATION_MAX_AGE");
+        try {
+            java.time.Duration age = org.springframework.boot.convert.DurationStyle.detectAndParse(maxValidationAge);
+            if (age.isZero() || age.isNegative()) {
+                throw new IllegalStateException("TRUST_AGENT_VALIDATION_MAX_AGE는 0보다 커야 합니다: " + maxValidationAge);
+            }
+        } catch (IllegalArgumentException invalid) {
+            throw new IllegalStateException("TRUST_AGENT_VALIDATION_MAX_AGE 형식이 올바르지 않습니다: " + maxValidationAge, invalid);
         }
     }
 }

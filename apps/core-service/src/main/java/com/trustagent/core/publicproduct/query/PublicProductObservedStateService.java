@@ -6,14 +6,14 @@ import java.time.format.DateTimeParseException;
 import org.springframework.stereotype.Service;
 
 @Service
-class PublicProductObservedStateService {
+public class PublicProductObservedStateService {
 
     private final PublicProductObservedStateRepository repository;
     private final PublicEvidenceConfirmationPolicy policy;
     private final PublicEvidencePolicyProperties properties;
     private final Clock clock;
 
-    PublicProductObservedStateService(
+    public PublicProductObservedStateService(
             PublicProductObservedStateRepository repository,
             PublicEvidenceConfirmationPolicy policy,
             PublicEvidencePolicyProperties properties,
@@ -24,7 +24,8 @@ class PublicProductObservedStateService {
         this.clock = clock;
     }
 
-    PublicProductObservedState get(String productKey, String requestedAsOf) {
+    /** TASK-006 변경안 검증이 공개 근거 교차 검증에 같은 조회 경로를 쓴다. 동작 변경 없음. */
+    public PublicProductObservedState get(String productKey, String requestedAsOf) {
         Instant evaluatedAt = clock.instant();
         Instant asOf = parseAsOf(requestedAsOf, evaluatedAt);
         var product = repository.findProduct(productKey).orElseThrow(() ->

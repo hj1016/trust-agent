@@ -17,12 +17,12 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 @Repository
-class PublicProductObservedStateRepository {
+public class PublicProductObservedStateRepository {
 
     private final JdbcClient jdbc;
     private final ObjectMapper objectMapper;
 
-    PublicProductObservedStateRepository(JdbcClient jdbc, ObjectMapper objectMapper) {
+    public PublicProductObservedStateRepository(JdbcClient jdbc, ObjectMapper objectMapper) {
         this.jdbc = jdbc;
         this.objectMapper = objectMapper;
     }

@@ -83,10 +83,11 @@ class InternalPolicyApplicableIntegrationTest {
                 .importBaseline(root, "baseline:89898989898989898989898989898989");
         new SyntheticInternalImporter(JdbcClient.create(dataSource), objectMapper, manager, "Asia/Seoul")
                 .importBaseline(root, "synthetic-import:89898989898989898989898989898989");
-        // TASK-005: 중도상환수수료 family의 test/demo 전용 승인 checklist 예시 데이터(origin=FIXTURE)
+        // TASK-005/006: 중도상환수수료와 셀러론 family의 test/demo 전용 승인 checklist 예시 데이터(origin=FIXTURE)
         new FixtureApprovedChecklistLoader(JdbcClient.create(dataSource), objectMapper, manager, CLOCK)
                 .load(root, "checklist-fixture-run:89898989898989898989898989898989");
         insertApprovedSchedules();
+        insertProposalsAndValidationResults();
         insertRetroactiveFamily();
         insertWithdrawnFamily();
         insertBrokenChainFamily();
@@ -296,8 +297,8 @@ class InternalPolicyApplicableIntegrationTest {
     }
 
     @Test
-    void applicableResponseContractIsUnchangedByProposalWork() throws Exception {
-        // TASK-005 AC-22: 응답 필드 집합 불변. latestProposalId 없음(제안 3 보류).
+    void applicableResponseContractAddsOnlyTheTwoValidationFields() throws Exception {
+        // TASK-005 AC-22 + TASK-006 제안 1a: 기존 19개 필드에 validatedProposalId, validationResultId만 추가. latestProposalId 없음.
         JsonNode result = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-09-25T02:00:00Z")));
         java.util.Set<String> fields = new java.util.TreeSet<>();
         result.propertyNames().forEach(fields::add);
@@ -305,8 +306,148 @@ class InternalPolicyApplicableIntegrationTest {
                 "familyId", "datasetClass", "synthetic", "disclaimer", "businessDate", "knownAt", "evaluatedAt",
                 "evaluatedBusinessDate", "businessDateInFuture", "historicalKnownAt", "noticeSelectionStatus",
                 "checklistAvailabilityStatus", "blockingReasons", "warningReasons", "internalChecklistUseAllowed",
-                "candidateNoticeIds", "selectedNotice", "rules", "approvedChecklist")), fields);
+                "candidateNoticeIds", "selectedNotice", "rules", "approvedChecklist",
+                "validatedProposalId", "validationResultId")), fields);
         assertFalse(fields.contains("latestProposalId"));
+        assertTrue(result.get("validatedProposalId").isNull());
+        assertTrue(result.get("validationResultId").isNull());
+    }
+
+    // ---- TASK-006 AC-12: 자동 검증 결과의 조회 반영. 검증 결과는 승인이 아니므로 사용 허용은 항상 false ----
+
+    private static final String PROPOSAL_1 = "checklist-proposal:sha256:" + "1".repeat(64);
+    private static final String PROPOSAL_2 = "checklist-proposal:sha256:" + "2".repeat(64);
+    private static final String RESULT_FAIL = "validation:" + "f".repeat(32);
+    private static final String RESULT_WARN = "validation:" + "b".repeat(32);
+    private static final String RESULT_PASS = "validation:" + "c".repeat(32);
+
+    @Test
+    void validationResultDrivesChecklistStatusWithoutAllowingUse() throws Exception {
+        // (a) 변경안만 보이고 결과는 아직 없음 → PENDING_VALIDATION, 두 필드 null
+        JsonNode proposalOnly = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-03T00:59:59Z")));
+        assertEquals("PENDING_VALIDATION", proposalOnly.get("checklistAvailabilityStatus").stringValue());
+        assertTrue(proposalOnly.get("validatedProposalId").isNull());
+        assertTrue(proposalOnly.get("validationResultId").isNull());
+
+        // FAIL → VALIDATION_FAILED
+        JsonNode failed = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-03T12:00:00Z")));
+        assertEquals("VALIDATION_FAILED", failed.get("checklistAvailabilityStatus").stringValue());
+        assertTrue(strings(failed.get("blockingReasons")).contains("VALIDATION_FAILED"));
+        assertEquals(PROPOSAL_1, failed.get("validatedProposalId").stringValue());
+        assertEquals(RESULT_FAIL, failed.get("validationResultId").stringValue());
+        assertFalse(failed.get("internalChecklistUseAllowed").booleanValue());
+
+        // WARN → PENDING_REVIEW (사람 검토 대기). 유효 기간은 knownAt이 아니라 평가 시각(2026-10-05T03:00:00Z) 기준이다.
+        JsonNode warned = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T10:00:00Z")));
+        assertEquals("PENDING_REVIEW", warned.get("checklistAvailabilityStatus").stringValue());
+        assertTrue(strings(warned.get("blockingReasons")).contains("HUMAN_REVIEW_PENDING"));
+        assertEquals(RESULT_WARN, warned.get("validationResultId").stringValue());
+        assertFalse(warned.get("internalChecklistUseAllowed").booleanValue());
+
+        // PASS → PENDING_REVIEW. 검증 통과가 사용 허용을 뜻하지 않는다.
+        JsonNode passed = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T19:59:59Z")));
+        assertEquals("PENDING_REVIEW", passed.get("checklistAvailabilityStatus").stringValue());
+        assertTrue(strings(passed.get("blockingReasons")).contains("HUMAN_REVIEW_PENDING"));
+        assertFalse(strings(passed.get("blockingReasons")).contains("CHECKLIST_VALIDATION_PENDING"));
+        assertEquals(PROPOSAL_1, passed.get("validatedProposalId").stringValue());
+        assertEquals(RESULT_PASS, passed.get("validationResultId").stringValue());
+        assertFalse(passed.get("internalChecklistUseAllowed").booleanValue());
+        assertTrue(passed.get("approvedChecklist").isNull());
+    }
+
+    @Test
+    void knownAtEarlierThanValidatedAtHidesTheResultAndEqualTimeShowsIt() throws Exception {
+        // (b) PASS 결과 validated_at = 2026-10-04T12:00:00Z. 1초 이른 knownAt은 직전 WARN 결과를 본다.
+        JsonNode oneSecondBefore = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T11:59:59Z")));
+        assertEquals(RESULT_WARN, oneSecondBefore.get("validationResultId").stringValue());
+
+        JsonNode exactlyEqual = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T12:00:00Z")));
+        assertEquals(RESULT_PASS, exactlyEqual.get("validationResultId").stringValue());
+        assertEquals("PENDING_REVIEW", exactlyEqual.get("checklistAvailabilityStatus").stringValue());
+
+        // FAIL 결과 validated_at = 2026-10-03T01:00:00Z. 그보다 이른 knownAt에는 어떤 결과도 보이지 않는다.
+        JsonNode beforeAnyResult = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-03T00:59:59Z")));
+        assertTrue(beforeAnyResult.get("validationResultId").isNull());
+        assertEquals("PENDING_VALIDATION", beforeAnyResult.get("checklistAvailabilityStatus").stringValue());
+    }
+
+    @Test
+    void newProposalRevisionDoesNotInheritThePreviousProposalResults() throws Exception {
+        // 새 revision(PROPOSAL_2, created_at 2026-10-04T20:00:00Z)이 보이면 이전 변경안의 PASS 결과를 쓰지 않는다.
+        JsonNode newRevision = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T20:00:00Z")));
+        assertEquals("PENDING_VALIDATION", newRevision.get("checklistAvailabilityStatus").stringValue());
+        assertTrue(strings(newRevision.get("blockingReasons")).contains("CHECKLIST_VALIDATION_PENDING"));
+        assertTrue(newRevision.get("validatedProposalId").isNull());
+        assertTrue(newRevision.get("validationResultId").isNull());
+
+        JsonNode defaultKnownAt = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", null)));
+        assertEquals("PENDING_VALIDATION", defaultKnownAt.get("checklistAvailabilityStatus").stringValue());
+        assertTrue(defaultKnownAt.get("validatedProposalId").isNull());
+    }
+
+    @Test
+    void validationOlderThanMaxAgeIsStaleAndStillBlocked() throws Exception {
+        // PASS validated_at 2026-10-04T12:00:00Z, 유효 기간 24h. 평가 시각을 24h + 1초 뒤로 옮기면 오래됨.
+        CLOCK.set(Instant.parse("2026-10-05T12:00:01Z"));
+        try {
+            JsonNode stale = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T19:59:59Z")));
+            assertEquals("VALIDATION_STALE", stale.get("checklistAvailabilityStatus").stringValue());
+            assertTrue(strings(stale.get("blockingReasons")).contains("VALIDATION_STALE"));
+            assertEquals(RESULT_PASS, stale.get("validationResultId").stringValue());
+            assertFalse(stale.get("internalChecklistUseAllowed").booleanValue());
+
+            // 정확히 24h는 아직 유효하다.
+            CLOCK.set(Instant.parse("2026-10-05T12:00:00Z"));
+            JsonNode exact = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T19:59:59Z")));
+            assertEquals("PENDING_REVIEW", exact.get("checklistAvailabilityStatus").stringValue());
+        } finally {
+            CLOCK.reset();
+        }
+    }
+
+    @Test
+    void sellerFixtureChecklistIsVisibleBeforeHumanRevisionsButNeverUnlocksUse() throws Exception {
+        // TASK-006 AC-07: 셀러론 fixture 일정(2026-09-14 생성)은 사람 검토 일정(2026-09-18)보다 앞선 knownAt에서 보이지만 사용 불가.
+        JsonNode v1 = body(get(path("SIN-SELLER-CHECKLIST", "2026-09-16", "2026-09-16T00:00:00Z")));
+        assertEquals("AVAILABLE", v1.get("checklistAvailabilityStatus").stringValue());
+        assertEquals("approved-checklist:5741d977175e7637738a43d95aeb8c6d",
+                v1.get("approvedChecklist").get("approvedChecklistVersionId").stringValue());
+        assertEquals("checklist-schedule:ca9f7b5750c8e75cca9dd73d5813cc9b",
+                v1.get("approvedChecklist").get("scheduleRevisionId").stringValue());
+        assertFalse(v1.get("internalChecklistUseAllowed").booleanValue());
+    }
+
+    private void insertProposalsAndValidationResults() throws Exception {
+        String base = "approved-checklist:2eaa5be6af97d149ee1d05a293c7e3a2";
+        try (Connection connection = dataSource.getConnection()) {
+            connection.setAutoCommit(false);
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("""
+                        insert into checklist_change_proposal values
+                        ('%s','DERIVED','SIN-PREPAYMENT-FEE','%s','SIN-PREPAYMENT-FEE-V2','proposal-generator-v1',
+                         null,null,'%s','%s',0,'2026-10-03T00:00:00Z'),
+                        ('%s','DERIVED','SIN-PREPAYMENT-FEE','%s','SIN-PREPAYMENT-FEE-V2','proposal-generator-v1',
+                         '%s','재생성','%s','%s',0,'2026-10-04T20:00:00Z')
+                        """.formatted(PROPOSAL_1, base, HASH, HASH, PROPOSAL_2, base, PROPOSAL_1, HASH, HASH));
+                statement.execute("""
+                        insert into automated_validation_result
+                            (validation_result_id, dataset_class, proposal_id, proposal_hash, validator_version, status, validated_at)
+                        values
+                        ('%s','DERIVED','%s','%s','proposal-validator-v1','FAIL','2026-10-03T01:00:00Z'),
+                        ('%s','DERIVED','%s','%s','proposal-validator-v1','WARN','2026-10-04T08:00:00Z'),
+                        ('%s','DERIVED','%s','%s','proposal-validator-v1','PASS','2026-10-04T12:00:00Z')
+                        """.formatted(RESULT_FAIL, PROPOSAL_1, HASH, RESULT_WARN, PROPOSAL_1, HASH, RESULT_PASS, PROPOSAL_1, HASH));
+                statement.execute("""
+                        insert into automated_validation_issue
+                            (validation_result_id, result_status, issue_order, severity, code, rule_key, message)
+                        values
+                        ('%s','FAIL',0,'FAIL','VALUE_MISMATCH','CHECK_PREPAYMENT_FEE_RATE','테스트 FAIL issue'),
+                        ('%s','WARN',0,'WARN','MISSING_CONDITIONS','CHECK_PREPAYMENT_FEE_RATE','테스트 WARN issue'),
+                        ('%s','PASS',0,'INFO','PUBLIC_CROSS_CHECK_NOT_APPLICABLE',null,'테스트 INFO issue')
+                        """.formatted(RESULT_FAIL, RESULT_WARN, RESULT_PASS));
+            }
+            connection.commit();
+        }
     }
 
     @Test
@@ -333,7 +474,7 @@ class InternalPolicyApplicableIntegrationTest {
             statement.execute("""
                     insert into approved_checklist_schedule_revision values
                     ('checklist-schedule:11111111111111111111111111111111','SYNTHETIC_INTERNAL',
-                     'SIN-SELLER-CHECKLIST',null,'2026-09-18T00:00:00Z','%s'),
+                     'SIN-SELLER-CHECKLIST','checklist-schedule:ca9f7b5750c8e75cca9dd73d5813cc9b','2026-09-18T00:00:00Z','%s'),
                     ('checklist-schedule:22222222222222222222222222222222','SYNTHETIC_INTERNAL',
                      'SIN-SELLER-CHECKLIST','checklist-schedule:11111111111111111111111111111111',
                      '2026-10-02T00:00:00Z','%s')

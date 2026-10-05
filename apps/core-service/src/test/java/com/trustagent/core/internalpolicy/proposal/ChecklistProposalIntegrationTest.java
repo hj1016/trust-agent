@@ -99,18 +99,19 @@ class ChecklistProposalIntegrationTest {
 
     @Test
     void fixtureLoadIsIdempotentAndRecordsEveryRun() {
+        // TASK-006: 셀러론 예시(공개 근거 교차 검증용)가 추가돼 fixture family는 2개다.
         var first = loader.load(repositoryRoot, "checklist-fixture-run:" + "a".repeat(32));
-        assertEquals(1, first.counts().get("approved_checklist_version"));
-        assertEquals(2, first.counts().get("approved_checklist_item"));
-        assertEquals(1, first.counts().get("approved_checklist_schedule_revision"));
-        assertEquals(1, first.counts().get("approved_checklist_schedule_entry"));
-        assertEquals("FIXTURE", single("select origin from approved_checklist_version"));
+        assertEquals(2, first.counts().get("approved_checklist_version"));
+        assertEquals(4, first.counts().get("approved_checklist_item"));
+        assertEquals(2, first.counts().get("approved_checklist_schedule_revision"));
+        assertEquals(2, first.counts().get("approved_checklist_schedule_entry"));
+        assertEquals("FIXTURE", single("select string_agg(distinct origin, ',') from approved_checklist_version"));
 
         var second = loader.load(repositoryRoot, "checklist-fixture-run:" + "b".repeat(32));
         assertEquals(0, second.counts().get("approved_checklist_version"));
-        assertEquals(1, count("approved_checklist_version"));
-        assertEquals(2, count("approved_checklist_item"));
-        assertEquals(1, count("approved_checklist_schedule_revision"));
+        assertEquals(2, count("approved_checklist_version"));
+        assertEquals(4, count("approved_checklist_item"));
+        assertEquals(2, count("approved_checklist_schedule_revision"));
         assertEquals(2, count("approved_checklist_fixture_run"));
         assertEquals(first.fingerprint(), second.fingerprint());
     }
@@ -123,8 +124,8 @@ class ChecklistProposalIntegrationTest {
         var exception = assertThrows(FixtureApprovedChecklistException.class, () -> loader.load(modified, "checklist-fixture-run:" + "c".repeat(32)));
 
         assertEquals("FIXTURE_CONTENT_CONFLICT", exception.code());
-        assertEquals(1, count("approved_checklist_version"));
-        assertEquals(2, count("approved_checklist_item"));
+        assertEquals(2, count("approved_checklist_version"));
+        assertEquals(4, count("approved_checklist_item"));
         assertEquals("FAILED", single("select status from approved_checklist_fixture_run where fixture_run_id = 'checklist-fixture-run:" + "c".repeat(32) + "'"));
     }
 
@@ -145,7 +146,7 @@ class ChecklistProposalIntegrationTest {
     @Test
     void checklistItemsEnforceFamilyMatchUniqueRuleKeysAndAppendOnly() throws Exception {
         loader.load(repositoryRoot, null);
-        String versionId = single("select approved_checklist_version_id from approved_checklist_version");
+        String versionId = single("select approved_checklist_version_id from approved_checklist_version where family_id = 'SIN-PREPAYMENT-FEE'");
 
         assertEquals("23503", sqlState(() -> jdbc.sql("""
                 insert into approved_checklist_item values (:id,'SIN-SELLER-CHECKLIST',9,'CHECK_X','x',true,'null'::jsonb,null,'sha256:%s')
@@ -314,17 +315,19 @@ class ChecklistProposalIntegrationTest {
         Path source = root.resolve("datasets/synthetic/internal/approved-checklists");
         Path destination = target.resolve("datasets/synthetic/internal/approved-checklists");
         Files.createDirectories(destination);
+        boolean changed = false;
         try (var paths = Files.list(source)) {
             for (Path path : paths.toList()) {
                 String content = Files.readString(path);
                 if (path.getFileName().toString().endsWith(".approved-checklist.json")) {
                     String edited = edit.apply(content);
-                    assertFalse(edited.equals(content), "fixture 내용 변경이 적용되어야 한다");
+                    changed |= !edited.equals(content);
                     content = edited;
                 }
                 Files.writeString(destination.resolve(path.getFileName()), content);
             }
         }
+        assertTrue(changed, "fixture 내용 변경이 적어도 한 파일에 적용되어야 한다");
         return target;
     }
 

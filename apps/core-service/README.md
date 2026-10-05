@@ -5,7 +5,7 @@ Spring Boot 기반 핵심 서비스입니다. 애플리케이션 골격과 appen
 합성 공문 적재와 적용 공문 기준일 조회를 구현했습니다.
 Flyway V5부터는 최종 기획서의 대표 사례인 중도상환수수료 변경 전후, 시행일, 조건과
 예외를 `structuredChange`로 보존하고 적용 공문 조회 API에서 반환합니다. Flyway V6와 checklist 변경안
-생성(아래)을 구현했습니다. 자동 검증 결과와 사람의 제공 승인은 아직 구현하지 않았습니다. 일반 서버 기동 중에는
+생성, Flyway V7과 변경안 자동 검증(아래)을 구현했습니다. 사람의 검수와 제공 승인은 아직 구현하지 않았으며 자동 검증 통과는 사용 허용이 아닙니다. 일반 서버 기동 중에는
 baseline importer bean을 만들거나 데이터를 자동 적재하지 않습니다.
 
 Core 업무 DB는 PostgreSQL이며(ADR-009) 이 README의 구현 설명은 PostgreSQL 18.6 기준입니다.
@@ -43,6 +43,21 @@ GET /api/v1/internal-policy/checklists/{familyId}/applicable
 ```
 
 결과는 `checklist_change_proposal`, `checklist_change_proposal_item`, `proposal_generation_run` 테이블에 append-only로 남습니다.
+
+3. 변경안 자동 검증. 변경안을 공문 원문 규칙, 기준 checklist, 공개 상품 근거와 대조해 PASS/WARN/FAIL과 세부 오류(issue)를
+   한 트랜잭션으로 저장합니다. FAIL 결과에 FAIL issue가 없거나 WARN 결과에 WARN issue가 없으면 DB가 저장을 거부합니다.
+   공개 근거 교차 검증은 공개 상품 관측 상태 조회와 같은 freshness 정책(`trust-agent.public-evidence.max-confirmation-age`)을 씁니다.
+
+```bash
+./gradlew :apps:core-service:bootRun --offline --no-daemon \
+  --args='--spring.main.web-application-type=none --trust-agent.proposal-validation.enabled=true --trust-agent.proposal-validation.proposal-id=checklist-proposal:sha256:<64 hex>'
+```
+
+결과는 `automated_validation_result`, `automated_validation_issue`, `validation_run` 테이블에 append-only로 남습니다. 적용 공문 조회는
+`knownAt`까지 보이는 최신 변경안 revision의 최신 결과로 `checklistAvailabilityStatus`를 정합니다(결과 없음 `PENDING_VALIDATION`,
+FAIL `VALIDATION_FAILED`, `trust-agent.validation-policy.max-validation-age` 초과 `VALIDATION_STALE`, PASS/WARN `PENDING_REVIEW`)
+그리고 사용한 결과를 `validatedProposalId`, `validationResultId`로 돌려줍니다(없으면 null). 어떤 결과도 `internalChecklistUseAllowed`를
+true로 만들지 않습니다. production profile은 `TRUST_AGENT_VALIDATION_MAX_AGE`(0보다 큰 기간)와 `TRUST_AGENT_VALIDATION_POLICY_VERSION`을 요구합니다.
 
 ## 공개 상품 관측 상태 조회
 

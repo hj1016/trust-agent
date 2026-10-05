@@ -43,8 +43,14 @@ trust-agent:
     generator-version: ${TRUST_AGENT_PROPOSAL_GENERATOR_VERSION:proposal-generator-v1}
   fixture-approved-checklist:
     enabled: false
+  proposal-validation:
+    enabled: false
+    validator-version: ${TRUST_AGENT_PROPOSAL_VALIDATOR_VERSION:proposal-validator-v1}
+  validation-policy:
+    max-validation-age: ${TRUST_AGENT_VALIDATION_MAX_AGE:24h}
+    policy-version: ${TRUST_AGENT_VALIDATION_POLICY_VERSION:internal-validation-v1}
   schema:
-    expected-version: ${TRUST_AGENT_SCHEMA_EXPECTED_VERSION:6}
+    expected-version: ${TRUST_AGENT_SCHEMA_EXPECTED_VERSION:7}
 
 management:
   server:

@@ -58,6 +58,26 @@ class ProposalDemoConfiguration {
                 environment.getProperty("trust-agent.fixture-approved-checklist.run-id"));
     }
 
+    @Bean
+    @ConditionalOnProperty(name = "trust-agent.proposal-validation.enabled", havingValue = "true")
+    ProposalValidationService proposalValidationService(
+            JdbcClient jdbc,
+            ObjectMapper mapper,
+            PlatformTransactionManager manager,
+            Clock clock,
+            com.trustagent.core.publicproduct.query.PublicProductObservedStateService publicProducts) {
+        return new ProposalValidationService(jdbc, mapper, manager, clock, publicProducts);
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "trust-agent.proposal-validation.enabled", havingValue = "true")
+    ApplicationRunner proposalValidationRunner(ProposalValidationService service, Environment environment) {
+        return (ApplicationArguments args) -> service.validate(new ProposalValidationService.Request(
+                required(environment, "trust-agent.proposal-validation.proposal-id"),
+                environment.getProperty("trust-agent.proposal-validation.run-id"),
+                required(environment, "trust-agent.proposal-validation.validator-version")));
+    }
+
     private static String required(Environment environment, String key) {
         String value = environment.getProperty(key);
         if (value == null || value.isBlank()) {

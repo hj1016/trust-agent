@@ -1,0 +1,18 @@
+{
+  "dataset_class": "SYNTHETIC_INTERNAL",
+  "synthetic": true,
+  "disclaimer": "이 데이터는 TrustAgent 테스트와 시연을 위한 합성 승인 checklist 예시이며 실제 은행 내부자료나 실제 인간 승인 기록이 아닙니다. 공개 근거 교차 검증 테스트 용도다.",
+  "origin": "FIXTURE",
+  "schedule_revision_id": "checklist-schedule:ca9f7b5750c8e75cca9dd73d5813cc9b",
+  "family_id": "SIN-SELLER-CHECKLIST",
+  "supersedes_schedule_revision_id": null,
+  "created_at": "2026-09-14T00:00:00Z",
+  "entries": [
+    {
+      "entry_order": 0,
+      "approved_checklist_version_id": "approved-checklist:5741d977175e7637738a43d95aeb8c6d",
+      "effective_from": "2026-09-15",
+      "effective_to": null
+    }
+  ]
+}

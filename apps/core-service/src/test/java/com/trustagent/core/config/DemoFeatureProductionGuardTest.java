@@ -17,11 +17,13 @@ class DemoFeatureProductionGuardTest {
             "TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent",
             "TRUST_AGENT_DB_USERNAME", "runtime",
             "TRUST_AGENT_DB_PASSWORD", "runtime-secret",
-            "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "6",
+            "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "7",
             "TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1",
             "TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h",
             "TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE", "Asia/Seoul",
-            "TRUST_AGENT_INTERNAL_TIMEZONE_POLICY_VERSION", "internal-business-time-v1");
+            "TRUST_AGENT_INTERNAL_TIMEZONE_POLICY_VERSION", "internal-business-time-v1",
+            "TRUST_AGENT_VALIDATION_MAX_AGE", "24h",
+            "TRUST_AGENT_VALIDATION_POLICY_VERSION", "internal-validation-v1");
 
     @Test
     void proposalGenerationAloneRefusesProductionStartup() {
@@ -38,12 +40,33 @@ class DemoFeatureProductionGuardTest {
     }
 
     @Test
+    void proposalValidationAloneRefusesProductionStartup() {
+        // TASK-006 AC-13: 변경안 검증 runner 설정이 켜지면 production 기동 거부.
+        var error = refusal(Map.of("trust-agent.proposal-validation.enabled", "true"));
+        assertTrue(error.contains("DEMO_FEATURE_ENABLED_IN_PROD"));
+        assertTrue(error.contains("trust-agent.proposal-validation.enabled"));
+    }
+
+    @Test
+    void validationAgeMustBePositiveInProduction() {
+        // TASK-006 AC-13: 검증 유효 기간이 0이거나 음수면 기동 거부.
+        try (var context = productionContext(Map.of("TRUST_AGENT_VALIDATION_MAX_AGE", "0s"))) {
+            assertThrows(RuntimeException.class, context::refresh);
+        }
+        try (var context = productionContext(Map.of("TRUST_AGENT_VALIDATION_MAX_AGE", "-1h"))) {
+            assertThrows(RuntimeException.class, context::refresh);
+        }
+    }
+
+    @Test
     void bothDemoSettingsAreReportedTogether() {
         var error = refusal(Map.of(
                 "trust-agent.proposal-generation.enabled", "true",
-                "trust-agent.fixture-approved-checklist.enabled", "true"));
+                "trust-agent.fixture-approved-checklist.enabled", "true",
+                "trust-agent.proposal-validation.enabled", "true"));
         assertTrue(error.contains("trust-agent.proposal-generation.enabled"));
         assertTrue(error.contains("trust-agent.fixture-approved-checklist.enabled"));
+        assertTrue(error.contains("trust-agent.proposal-validation.enabled"));
     }
 
     @Test
@@ -53,7 +76,8 @@ class DemoFeatureProductionGuardTest {
         }
         try (var context = productionContext(Map.of(
                 "trust-agent.proposal-generation.enabled", "false",
-                "trust-agent.fixture-approved-checklist.enabled", "false"))) {
+                "trust-agent.fixture-approved-checklist.enabled", "false",
+                "trust-agent.proposal-validation.enabled", "false"))) {
             context.refresh();
         }
     }
