@@ -1,9 +1,8 @@
 # TASK-000 초기 수집 자산 기준선 점검
 
 - 성격: **AI-native SDLC 도입 이전 자산을 현재 기준으로 재평가하는 Baseline Audit**. AI-native SDLC의 첫 baseline audit 문서다.
-- 작성/갱신일: 2026-10-04
 - 상태: 문서 기준 정리 및 승인된 문서 DROP 실행 완료. 데이터/코드/설정 등 전체 자산 audit는 미완료.
-- 요구사항/결정 출처: 2026-10-04 사용자의 저장소 문서 정리 요청(삭제 대상, 기준 문서 내용, 커밋 메시지 명시).
+- 요구사항/결정 출처: 사용자의 저장소 문서 정리 요청(삭제 대상, 기준 문서 내용, 커밋 메시지 명시). 검토 대상 PR: #9.
 - 범위: 개발 기준 문서 정리, 아래 10개 문서 DROP 기록/삭제, Git history 보존. 애플리케이션 코드/데이터/DB 전환은 제외.
 
 ## Goal과 baseline 원칙
@@ -13,7 +12,7 @@
 
 ## 사전 Acceptance Criteria
 
-이번 문서 작업의 기준은 사용자가 구현 전에 지정한 요청이다. 결정자: 사용자 / 일자: 2026-10-04.
+이번 문서 작업의 기준은 사용자가 구현 전에 지정한 요청이다. 결정자: 사용자 / 승인 범위: 지정 문서 10개 DROP과 기준 문서 정리 / 검토 대상 PR: #9.
 
 | ID | 기준 | 검증 방법 | 결과 |
 |---|---|---|---|
@@ -23,7 +22,7 @@
 | AC-04 | 이번 문서 변경만 커밋하고 기존 코드/데이터 변경과 history 보존 | 선택 staging, Git status/diff, 이전 HEAD ancestor 확인 | 커밋 전/후 확인 |
 | AC-05 | 후속 audit 대상과 미완료 범위 구분 | 후속 표와 검수 기록 확인 | 충족 |
 
-Acceptance Criteria 변경 이력: 변경 없음. 이후 변경 시 변경 이유 / 일자 / 결정자 / 전후 / 재검증 영향을 기록한다.
+Acceptance Criteria 변경 이력: 변경 없음. 이후 변경 시 변경 이유 / 결정자 / 승인 범위 / 검토 대상 revision / 전후 / 재검증 영향을 기록한다.
 
 ## Implementation Plan
 
@@ -69,12 +68,12 @@ Git 상태/문서 구조 확인 → 기존 수정 문서와 기준 초안 외부
 | 데이터 | datasets/public/kb, datasets/derived, datasets/synthetic, contracts, 비공개 원문 | 출처/hash/분류/schema/참조/시행일/조건/예외 및 공개 범위 |
 | 수집 스크립트 | scripts/collect_public_kb_snapshots.py, extract_public_kb_product_facts.py, public_product_freshness.py, migrate_public_kb_pipeline_v2.py | native 수집/정규화/추적/중복/재관측/실패 및 회귀 |
 | 기존 코드 | apps/core-service, apps/ai-service, apps/frontend | 구현/placeholder 구분, 업무 규칙/권한/상태/감사, Core Tool API 경계 |
-| DB 및 검색 설정 | Core application.yml, db/migration, 검색 관련 구성 | PostgreSQL 현 구현과 Oracle 목표 차이, 이전/rollback, ES 인덱스/정합성/평가 |
-| Docker·환경 | infra/docker, 로컬 실행/환경변수/의존성 구성 | Oracle/ES/Redis 필요 범위, 재현성/비밀/기동/장애 |
+| DB 및 검색 설정 | Core application.yml, db/migration, 검색 관련 구성 | PostgreSQL 구현 점검(DB 제품 교체는 ADR-009로 범위 밖), 이전/rollback, ES 인덱스/정합성/평가 |
+| Docker·환경 | infra/docker, 로컬 실행/환경변수/의존성 구성 | PostgreSQL/ES/Redis 필요 범위, 재현성/비밀/기동/장애 |
 | 테스트 | tests, Core 단위/통합 테스트 | 각 테스트 보장 범위, 현 환경 재실행, 숫자/시행일/권한/동시성/실패 |
 | CI | .github/workflows, Gradle wrapper/lock/verification | 실제 checks/실행 환경/skip, 목표 기술 전환 시 필요한 검증 |
 
-각 항목의 판정 이유, 대안, 위험, 검증 결과와 인간 판단을 추가 기록한다. 수정/삭제/신규 구현은 별도 승인된 Task 범위에서 수행한다. 이번 작업으로 Oracle 전환, ES 구축, 전체 데이터 품질 검증이 완료된 것은 아니다.
+각 항목의 판정 이유, 대안, 위험, 검증 결과와 인간 판단을 추가 기록한다. 수정/삭제/신규 구현은 별도 승인된 Task 범위에서 수행한다. 이번 작업으로 ES 구축, 전체 데이터 품질 검증이 완료된 것은 아니다. Core 업무 DB는 PostgreSQL 유지로 결정됐다(ADR-009).
 
 ## AI 제안 및 인간 판단 기록
 
@@ -86,7 +85,7 @@ Git 상태/문서 구조 확인 → 기존 수정 문서와 기준 초안 외부
 - 결정 이유: 사용자는 위 공통 DROP 이유를 지정하고 최신 기준에서 필요한 설계를 해당 Task에 새로 작성하도록 결정했다.
 - AI에게 전달한 피드백: 지정 10개 문서를 DROP 기록 후 실제 삭제하고 기존 repo/history 및 새 기준 문서를 유지한다.
 - AI 수정 결과: DROP 표/삭제 및 최신 규칙을 반영. 과거 ADR/evidence와 기존 코드/데이터는 보존.
-- 최종 판단: 문서 폐기와 정리 실행은 사용자 요청으로 승인됨. 결과물의 인간 최종 검수는 아직 미기록.
+- 최종 판단: 문서 폐기와 정리 실행은 사용자 요청으로 승인됨(승인 범위: 지정 문서 10개 DROP과 기준 문서 정리, 검토 대상 PR #9). 결과물의 인간 최종 검수는 아직 미기록.
 
 그 외 중요한 AI 제안 수정/거절: 없음.
 
@@ -101,3 +100,7 @@ Git 상태/문서 구조 확인 → 기존 수정 문서와 기준 초안 외부
 [검수 체크리스트](../development/REVIEW_CHECKLIST.md)를 사용한다. 결과물에 대한 인간 검수/설명 Gate: 미기록. 사용자의 실행 지시를 결과물 검수 통과로 기록하지 않는다.
 코드가 동작하더라도 핵심 흐름과 기술 선택 이유를 자신의 말로 설명할 수 없으면 완료가 아니다.
 문서 정리 실행과 전체 baseline audit 완료를 구분한다. 다음 단계는 위 자산별 inventory/실제 검증/인간 판정이며 사전 AC와 범위를 정한 뒤 진행한다.
+
+## 자산 audit 초안
+
+위 "다음 자산 audit 범위"의 7개 영역에 대한 AI 판정 초안을 [TASK-000 자산 audit 초안](TASK-000_자산-audit-초안.md)에 작성했다. 미커밋 Day 5 작업 처리안과 공개 상품 파이프라인 선택지를 포함한다. 관련 초안은 [ADR-009 Oracle 전환 검토 종료와 PostgreSQL 유지](../adr/ADR-009-oracle-core-database.md)과 [PLAN-001 Task 분할](PLAN-001_중도상환수수료-흐름-Task-분할-초안.md)이다. 판정은 audit 문서 7절에 기록했고, 실행은 [TASK-001](TASK-001_미커밋-Day-5-자산-보존.md), [TASK-002](TASK-002_일회성-migrate-스크립트-DROP-실행.md), [TASK-003](TASK-003_Oracle-위험-검증-spike.md)에서 별도 승인으로 진행한다. 이 기록은 audit 완료나 인간 검수 통과를 뜻하지 않는다.
