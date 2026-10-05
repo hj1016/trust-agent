@@ -27,7 +27,7 @@ Flyway V4 append-only 저장 구조와 승인 checklist schedule 제약, Asia/Se
 내부 checklist 사용 차단 정책 기반을 갖췄습니다. 적용 공문 조회 endpoint는 `businessDate`와
 `knownAt` 두 시간축으로 적용 공문과 승인 checklist schedule을 선택합니다. 수신 전 공문과 이후 schedule revision은 과거 조회에 노출하지 않고,
 관계없는 중첩이나 끊긴 supersedes chain은 임의 선택하지 않고 `AMBIGUOUS`로 차단합니다.
-변경 후보, 자동 검증과 사람 검토는 아직 구현하지 않았습니다.
+checklist 변경안(proposal) 생성을 구현했습니다. 새 공문의 구조화 규칙과 직전 승인 checklist를 규칙 단위로 비교해 추가, 수정, 삭제와 전후 값을 결정적으로 만들고 파생 데이터로 저장합니다. 변경안은 승인이 아니며, 테스트용 승인 checklist 예시 데이터(출처 FIXTURE)는 검증과 사람 결정과 사용 허용 조건을 우회하지 않습니다. 자동 검증과 사람 검토는 아직 구현하지 않았습니다.
 최종 기획서와의 대표 시나리오 차이를 해소하기 위해 중도상환수수료율 1.2퍼센트에서
 0.8퍼센트로의 변경, 시행일, 적용 조건과 예외를 구조화한 합성 공문 v1/v2를 추가했습니다.
 Flyway V5와 synthetic importer, 적용 공문 조회 API가 이 구조화 변경을 보존하고 반환합니다.
@@ -45,10 +45,10 @@ python3 -m unittest discover -s tests -v
 TRUSTAGENT_REQUIRE_PRIVATE_SNAPSHOTS=1 python3 -m unittest discover -s tests -v
 ```
 
-검증 결과 Python 57개 테스트가 모두 통과했습니다. 상세 증거는
+검증 결과 Python 60개 테스트가 모두 통과했습니다. 상세 증거는
 `docs/evidence/PUBLIC_KB_OBSERVATION_HARDENING_EVIDENCE.md`와
 `docs/evidence/PUBLIC_PRODUCT_OBSERVED_STATE_EVIDENCE.md`, `docs/evidence/SYNTHETIC_NOTICE_SCHEMA_EVIDENCE.md`,
-`docs/evidence/INTERNAL_POLICY_APPLICABLE_QUERY_EVIDENCE.md`에 기록합니다.
+`docs/evidence/INTERNAL_POLICY_APPLICABLE_QUERY_EVIDENCE.md`, `docs/evidence/CHECKLIST_PROPOSAL_GENERATION_EVIDENCE.md`에 기록합니다.
 
 Core service의 clean·offline 검증은 다음과 같습니다. Docker daemon이 필요하며 고정된
 PostgreSQL 18.6 image digest를 사용합니다.
@@ -57,7 +57,7 @@ PostgreSQL 18.6 image digest를 사용합니다.
 JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew clean test bootJar --offline --no-daemon
 ```
 
-Java 테스트 85개와 executable jar 생성이 통과했습니다. 상세
+Java 테스트 106개와 executable jar 생성이 통과했습니다. 상세
 증거는 `docs/evidence/CORE_SERVICE_SCHEMA_AUDIT_EVIDENCE.md`와
 `docs/evidence/PUBLIC_PRODUCT_BASELINE_IMPORTER_EVIDENCE.md`, `docs/evidence/PUBLIC_PRODUCT_OBSERVED_STATE_EVIDENCE.md`,
 `docs/evidence/SYNTHETIC_NOTICE_SCHEMA_EVIDENCE.md`, `docs/evidence/INTERNAL_POLICY_APPLICABLE_QUERY_EVIDENCE.md`에 기록합니다.
@@ -121,6 +121,7 @@ python3 scripts/extract_public_kb_product_facts.py --all
 - 공개 상품 관측 상태 조회 검증 기록: `docs/evidence/PUBLIC_PRODUCT_OBSERVED_STATE_EVIDENCE.md`
 - 합성 내부 공문 계약과 저장 구조 검증 기록: `docs/evidence/SYNTHETIC_NOTICE_SCHEMA_EVIDENCE.md`
 - 적용 공문 기준일 조회 검증 기록: `docs/evidence/INTERNAL_POLICY_APPLICABLE_QUERY_EVIDENCE.md`
+- checklist 변경안 생성 검증 기록: `docs/evidence/CHECKLIST_PROPOSAL_GENERATION_EVIDENCE.md`
 - 최종 기획서 정합화 검증 기록: `docs/evidence/FINAL_PROPOSAL_ALIGNMENT_EVIDENCE.md`
 - Oracle 전환 위험 검증 spike 기록(중단): `docs/evidence/TASK-003_ORACLE_SPIKE_EVIDENCE.md`
 

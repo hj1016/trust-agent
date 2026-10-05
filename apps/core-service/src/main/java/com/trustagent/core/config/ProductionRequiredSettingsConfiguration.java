@@ -27,11 +27,24 @@ public class ProductionRequiredSettingsConfiguration {
             "TRUST_AGENT_SYNTHETIC_IMPORT_DB_USERNAME",
             "TRUST_AGENT_SYNTHETIC_IMPORT_DB_PASSWORD");
 
+    /** test/demo 전용 기능. production에서 하나라도 켜져 있으면 기동을 거부한다. */
+    static final List<String> DEMO_ONLY_SETTINGS = List.of(
+            "trust-agent.proposal-generation.enabled",
+            "trust-agent.fixture-approved-checklist.enabled");
+
     public ProductionRequiredSettingsConfiguration(Environment environment) {
         validate(environment);
     }
 
     static void validate(Environment environment) {
+        var enabledDemoSettings = DEMO_ONLY_SETTINGS.stream()
+                .filter(name -> environment.getProperty(name, Boolean.class, false))
+                .toList();
+        if (!enabledDemoSettings.isEmpty()) {
+            throw new IllegalStateException(
+                    "DEMO_FEATURE_ENABLED_IN_PROD: production profile에서는 demo 전용 기능을 켤 수 없습니다: "
+                            + String.join(", ", enabledDemoSettings));
+        }
         var required = new java.util.ArrayList<>(REQUIRED_ENVIRONMENT_SETTINGS);
         if (environment.getProperty("trust-agent.baseline-import.enabled", Boolean.class, false)) {
             required.addAll(REQUIRED_BASELINE_IMPORT_SETTINGS);

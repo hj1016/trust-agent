@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/synthetic-approved-checklist-schedule-fixture.schema.json",
+  "title": "TrustAgent Synthetic Approved Checklist Schedule Fixture",
+  "description": "test/demo 전용 승인 checklist 적용 schedule 예시 데이터. origin은 FIXTURE로 고정되며 인간 승인 증거가 아니다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset_class", "synthetic", "disclaimer", "origin", "schedule_revision_id", "family_id", "supersedes_schedule_revision_id", "created_at", "entries"],
+  "properties": {
+    "dataset_class": {"const": "SYNTHETIC_INTERNAL"},
+    "synthetic": {"const": true},
+    "disclaimer": {"type": "string", "minLength": 20},
+    "origin": {"const": "FIXTURE"},
+    "schedule_revision_id": {"type": "string", "pattern": "^checklist-schedule:[a-f0-9]{32}$"},
+    "family_id": {"type": "string", "pattern": "^SIN-[A-Z0-9-]+$"},
+    "supersedes_schedule_revision_id": {"type": ["string", "null"], "pattern": "^checklist-schedule:[a-f0-9]{32}$"},
+    "created_at": {"type": "string", "format": "date-time", "pattern": "Z$"},
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["entry_order", "approved_checklist_version_id", "effective_from", "effective_to"],
+        "properties": {
+          "entry_order": {"type": "integer", "minimum": 0},
+          "approved_checklist_version_id": {"type": "string", "pattern": "^approved-checklist:[a-f0-9]{32}$"},
+          "effective_from": {"type": "string", "format": "date"},
+          "effective_to": {"type": ["string", "null"], "format": "date"}
+        }
+      }
+    }
+  }
+}
