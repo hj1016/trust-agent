@@ -210,11 +210,11 @@ class InternalPolicyApplicableIntegrationTest {
         java.util.List<String> blocking = strings(result.get("blockingReasons"));
         assertFalse(blocking.contains("FUTURE_BUSINESS_DATE"));
         assertFalse(blocking.contains("HISTORICAL_KNOWN_AT"));
-        // 시간 차단 사유가 없고 승인 checklist fixture가 있어도(AVAILABLE) 검증과 공개 근거 재평가 전에는 사용이 차단된다.
+        // 시간 차단 사유가 없고 HUMAN_REVIEW checklist가 있어도(AVAILABLE) 사람 결정 기록이 없으면 사용이 차단된다(TASK-007).
         assertEquals("SIN-SELLER-CHECKLIST-V2", result.get("selectedNotice").get("noticeId").stringValue());
         assertEquals("AVAILABLE", result.get("checklistAvailabilityStatus").stringValue());
-        assertTrue(blocking.contains("CURRENT_VALIDATION_NOT_EVALUATED"));
-        assertTrue(blocking.contains("CURRENT_PUBLIC_EVIDENCE_NOT_EVALUATED"));
+        assertTrue(blocking.contains("HUMAN_DECISION_MISSING"));
+        assertTrue(result.get("approvedChecklist").get("decisionId").isNull());
         assertFalse(result.get("internalChecklistUseAllowed").booleanValue());
 
         // 승인 checklist가 없는 family는 같은 날이어도 검증 대기로 차단된다.
@@ -234,8 +234,8 @@ class InternalPolicyApplicableIntegrationTest {
         java.util.List<String> blocking = strings(same.get("blockingReasons"));
         assertFalse(blocking.contains("HISTORICAL_KNOWN_AT"));
         assertFalse(blocking.contains("FUTURE_BUSINESS_DATE"));
-        // 시간 사유는 없지만 검증 미완료 사유로 사용은 차단된다.
-        assertTrue(blocking.contains("CURRENT_VALIDATION_NOT_EVALUATED"));
+        // 시간 사유는 없지만 사람 결정 기록이 없어 사용은 차단된다.
+        assertTrue(blocking.contains("HUMAN_DECISION_MISSING"));
         assertFalse(same.get("internalChecklistUseAllowed").booleanValue());
 
         // 1초만 앞서도 과거 지식 조회로 차단 사유가 붙는다. 1초 뒤는 기존 테스트가 400으로 확인한다.
@@ -280,8 +280,9 @@ class InternalPolicyApplicableIntegrationTest {
         assertEquals("approved-checklist:2eaa5be6af97d149ee1d05a293c7e3a2",
                 v1.get("approvedChecklist").get("approvedChecklistVersionId").stringValue());
         java.util.List<String> blocking = strings(v1.get("blockingReasons"));
-        assertTrue(blocking.contains("CURRENT_VALIDATION_NOT_EVALUATED"));
-        assertTrue(blocking.contains("CURRENT_PUBLIC_EVIDENCE_NOT_EVALUATED"));
+        assertTrue(blocking.contains("FIXTURE_CHECKLIST_NOT_APPROVED"));
+        assertEquals("FIXTURE", v1.get("approvedChecklist").get("origin").stringValue());
+        assertTrue(v1.get("approvedChecklist").get("decisionId").isNull());
         assertFalse(v1.get("internalChecklistUseAllowed").booleanValue());
     }
 
@@ -344,8 +345,8 @@ class InternalPolicyApplicableIntegrationTest {
         assertEquals(RESULT_WARN, warned.get("validationResultId").stringValue());
         assertFalse(warned.get("internalChecklistUseAllowed").booleanValue());
 
-        // PASS → PENDING_REVIEW. 검증 통과가 사용 허용을 뜻하지 않는다.
-        JsonNode passed = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T19:59:59Z")));
+        // PASS → PENDING_REVIEW. 검증 통과가 사용 허용을 뜻하지 않는다. (19:30:00Z에 반려되므로 그 직전 시각으로 조회)
+        JsonNode passed = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T19:29:59Z")));
         assertEquals("PENDING_REVIEW", passed.get("checklistAvailabilityStatus").stringValue());
         assertTrue(strings(passed.get("blockingReasons")).contains("HUMAN_REVIEW_PENDING"));
         assertFalse(strings(passed.get("blockingReasons")).contains("CHECKLIST_VALIDATION_PENDING"));
@@ -390,7 +391,7 @@ class InternalPolicyApplicableIntegrationTest {
         // PASS validated_at 2026-10-04T12:00:00Z, 유효 기간 24h. 평가 시각을 24h + 1초 뒤로 옮기면 오래됨.
         CLOCK.set(Instant.parse("2026-10-05T12:00:01Z"));
         try {
-            JsonNode stale = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T19:59:59Z")));
+            JsonNode stale = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T19:29:59Z")));
             assertEquals("VALIDATION_STALE", stale.get("checklistAvailabilityStatus").stringValue());
             assertTrue(strings(stale.get("blockingReasons")).contains("VALIDATION_STALE"));
             assertEquals(RESULT_PASS, stale.get("validationResultId").stringValue());
@@ -398,7 +399,7 @@ class InternalPolicyApplicableIntegrationTest {
 
             // 정확히 24h는 아직 유효하다.
             CLOCK.set(Instant.parse("2026-10-05T12:00:00Z"));
-            JsonNode exact = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T19:59:59Z")));
+            JsonNode exact = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T19:29:59Z")));
             assertEquals("PENDING_REVIEW", exact.get("checklistAvailabilityStatus").stringValue());
         } finally {
             CLOCK.reset();
@@ -415,6 +416,25 @@ class InternalPolicyApplicableIntegrationTest {
         assertEquals("checklist-schedule:ca9f7b5750c8e75cca9dd73d5813cc9b",
                 v1.get("approvedChecklist").get("scheduleRevisionId").stringValue());
         assertFalse(v1.get("internalChecklistUseAllowed").booleanValue());
+    }
+
+    @Test
+    void rejectedProposalStaysRejectedEvenThoughAPassResultExists() throws Exception {
+        // TASK-007 AC-08: PROPOSAL_1은 PASS 결과(12:00)가 있지만 19:30:00Z에 반려됐다.
+        JsonNode rejected = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T19:30:00Z")));
+        assertEquals("UNAVAILABLE", rejected.get("checklistAvailabilityStatus").stringValue());
+        assertTrue(strings(rejected.get("blockingReasons")).contains("PROPOSAL_REJECTED"));
+        assertFalse(strings(rejected.get("blockingReasons")).contains("HUMAN_REVIEW_PENDING"));
+        assertTrue(rejected.get("validatedProposalId").isNull());
+        assertTrue(rejected.get("validationResultId").isNull());
+        assertFalse(rejected.get("internalChecklistUseAllowed").booleanValue());
+
+        // 반려 1초 전에는 검토 대기였다. 반려 뒤 새 revision(PROPOSAL_2)이 보이면 그 revision 기준 검증 대기다.
+        JsonNode before = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T19:29:59Z")));
+        assertEquals("PENDING_REVIEW", before.get("checklistAvailabilityStatus").stringValue());
+        JsonNode newRevision = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-04T20:00:00Z")));
+        assertEquals("PENDING_VALIDATION", newRevision.get("checklistAvailabilityStatus").stringValue());
+        assertFalse(strings(newRevision.get("blockingReasons")).contains("PROPOSAL_REJECTED"));
     }
 
     private void insertProposalsAndValidationResults() throws Exception {
@@ -445,6 +465,14 @@ class InternalPolicyApplicableIntegrationTest {
                         ('%s','WARN',0,'WARN','MISSING_CONDITIONS','CHECK_PREPAYMENT_FEE_RATE','테스트 WARN issue'),
                         ('%s','PASS',0,'INFO','PUBLIC_CROSS_CHECK_NOT_APPLICABLE',null,'테스트 INFO issue')
                         """.formatted(RESULT_FAIL, RESULT_WARN, RESULT_PASS));
+                // TASK-007: PROPOSAL_1을 PASS 결과 뒤 19:30:00Z에 반려. PROPOSAL_2는 공문 재추출로 생긴 새 revision이라고 가정한 테스트 자료.
+                statement.execute("""
+                        insert into human_review_decision
+                            (decision_id, dataset_class, proposal_id, validation_result_id, proposal_hash, decision,
+                             reviewer_id, reason, decided_at)
+                        values ('review-decision:%s','SYNTHETIC_WORK','%s','%s','%s','REJECT','SYN-REVIEWER-01',
+                                '공문 원문 재확인 필요','2026-10-04T19:30:00Z')
+                        """.formatted("d".repeat(32), PROPOSAL_1, RESULT_PASS, HASH));
             }
             connection.commit();
         }

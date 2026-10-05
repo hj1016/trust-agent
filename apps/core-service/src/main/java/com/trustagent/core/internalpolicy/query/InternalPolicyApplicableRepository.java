@@ -153,11 +153,16 @@ class InternalPolicyApplicableRepository {
         return jdbc.sql("""
                         select checklist.approved_checklist_version_id,
                                entry.schedule_revision_id, entry.effective_from,
-                               entry.effective_to, checklist.created_at
+                               entry.effective_to, checklist.created_at, checklist.origin,
+                               decision.decision_id
                         from approved_checklist_schedule_entry entry
                         join approved_checklist_version checklist
                           on checklist.approved_checklist_version_id = entry.approved_checklist_version_id
                          and checklist.family_id = entry.family_id
+                        left join human_review_decision decision
+                          on decision.approved_checklist_version_id = checklist.approved_checklist_version_id
+                         and decision.decision = 'APPROVE'
+                         and decision.decided_at <= :knownAt
                         where entry.schedule_revision_id = :scheduleRevisionId
                           and checklist.notice_id = :noticeId
                           and checklist.created_at <= :knownAt
@@ -173,8 +178,80 @@ class InternalPolicyApplicableRepository {
                         resultSet.getString("schedule_revision_id"),
                         resultSet.getObject("effective_from", LocalDate.class),
                         resultSet.getObject("effective_to", LocalDate.class),
-                        instant(resultSet, "created_at")))
+                        instant(resultSet, "created_at"),
+                        resultSet.getString("origin"),
+                        resultSet.getString("decision_id"),
+                        List.of()))
+                .optional()
+                .map(this::withItems);
+    }
+
+    private InternalPolicyApplicableState.ApprovedChecklist withItems(InternalPolicyApplicableState.ApprovedChecklist checklist) {
+        List<InternalPolicyApplicableState.ApprovedItem> items = jdbc.sql("""
+                        select item_order, rule_key, instruction, evidence_required,
+                               structured_change::text as structured_change, source_rule_version_id
+                        from approved_checklist_item
+                        where approved_checklist_version_id = :versionId
+                        order by item_order
+                        """)
+                .param("versionId", checklist.approvedChecklistVersionId())
+                .query((resultSet, rowNumber) -> new InternalPolicyApplicableState.ApprovedItem(
+                        resultSet.getInt("item_order"),
+                        resultSet.getString("rule_key"),
+                        resultSet.getString("instruction"),
+                        resultSet.getBoolean("evidence_required"),
+                        mapper.readTree(resultSet.getString("structured_change")),
+                        resultSet.getString("source_rule_version_id")))
+                .list();
+        return new InternalPolicyApplicableState.ApprovedChecklist(
+                checklist.approvedChecklistVersionId(), checklist.scheduleRevisionId(), checklist.effectiveFrom(),
+                checklist.effectiveTo(), checklist.createdAt(), checklist.origin(), checklist.decisionId(), items);
+    }
+
+    /** 일정 leaf에서 업무일을 덮는 구간의 checklist가 가리키는 공문 ID들(선택된 공문과 비교용). */
+    List<String> findCoveringChecklistNoticeIds(String scheduleRevisionId, LocalDate businessDate, Instant knownAt) {
+        return jdbc.sql("""
+                        select checklist.notice_id
+                        from approved_checklist_schedule_entry entry
+                        join approved_checklist_version checklist
+                          on checklist.approved_checklist_version_id = entry.approved_checklist_version_id
+                        where entry.schedule_revision_id = :scheduleRevisionId
+                          and checklist.created_at <= :knownAt
+                          and entry.effective_from <= :businessDate
+                          and (entry.effective_to is null or :businessDate < entry.effective_to)
+                        """)
+                .param("scheduleRevisionId", scheduleRevisionId)
+                .param("knownAt", utc(knownAt))
+                .param("businessDate", businessDate)
+                .query(String.class)
+                .list();
+    }
+
+    record RejectRow(String decisionId, Instant decidedAt) {}
+
+    /** knownAt까지 기록된 반려 결정. */
+    Optional<RejectRow> findVisibleReject(String proposalId, Instant knownAt) {
+        return jdbc.sql("""
+                        select decision_id, decided_at from human_review_decision
+                        where proposal_id = :proposalId and decision = 'REJECT' and decided_at <= :knownAt
+                        """)
+                .param("proposalId", proposalId)
+                .param("knownAt", utc(knownAt))
+                .query((resultSet, rowNumber) -> new RejectRow(resultSet.getString("decision_id"), instant(resultSet, "decided_at")))
                 .optional();
+    }
+
+    record ReferenceRow(String productKey, String factKey, String subjectType, String evidenceRequirement) {}
+
+    List<ReferenceRow> findReferences(String noticeId) {
+        return jdbc.sql("""
+                        select product_key, fact_key, subject_type, evidence_requirement
+                        from internal_notice_reference where notice_id = :noticeId order by reference_order
+                        """)
+                .param("noticeId", noticeId)
+                .query((resultSet, rowNumber) -> new ReferenceRow(resultSet.getString("product_key"),
+                        resultSet.getString("fact_key"), resultSet.getString("subject_type"), resultSet.getString("evidence_requirement")))
+                .list();
     }
 
     record ProposalRow(String proposalId, Instant createdAt) {}

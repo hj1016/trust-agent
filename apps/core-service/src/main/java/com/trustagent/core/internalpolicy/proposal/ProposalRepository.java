@@ -7,6 +7,8 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import tools.jackson.databind.node.ObjectNode;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import tools.jackson.databind.JsonNode;
@@ -164,14 +166,23 @@ final class ProposalRepository {
     }
 
     void insertProposal(ChecklistChangeProposalGenerator.Proposal proposal, String familyId, Instant createdAt) {
+        insertProposalRevision(proposal, familyId, createdAt, null, null);
+    }
+
+    /** supersedes와 reason이 있으면 revision(TASK-007 수정 결정), 둘 다 없으면 최초 변경안. */
+    void insertProposalRevision(
+            ChecklistChangeProposalGenerator.Proposal proposal, String familyId, Instant createdAt,
+            String supersedesProposalId, String revisionReason) {
         jdbc.sql("""
                         insert into checklist_change_proposal (
                             proposal_id, dataset_class, family_id, base_checklist_version_id, target_notice_id,
                             generator_version, supersedes_proposal_id, revision_reason, before_hash, after_hash,
                             item_count, created_at)
-                        values (:id, 'DERIVED', :family, :base, :target, :generator, null, null, :beforeHash,
+                        values (:id, 'DERIVED', :family, :base, :target, :generator, :supersedes, :reason, :beforeHash,
                                 :afterHash, :itemCount, :createdAt)
                         """)
+                .param("supersedes", supersedesProposalId)
+                .param("reason", revisionReason)
                 .param("id", proposal.proposalId())
                 .param("family", familyId)
                 .param("base", proposal.baseChecklistVersionId())
@@ -347,6 +358,206 @@ final class ProposalRepository {
                 .param("completed", utc(completedAt))
                 .param("status", status)
                 .param("error", errorCode)
+                .update();
+    }
+
+    // ---- TASK-007 사람 검토 결정 ----
+
+    record DecisionRow(String decisionId, String decision, Instant decidedAt, String approvedChecklistVersionId) {}
+
+    record ScheduleEntryRow(String approvedChecklistVersionId, LocalDate effectiveFrom, LocalDate effectiveTo) {
+        ObjectNode toJson(ObjectMapper mapper) {
+            ObjectNode node = mapper.createObjectNode();
+            node.put("approved_checklist_version_id", approvedChecklistVersionId);
+            node.put("effective_from", effectiveFrom.toString());
+            if (effectiveTo == null) {
+                node.putNull("effective_to");
+            } else {
+                node.put("effective_to", effectiveTo.toString());
+            }
+            return node;
+        }
+    }
+
+    record ApprovedItemRow(ChecklistItemContent content, String sourceRuleVersionId) {
+        String ruleKey() {
+            return content.ruleKey();
+        }
+
+        ObjectNode toJson(ObjectMapper mapper) {
+            ObjectNode node = content.toJson(mapper);
+            if (sourceRuleVersionId == null) {
+                node.putNull("source_rule_version_id");
+            } else {
+                node.put("source_rule_version_id", sourceRuleVersionId);
+            }
+            return node;
+        }
+
+        static ApprovedItemRow fromContent(JsonNode after, String sourceRuleVersionId) {
+            if (after == null || after.isNull()) {
+                throw new HumanReviewException("PROPOSAL_INTEGRITY_VIOLATION", "변경 후 내용이 없는 항목은 발행할 수 없습니다.");
+            }
+            JsonNode change = after.get("structured_change");
+            return new ApprovedItemRow(new ChecklistItemContent(
+                    after.get("rule_key").stringValue(),
+                    after.get("instruction").stringValue(),
+                    after.get("evidence_required").asBoolean(),
+                    change == null || change.isNull() ? null : change), sourceRuleVersionId);
+        }
+    }
+
+    Optional<DecisionRow> findDecision(String proposalId) {
+        return jdbc.sql("""
+                        select decision_id, decision, decided_at, approved_checklist_version_id
+                        from human_review_decision where proposal_id = :id
+                        """)
+                .param("id", proposalId)
+                .query((rs, row) -> new DecisionRow(rs.getString("decision_id"), rs.getString("decision"),
+                        rs.getObject("decided_at", java.time.OffsetDateTime.class).toInstant(),
+                        rs.getString("approved_checklist_version_id")))
+                .optional();
+    }
+
+    Optional<ValidationRow> findLatestValidation(String proposalId) {
+        return jdbc.sql("""
+                        select validation_result_id, status, validated_at, proposal_hash
+                        from automated_validation_result where proposal_id = :id
+                        order by validated_at desc, validation_result_id desc limit 1
+                        """)
+                .param("id", proposalId)
+                .query((rs, row) -> new ValidationRow(rs.getString("validation_result_id"), rs.getString("status"),
+                        rs.getObject("validated_at", java.time.OffsetDateTime.class).toInstant(), rs.getString("proposal_hash")))
+                .optional();
+    }
+
+    record ValidationRow(String validationResultId, String status, Instant validatedAt, String proposalHash) {}
+
+    boolean humanApprovalExists(String noticeId) {
+        return jdbc.sql("select count(*) from approved_checklist_version where notice_id = :id and origin = 'HUMAN_REVIEW'")
+                .param("id", noticeId).query(Integer.class).single() > 0;
+    }
+
+    boolean reviewRunExists(String runId) {
+        return jdbc.sql("select count(*) from human_review_run where review_run_id = :id")
+                .param("id", runId).query(Integer.class).single() > 0;
+    }
+
+    List<ApprovedItemRow> findItemRows(String approvedChecklistVersionId) {
+        return jdbc.sql("""
+                        select rule_key, instruction, evidence_required, structured_change::text as structured_change,
+                               source_rule_version_id
+                        from approved_checklist_item where approved_checklist_version_id = :versionId order by item_order
+                        """)
+                .param("versionId", approvedChecklistVersionId)
+                .query((rs, row) -> new ApprovedItemRow(content(rs, row), rs.getString("source_rule_version_id")))
+                .list();
+    }
+
+    Map<String, String> findRuleVersionIds(String extractionAttemptId) {
+        Map<String, String> ids = new java.util.HashMap<>();
+        jdbc.sql("""
+                        select rule.rule_key, rule.rule_version_id
+                        from internal_policy_rule_evidence evidence
+                        join internal_policy_rule_version rule on rule.rule_version_id = evidence.rule_version_id
+                        where evidence.extraction_attempt_id = :attemptId
+                        """)
+                .param("attemptId", extractionAttemptId)
+                .query((rs, row) -> ids.put(rs.getString("rule_key"), rs.getString("rule_version_id")))
+                .list();
+        return ids;
+    }
+
+    List<ScheduleEntryRow> findScheduleEntries(String scheduleRevisionId) {
+        return jdbc.sql("""
+                        select approved_checklist_version_id, effective_from, effective_to
+                        from approved_checklist_schedule_entry where schedule_revision_id = :id order by entry_order
+                        """)
+                .param("id", scheduleRevisionId)
+                .query((rs, row) -> new ScheduleEntryRow(rs.getString("approved_checklist_version_id"),
+                        rs.getObject("effective_from", LocalDate.class), rs.getObject("effective_to", LocalDate.class)))
+                .list();
+    }
+
+    void insertApprovedVersion(String versionId, String familyId, String noticeId, Instant createdAt, String hash, String origin) {
+        jdbc.sql("""
+                        insert into approved_checklist_version (
+                            approved_checklist_version_id, dataset_class, family_id, notice_id, created_at, source_record_hash, origin)
+                        values (:id, 'SYNTHETIC_INTERNAL', :family, :notice, :createdAt, :hash, :origin)
+                        """)
+                .param("id", versionId).param("family", familyId).param("notice", noticeId)
+                .param("createdAt", utc(createdAt)).param("hash", hash).param("origin", origin)
+                .update();
+    }
+
+    void insertApprovedItem(String versionId, String familyId, int order, ApprovedItemRow item, String hash) {
+        jdbc.sql("""
+                        insert into approved_checklist_item (
+                            approved_checklist_version_id, family_id, item_order, rule_key, instruction,
+                            evidence_required, structured_change, source_rule_version_id, source_record_hash)
+                        values (:id, :family, :order, :ruleKey, :instruction, :evidenceRequired,
+                                cast(:structuredChange as jsonb), :sourceRule, :hash)
+                        """)
+                .param("id", versionId).param("family", familyId).param("order", order)
+                .param("ruleKey", item.content().ruleKey()).param("instruction", item.content().instruction())
+                .param("evidenceRequired", item.content().evidenceRequired())
+                .param("structuredChange", item.content().structuredChange() == null ? "null" : json(item.content().structuredChange()))
+                .param("sourceRule", item.sourceRuleVersionId()).param("hash", hash)
+                .update();
+    }
+
+    void insertScheduleRevision(String scheduleId, String familyId, String supersedes, Instant createdAt, String hash) {
+        jdbc.sql("""
+                        insert into approved_checklist_schedule_revision (
+                            schedule_revision_id, dataset_class, family_id, supersedes_schedule_revision_id, created_at, source_record_hash)
+                        values (:id, 'SYNTHETIC_INTERNAL', :family, :supersedes, :createdAt, :hash)
+                        """)
+                .param("id", scheduleId).param("family", familyId).param("supersedes", supersedes)
+                .param("createdAt", utc(createdAt)).param("hash", hash)
+                .update();
+    }
+
+    void insertScheduleEntry(String scheduleId, String familyId, int order, ScheduleEntryRow entry, String hash) {
+        jdbc.sql("""
+                        insert into approved_checklist_schedule_entry (
+                            schedule_revision_id, family_id, entry_order, approved_checklist_version_id,
+                            effective_from, effective_to, source_record_hash)
+                        values (:id, :family, :order, :version, :from, :to, :hash)
+                        """)
+                .param("id", scheduleId).param("family", familyId).param("order", order)
+                .param("version", entry.approvedChecklistVersionId())
+                .param("from", entry.effectiveFrom()).param("to", entry.effectiveTo()).param("hash", hash)
+                .update();
+    }
+
+    void insertDecision(
+            String decisionId, String proposalId, String validationResultId, String proposalHash, String decision,
+            String reviewerId, String reason, Instant decidedAt, String versionId, String scheduleId, String revisionProposalId) {
+        jdbc.sql("""
+                        insert into human_review_decision (
+                            decision_id, dataset_class, proposal_id, validation_result_id, proposal_hash, decision,
+                            reviewer_id, reason, decided_at, approved_checklist_version_id, schedule_revision_id, revision_proposal_id)
+                        values (:id, 'SYNTHETIC_WORK', :proposal, :validation, :hash, :decision, :reviewer, :reason,
+                                :decidedAt, :version, :schedule, :revision)
+                        """)
+                .param("id", decisionId).param("proposal", proposalId).param("validation", validationResultId)
+                .param("hash", proposalHash).param("decision", decision).param("reviewer", reviewerId)
+                .param("reason", reason).param("decidedAt", utc(decidedAt)).param("version", versionId)
+                .param("schedule", scheduleId).param("revision", revisionProposalId)
+                .update();
+    }
+
+    void insertReviewRun(
+            String runId, String proposalId, String decision, String reviewerId, String decisionId,
+            Instant startedAt, Instant completedAt, String status, String errorCode) {
+        jdbc.sql("""
+                        insert into human_review_run (
+                            review_run_id, proposal_id, decision, reviewer_id, decision_id, started_at, completed_at, status, error_code)
+                        values (:id, :proposal, :decision, :reviewer, :decisionId, :started, :completed, :status, :error)
+                        """)
+                .param("id", runId).param("proposal", proposalId).param("decision", decision).param("reviewer", reviewerId)
+                .param("decisionId", decisionId).param("started", utc(startedAt)).param("completed", utc(completedAt))
+                .param("status", status).param("error", errorCode)
                 .update();
     }
 

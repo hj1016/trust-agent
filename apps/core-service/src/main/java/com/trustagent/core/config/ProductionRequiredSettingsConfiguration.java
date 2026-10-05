@@ -33,7 +33,8 @@ public class ProductionRequiredSettingsConfiguration {
     static final List<String> DEMO_ONLY_SETTINGS = List.of(
             "trust-agent.proposal-generation.enabled",
             "trust-agent.fixture-approved-checklist.enabled",
-            "trust-agent.proposal-validation.enabled");
+            "trust-agent.proposal-validation.enabled",
+            "trust-agent.human-review.enabled");
 
     public ProductionRequiredSettingsConfiguration(Environment environment) {
         validate(environment);

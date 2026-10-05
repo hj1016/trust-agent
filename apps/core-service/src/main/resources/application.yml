@@ -46,11 +46,13 @@ trust-agent:
   proposal-validation:
     enabled: false
     validator-version: ${TRUST_AGENT_PROPOSAL_VALIDATOR_VERSION:proposal-validator-v1}
+  human-review:
+    enabled: false
   validation-policy:
     max-validation-age: ${TRUST_AGENT_VALIDATION_MAX_AGE:24h}
     policy-version: ${TRUST_AGENT_VALIDATION_POLICY_VERSION:internal-validation-v1}
   schema:
-    expected-version: ${TRUST_AGENT_SCHEMA_EXPECTED_VERSION:7}
+    expected-version: ${TRUST_AGENT_SCHEMA_EXPECTED_VERSION:8}
 
 management:
   server:

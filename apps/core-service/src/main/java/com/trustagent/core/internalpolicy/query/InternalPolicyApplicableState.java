@@ -59,6 +59,19 @@ public record InternalPolicyApplicableState(
             String scheduleRevisionId,
             LocalDate effectiveFrom,
             LocalDate effectiveTo,
-            Instant createdAt) {
+            Instant createdAt,
+            String origin,
+            String decisionId,
+            List<ApprovedItem> items) {
+    }
+
+    /** 승인 checklist 항목(저장 순서). sourceRuleVersionId는 항목의 근거가 된 공문 규칙 version이다. */
+    public record ApprovedItem(
+            int order,
+            String ruleKey,
+            String instruction,
+            boolean evidenceRequired,
+            JsonNode structuredChange,
+            String sourceRuleVersionId) {
     }
 }
