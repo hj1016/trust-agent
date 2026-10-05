@@ -123,6 +123,62 @@
 
 미기록. 사용자의 실행 승인과 PR 병합은 검수 통과가 아니다. REVIEW_CHECKLIST 적용과 설명은 사용자가 기록한다.
 
+### 인간 검수 자료 (AI 작성. 검수 통과 기록이 아니다)
+
+**보존 범위와 커밋, PR**
+- 30파일: 합성 중도상환수수료 공문 v1/v2와 receipt, extraction attempt 6개, `structured_change` 계약, 셀러론 공문 diff, 계약 테스트, 적용 공문 조회 6개 클래스, V5 migration, importer와 설정 변경, 통합 테스트 5개, evidence 2건, README 3종, AGENTS.md.
+- 커밋 `d6a0fbc`(보존), `ce64bee`(Core DB 표기 PostgreSQL 유지 정정). PR #11 → main `598f165`. 원격 CI run 37258568194, main run 37259090769.
+- 백업 대비 허용 변경: evidence 머리 표기, core README 1문장, README/AGENTS의 Core DB 문장 정정.
+
+**businessDate와 knownAt의 구분**
+- `businessDate`는 "어느 업무일에 적용되는 공문인가"를 정한다. 공문의 `[effectiveFrom, effectiveTo)` 구간과 비교한다.
+- `knownAt`은 "그 시점까지 시스템이 실제로 받은 사건만 보인다"는 가시성 cutoff다. receipt의 `receivedAt <= knownAt`인 공문만 후보가 된다. 생략하면 요청 시각(`evaluatedAt`)이다.
+- 두 축을 나누지 않으면 아직 수신하지 않은 공문이 과거 조회에 나타나거나(미래 지식), 미래 시행 공문이 너무 일찍 적용된다.
+- 미래 `knownAt`은 400 `FUTURE_KNOWN_AT_NOT_ALLOWED`. 과거 `knownAt`은 조회는 되지만 `HISTORICAL_KNOWN_AT`으로 현재 사용을 차단. 미래 `businessDate`는 계획 조회를 위해 허용하되 `FUTURE_BUSINESS_DATE`로 차단.
+
+**모호한 공문 선택**
+- 후보가 여럿이면 명시적 `supersedesNoticeId` 체인이 모든 후보를 끊김 없이 잇는 경우에만 체인의 마지막(leaf)을 선택한다.
+- 관계없는 공문이 겹치거나 체인이 끊기면 `noticeSelectionStatus=AMBIGUOUS`, blocking `AMBIGUOUS_EFFECTIVE_NOTICE`, `candidateNoticeIds`를 반환한다. 200이다. version 숫자나 수신 시각으로 임의 선택하지 않는다.
+- 철회된 공문만 남으면 `WITHDRAWN`, 시행 전이면 `NOT_YET_EFFECTIVE`, 없으면 `NO_APPLICABLE_NOTICE`.
+
+**미검증, 미승인 checklist 처리**
+- 공문이 선택돼도 extraction이 없으면 `PENDING_EXTRACTION`, 승인 checklist가 없으면 `PENDING_VALIDATION`이며 `approvedChecklist=null`. 이전 공문의 checklist로 fallback하지 않는다.
+- 승인 checklist가 있어도(테스트 fixture) `AVAILABLE`과 함께 `CURRENT_VALIDATION_NOT_EVALUATED`, `CURRENT_PUBLIC_EVIDENCE_NOT_EVALUATED`가 blocking에 남아 `internalChecklistUseAllowed=false`다. 자동 검증과 사람 결정이 구현되기 전에는 사용을 허용하지 않는다.
+- 현재 baseline에는 승인 checklist가 없으므로 모든 조회는 `PENDING_VALIDATION` 또는 그 앞 단계다.
+
+**대표 테스트 근거** (`InternalPolicyApplicableIntegrationTest`, PostgreSQL Testcontainers)
+- `fourSelectionConditionsAreAppliedAtTheirBoundaries`: 시행 전날 `NOT_YET_EFFECTIVE`, 시행일 선택, v2 수신 전 `NO_APPLICABLE_NOTICE`, 수신 후 v2 선택, 철회 `WITHDRAWN`.
+- `ambiguousBrokenChainReturns200AndCandidateNoticeIds`: 끊긴 체인 fixture에서 200, AMBIGUOUS, 후보 2개.
+- `retroactiveNoticeWarnsButIsInvisibleBeforeReceipt`: 소급 공문은 receipt 전 비노출, 후 `RETROACTIVE_NOTICE` 경고.
+- `pendingNewNoticeNeverFallsBackToPreviousChecklist`: v2 선택 시 `PENDING_VALIDATION`, 이전 checklist 미반환.
+- `finalProposalPrepaymentFeeChangeIsReturnedAsStructuredEvidence`: v2의 `structuredChange` 1.2 → 0.8 PERCENT.
+- `futureBusinessDateAndHistoricalKnowledgeAreExplicitlyBlocked`, `futureInvalidAndUnknownRequestsHaveStableTraceableErrors`.
+- 계약: `tests/contract/test_synthetic_notice_contracts.py` 5개(공문 4개, root 2개, 체인, 수신 순서, 구조화 변경).
+
+**확인용 조회 예시와 예상 결과** (baseline 적재 후 `GET /api/v1/internal-policy/checklists/{familyId}/applicable`)
+
+| 요청 | 예상 결과 |
+|---|---|
+| `SIN-PREPAYMENT-FEE?businessDate=2026-09-14&knownAt=2026-09-20T00:00:00Z` | `noticeSelectionStatus=NOT_YET_EFFECTIVE`, `selectedNotice=null`, blocking에 `NOTICE_NOT_YET_EFFECTIVE`, `HISTORICAL_KNOWN_AT` |
+| `SIN-PREPAYMENT-FEE?businessDate=2026-09-20&knownAt=2026-09-20T00:00:00Z` | `SELECTED`, `selectedNotice.noticeId=SIN-PREPAYMENT-FEE-V1`, `checklistAvailabilityStatus=PENDING_VALIDATION`, `approvedChecklist=null`, rules 2개(`CHECK_PREPAYMENT_FEE_RATE`의 `structuredChange.after_value="1.2"`), `internalChecklistUseAllowed=false` |
+| `SIN-PREPAYMENT-FEE?businessDate=2026-10-01&knownAt=2026-09-24T23:00:00Z` | v2 receipt(2026-09-24T23:40Z) 전이므로 `NO_APPLICABLE_NOTICE`(v1은 10-01에 종료), `selectedNotice=null` |
+| `SIN-PREPAYMENT-FEE?businessDate=2026-10-01&knownAt=2026-09-25T00:00:00Z` | `SELECTED`, `SIN-PREPAYMENT-FEE-V2`, rules 3개, `structuredChange` before "1.2" after "0.8" unit PERCENT effective_on 2026-10-01, `PENDING_VALIDATION`, 사용 불가 |
+| `SIN-PREPAYMENT-FEE?businessDate=2026-10-01` (knownAt 생략, 현재) | 위와 같고 `historicalKnownAt=false`, blocking에 `HISTORICAL_KNOWN_AT` 없음, `CHECKLIST_VALIDATION_PENDING` 있음 |
+| `SIN-PREPAYMENT-FEE?businessDate=<오늘+1일>` | `businessDateInFuture=true`, blocking에 `FUTURE_BUSINESS_DATE` |
+| `SIN-PREPAYMENT-FEE?businessDate=2026-10-01&knownAt=<미래 시각>` | 400, `code=FUTURE_KNOWN_AT_NOT_ALLOWED`, `traceId` |
+| `SIN-UNKNOWN?businessDate=2026-10-01` | 404, `code=POLICY_FAMILY_NOT_FOUND` |
+| `SIN-PREPAYMENT-FEE?businessDate=bad-date` | 400, `code=INVALID_BUSINESS_DATE` |
+
+실행 방법 두 가지: (A) 통합 테스트 1개 클래스 실행 `./gradlew :apps:core-service:test --tests '*InternalPolicyApplicableIntegrationTest' --offline --no-daemon`(Docker 필요, AMBIGUOUS와 철회 fixture까지 확인됨). (B) 로컬 PostgreSQL에 Flyway 적용 뒤 synthetic importer(`--trust-agent.synthetic-internal-import.enabled=true --trust-agent.synthetic-internal-import.root=<저장소 절대 경로>`, 자격증명은 `TRUST_AGENT_SYNTHETIC_IMPORT_DB_*`)로 적재하고 서버를 띄워 위 요청을 보낸다. AMBIGUOUS와 WITHDRAWN은 baseline에 없어 (B)로는 재현되지 않는다.
+
+**남은 한계**
+- 인증과 권한이 없다. actor를 신뢰하지 않으며 test/demo 범위다.
+- 승인 checklist, 자동 검증, 사람 결정이 없어 `internalChecklistUseAllowed`는 항상 false다(TASK-005~007).
+- 영업일 휴일 달력 없이 Asia/Seoul 달력 날짜를 쓴다.
+- 테스트 `futureBusinessDateAndHistoricalKnowledgeAreExplicitlyBlocked`는 고정 날짜 `2026-10-06`을 미래로 가정해 실제 시계에 의존한다. 그 날짜가 지나면 실패하므로 고정 `Clock` 주입으로 바꿔야 한다(후속 테스트 Task 후보).
+- Java 검증은 PostgreSQL 18.6 Testcontainers 기준이며 CI 원격 실행 기록은 PR #11과 main run에 있다.
+
+
 ## 결정 기록과 완료
 
 - 병합: 사용자가 PR #11을 Squash and merge(main `598f165`).
