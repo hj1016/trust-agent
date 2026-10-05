@@ -6,8 +6,9 @@
 
 - DB 구조 변경 파일 V8: `human_review_decision`(변경안당 1건 UNIQUE, 결정 종류별 필수·금지 컬럼 CHECK, 승인은 version과 일정 revision UNIQUE 참조), `human_review_run`. 두 테이블 append-only 가드와 보호 목록 등록(애플리케이션 테이블 33 → 35, 보호 trigger 66 → 70, migration 7 → 8).
 - `HumanReviewService`: 승인 전 검사(최신 결과 PASS/WARN, WARN 사유 필수, 결정 시점 기준 검증 유효 기간, 변경안 해시 일치, 대체·결정 여부, 공문 미철회, 중복 승인 없음, 기준 checklist 최신성). 승인 checklist 항목은 기준 항목 순서를 유지하며 수정은 자리에서 바꾸고 삭제는 빼고 추가는 뒤에 붙인다. 일정 revision은 현재 leaf를 잇고 직전 구간 종료일을 새 시행일로 제한한 뒤 새 구간을 붙인다. 수정은 생성기(`human-revision-v1`)로 새 revision을 만들고, 반려는 결정만 남긴다. 결정 입력에 `knownAt`이 없어 과거 시각 결정이 불가능하다.
-- 적용 공문 조회: 사용 허용 정책 입력을 실제 값으로 연결했다. 검증 유효 = 사람 승인 결정 존재(승인 시점에 확인), 공개 근거 확인 = 선택 공문의 필수 참조가 조회 시점에 확인됨(참조 없으면 해당 없음), 의미 일치 = checklist의 공문 = 선택 공문(조회 자체가 보장). 새 차단 사유 `FIXTURE_CHECKLIST_NOT_APPROVED`, `HUMAN_DECISION_MISSING`, `PUBLIC_EVIDENCE_UNCONFIRMED`, `PROPOSAL_REJECTED`(상태 `UNAVAILABLE`), `APPROVED_CHECKLIST_NOTICE_MISMATCH`, 경고 `INFORMATIONAL_PUBLIC_EVIDENCE_UNCONFIRMED`. 기존 placeholder 사유 `CURRENT_VALIDATION_NOT_EVALUATED`, `CURRENT_PUBLIC_EVIDENCE_NOT_EVALUATED`는 제거. 응답 `approvedChecklist`에 `origin`, `decisionId` 추가(최상위 필드 변화 없음).
+- 적용 공문 조회: 응답 `approvedChecklist`에 `origin`, `decisionId`, `items`(순서, 규칙 키, 설명, 근거 필요 여부, 구조화 변경, 근거 규칙 version)를 추가했다. 사용 허용 정책 입력을 실제 값으로 연결했다. 검증 유효 = 사람 승인 결정 존재(승인 시점에 확인), 공개 근거 확인 = 선택 공문의 필수 참조가 조회 시점에 확인됨(참조 없으면 해당 없음), 의미 일치 = checklist의 공문 = 선택 공문(조회 자체가 보장). 새 차단 사유 `FIXTURE_CHECKLIST_NOT_APPROVED`, `HUMAN_DECISION_MISSING`, `PUBLIC_EVIDENCE_UNCONFIRMED`, `PROPOSAL_REJECTED`(상태 `UNAVAILABLE`), `APPROVED_CHECKLIST_NOTICE_MISMATCH`, 경고 `INFORMATIONAL_PUBLIC_EVIDENCE_UNCONFIRMED`. 기존 placeholder 사유 `CURRENT_VALIDATION_NOT_EVALUATED`, `CURRENT_PUBLIC_EVIDENCE_NOT_EVALUATED`는 제거. 응답 `approvedChecklist`에 `origin`, `decisionId` 추가(최상위 필드 변화 없음).
 - 운영 기동 거부: `trust-agent.human-review.enabled`를 demo 전용 설정에 추가. importer 계열 역할은 결정 테이블에 쓸 수 없다.
+- 보완(사용자 지적 반영): 첫 commit은 AC-02의 항목 3개를 DB 저장으로만 확인했다. 두 번째 commit에서 응답에 항목을 싣고 실제 반환 결과로 검증했다.
 
 ## 테스트 evidence
 
@@ -40,7 +41,7 @@ Java 신규 12 = 결정 통합 7(`HumanReviewIntegrationTest`) + 승인 뒤 조�
 | `concurrentApprovalsOfTheSameProposalLeaveExactlyOneDecision` | 같은 변경안 동시 승인 2건 중 1건만 성공, 결정 1행, 일정 revision 1건. DB: 두 번째 결정 23505, 같은 leaf를 잇는 두 번째 revision 23505 | AC-09 |
 | `failureInsideApprovalTransactionLeavesNoPartialRows` | checklist·일정·결정 저장 뒤 유도한 실패로 전부 취소, HUMAN_REVIEW version·항목·revision·결정 0건, 실패 실행 기록 `REVIEW_WRITE_FAILED` | AC-10 |
 | `decisionTablesAreAppendOnlyAndImportersCannotWriteThem` | UPDATE/DELETE 42501, importer 두 역할 INSERT 불가, runtime INSERT 가능·UPDATE 불가 | AC-12 |
-| `approvedChecklistIsUsableForTheNoticePeriodWithDecisionIdAndOrigin` | 승인 뒤 2026-10-01 조회 `AVAILABLE`, 사용 허용 true, 차단 사유 없음, `origin=HUMAN_REVIEW`, `decisionId`. 2026-09-30은 FIXTURE라 false(`FIXTURE_CHECKLIST_NOT_APPROVED`). 승인 1초 전 기준 시각은 `PENDING_REVIEW`, 같은 시각은 보이지만 과거 조회라 false | AC-02, 03, 04 |
+| `approvedChecklistIsUsableForTheNoticePeriodWithDecisionIdAndOrigin` | 승인 뒤 2026-10-01 조회 `AVAILABLE`, 사용 허용 true, 차단 사유 없음, `origin=HUMAN_REVIEW`, `decisionId`, 응답 `approvedChecklist.items` 3개를 순서(0,1,2)·규칙 키(`CHECK_PREPAYMENT_FEE_RATE` 0.8/1.2/2026-10-01, `CHECK_NOTICE_SOURCE` 구조화 변경 null, `CHECK_CUSTOMER_CONTRACT_DATE` true)·설명 문구·근거 규칙 version(같은 응답의 `rules[].ruleVersionId`와 일치)으로 확인. 2026-09-30은 FIXTURE라 false(`FIXTURE_CHECKLIST_NOT_APPROVED`), 항목 2개(1.2). 승인 1초 전 기준 시각은 `PENDING_REVIEW`, 같은 시각은 보이지만 과거 조회라 false | AC-02, 03, 04 |
 | `approvalSurvivesValidationAgeButNotRequiredPublicEvidenceGoingStale` | 검증 25시간 뒤에도 true(기간 경과로 자동 만료 없음). 공개 관측 30일 초과 시 셀러론은 `PUBLIC_EVIDENCE_UNCONFIRMED`로 false, 참조 없는 중도상환수수료는 true | AC-13(a)(b) |
 | `laterNoticeEventsBlockOnlyWhenSelectionActuallyChanges` | 미래 시행 v3 수신만으로는 계속 true. 끊긴 chain v4 수신으로 선택 모호 → `AMBIGUOUS_EFFECTIVE_NOTICE`. v3 시행 구간 조회는 v3 선택 + `APPROVED_CHECKLIST_NOTICE_MISMATCH`. 셀러론 철회 뒤 `WITHDRAWN`(이전 업무일 포함), 철회 전 기준 시각은 선택됐으나 과거 조회 | AC-13(c)(d) |
 | `rejectedProposalStaysRejectedEvenThoughAPassResultExists` | PASS 결과가 있어도 반려 시각부터 `UNAVAILABLE` + `PROPOSAL_REJECTED`, 두 ID null. 반려 1초 전은 `PENDING_REVIEW`. 이후 새 revision은 그 revision 기준 `PENDING_VALIDATION` | AC-08 |
@@ -62,7 +63,7 @@ Java 신규 12 = 결정 통합 7(`HumanReviewIntegrationTest`) + 승인 뒤 조�
 ## 한계
 
 - CLI 실행 전용, 합성 검수자 ID. 인증·권한 체계, 화면, 알림, 승인 철회, 정기 재검증은 미구현.
-- TASK-006 V-01이 변경안 항목 전체를 공문 규칙과 비교하므로 검수자가 문구를 고친 revision은 승인할 수 없다. 완화 여부는 사용자 결정 사항.
+- TASK-006 V-01이 변경안 항목 전체를 공문 규칙과 비교하므로 검수자가 설명 문구만 고친 revision도 승인할 수 없다. 이번 Task에서 검사 기준을 바꾸지 않았고 별도 Task(TASK-013 계획)로 제안했다.
 - 공개 근거 확인은 조회 시점의 공개 상품 관측 상태 조회를 그대로 쓰며, 과거 조회에서는 확인 결과를 false로 둔다(과거 조회는 이미 차단).
 - 반려 표시는 새 상태값 없이 `UNAVAILABLE` + `PROPOSAL_REJECTED`다.
 - 인간 검수와 완료 판정은 미기록이다.

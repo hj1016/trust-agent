@@ -180,8 +180,32 @@ class InternalPolicyApplicableRepository {
                         resultSet.getObject("effective_to", LocalDate.class),
                         instant(resultSet, "created_at"),
                         resultSet.getString("origin"),
-                        resultSet.getString("decision_id")))
-                .optional();
+                        resultSet.getString("decision_id"),
+                        List.of()))
+                .optional()
+                .map(this::withItems);
+    }
+
+    private InternalPolicyApplicableState.ApprovedChecklist withItems(InternalPolicyApplicableState.ApprovedChecklist checklist) {
+        List<InternalPolicyApplicableState.ApprovedItem> items = jdbc.sql("""
+                        select item_order, rule_key, instruction, evidence_required,
+                               structured_change::text as structured_change, source_rule_version_id
+                        from approved_checklist_item
+                        where approved_checklist_version_id = :versionId
+                        order by item_order
+                        """)
+                .param("versionId", checklist.approvedChecklistVersionId())
+                .query((resultSet, rowNumber) -> new InternalPolicyApplicableState.ApprovedItem(
+                        resultSet.getInt("item_order"),
+                        resultSet.getString("rule_key"),
+                        resultSet.getString("instruction"),
+                        resultSet.getBoolean("evidence_required"),
+                        mapper.readTree(resultSet.getString("structured_change")),
+                        resultSet.getString("source_rule_version_id")))
+                .list();
+        return new InternalPolicyApplicableState.ApprovedChecklist(
+                checklist.approvedChecklistVersionId(), checklist.scheduleRevisionId(), checklist.effectiveFrom(),
+                checklist.effectiveTo(), checklist.createdAt(), checklist.origin(), checklist.decisionId(), items);
     }
 
     /** 일정 leaf에서 업무일을 덮는 구간의 checklist가 가리키는 공문 ID들(선택된 공문과 비교용). */

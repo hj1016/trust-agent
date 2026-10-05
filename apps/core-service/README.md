@@ -71,7 +71,7 @@ true로 만들지 않습니다. production profile은 `TRUST_AGENT_VALIDATION_MA
 수정은 `--trust-agent.human-review.decision=MODIFY --trust-agent.human-review.reason=<사유> --trust-agent.human-review.revised-rules-json=<규칙 JSON 배열>`, 반려는
 `--trust-agent.human-review.decision=REJECT --trust-agent.human-review.reason=<사유>`를 씁니다. 결과는 `human_review_decision`, `human_review_run` 테이블과
 기존 승인 checklist·일정 테이블에 append-only로 남습니다. 적용 공문 조회는 사람 결정이 있는 HUMAN_REVIEW checklist에만 사용 허용을 주고
-(`approvedChecklist.origin`, `approvedChecklist.decisionId`), 테스트용 출처는 `FIXTURE_CHECKLIST_NOT_APPROVED`, 결정 없는 HUMAN_REVIEW는 `HUMAN_DECISION_MISSING`,
+(`approvedChecklist.origin`, `approvedChecklist.decisionId`, 항목 목록 `approvedChecklist.items`), 테스트용 출처는 `FIXTURE_CHECKLIST_NOT_APPROVED`, 결정 없는 HUMAN_REVIEW는 `HUMAN_DECISION_MISSING`,
 반려된 변경안은 `UNAVAILABLE` + `PROPOSAL_REJECTED`, 필수 공개 근거 미확인은 `PUBLIC_EVIDENCE_UNCONFIRMED`, 일정 구간은 덮지만 다른 공문용 checklist면
 `APPROVED_CHECKLIST_NOTICE_MISMATCH`로 차단합니다. 승인 뒤 검증 결과의 기간 경과만으로는 만료되지 않습니다.
 

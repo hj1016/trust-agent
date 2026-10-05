@@ -158,6 +158,31 @@ class HumanReviewApplicableIntegrationTest {
             assertEquals(prepaymentDecisionId, usable.get("approvedChecklist").get("decisionId").stringValue());
             assertEquals("2026-10-01", usable.get("approvedChecklist").get("effectiveFrom").stringValue());
             assertTrue(usable.get("approvedChecklist").get("effectiveTo").isNull());
+            // AC-02: 응답의 승인 checklist 항목 3개를 내용·순서·근거 규칙 version으로 확인한다.
+            JsonNode items = usable.get("approvedChecklist").get("items");
+            assertEquals(3, items.size());
+            assertEquals(List.of("CHECK_PREPAYMENT_FEE_RATE", "CHECK_NOTICE_SOURCE", "CHECK_CUSTOMER_CONTRACT_DATE"),
+                    List.of(items.get(0).get("ruleKey").stringValue(), items.get(1).get("ruleKey").stringValue(), items.get(2).get("ruleKey").stringValue()));
+            assertEquals(List.of(0, 1, 2), List.of(items.get(0).get("order").intValue(), items.get(1).get("order").intValue(), items.get(2).get("order").intValue()));
+            assertEquals("0.8", items.get(0).get("structuredChange").get("after_value").stringValue());
+            assertEquals("1.2", items.get(0).get("structuredChange").get("before_value").stringValue());
+            assertEquals("2026-10-01", items.get(0).get("structuredChange").get("effective_on").stringValue());
+            assertTrue(items.get(1).get("structuredChange").isNull());
+            assertTrue(items.get(2).get("structuredChange").get("after_value").booleanValue());
+            for (JsonNode item : items) {
+                assertTrue(item.get("evidenceRequired").booleanValue());
+                assertFalse(item.get("instruction").stringValue().isBlank());
+                // 항목의 근거 규칙 version은 같은 응답의 공문 규칙(rules) version과 같다.
+                String expectedRule = null;
+                for (JsonNode rule : usable.get("rules")) {
+                    if (rule.get("ruleKey").stringValue().equals(item.get("ruleKey").stringValue())) {
+                        expectedRule = rule.get("ruleVersionId").stringValue();
+                    }
+                }
+                assertEquals(expectedRule, item.get("sourceRuleVersionId").stringValue(), item.get("ruleKey").stringValue());
+            }
+            assertEquals("기업여신 상담 시 변경된 중도상환수수료율 0.8퍼센트와 적용 조건을 원문 근거에서 확인한다.",
+                    items.get(0).get("instruction").stringValue());
 
             // AC-03: 2026-09-30은 테스트용 v1 checklist → 보이지만 사용 불가
             JsonNode fixture = body(get(path("SIN-PREPAYMENT-FEE", "2026-09-30", null)));
@@ -166,6 +191,8 @@ class HumanReviewApplicableIntegrationTest {
             assertTrue(fixture.get("approvedChecklist").get("decisionId").isNull());
             assertTrue(strings(fixture.get("blockingReasons")).contains("FIXTURE_CHECKLIST_NOT_APPROVED"));
             assertFalse(fixture.get("internalChecklistUseAllowed").booleanValue());
+            assertEquals(2, fixture.get("approvedChecklist").get("items").size());
+            assertEquals("1.2", fixture.get("approvedChecklist").get("items").get(0).get("structuredChange").get("after_value").stringValue());
 
             // AC-04: 승인 1초 전 기준 시각 → 승인 전 상태(검토 대기), 승인과 같은 시각 → 보이지만 과거 조회라 사용 불가
             JsonNode beforeApproval = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-10-05T04:29:59Z")));

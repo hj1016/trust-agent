@@ -3,7 +3,7 @@
 - 상태: **검증·검수 대기** (완료 확인 조건 15개와 승인·수정·반려 흐름 승인, 구현 착수 승인. 구현 PR 검수 대기. 완료와 인간 검수는 미기록)
 - 담당자 / 인간 결정자: AI 조사·초안·구현·검증 / 사용자 범위·판정·검수
 - 요구사항 출처: PLAN-001 TASK-007 절(S5 사람 검수, S6 조회), ADR-009 §2.2 R-11(한 공문군의 적용 일정은 revision chain), R-12(기간 중첩 금지), R-05(역할별 최소 권한), CLAUDE.md "AI는 승인 주체가 아니다"
-- 관련 Issue / PR / ADR / 이전 Task: TASK-005(변경안 생성, 완료), TASK-006(자동 검증, PR #21 검수 대기), ADR-008(공개 근거 확인 정책)
+- 관련 Issue / PR / ADR / 이전 Task: TASK-005(변경안 생성, 완료), TASK-006(자동 검증, 완료 PR #21/#23), ADR-008(공개 근거 확인 정책). 계획 문서 PR #22는 구현 PR #24가 같은 문서를 포함·갱신하여 대체(사용자 지시로 #22 닫음)
 
 ## Goal / 관련 요구사항
 
@@ -167,7 +167,7 @@
 
 - **별도 차단 규칙 없음.** 사용 허용 정책(`InternalChecklistUsePolicy`)은 과거 조회, 미래 업무일, 공문 선택 `SELECTED`, checklist `AVAILABLE`, 검증 유효, 공개 근거 확인, 의미 일치 7개 입력의 AND다. 공문 철회와 선택 변경·모호는 공문 선택 단계(기존 `selectNotice`)가 이미 처리하므로 TASK-007은 규칙을 추가하지 않고 입력값만 실제 값으로 연결했다.
 - **대체한 placeholder 사유 2개.** 기존 조회는 checklist가 있으면 `CURRENT_VALIDATION_NOT_EVALUATED`, `CURRENT_PUBLIC_EVIDENCE_NOT_EVALUATED`를 넣고 정책 입력을 false로 고정했다(Day 5c 보류분). 이를 `FIXTURE_CHECKLIST_NOT_APPROVED`(테스트용 출처), `HUMAN_DECISION_MISSING`(HUMAN_REVIEW 출처지만 결정 기록 없음), `PUBLIC_EVIDENCE_UNCONFIRMED`(필수 공개 근거 미확인), 참고용은 경고 `INFORMATIONAL_PUBLIC_EVIDENCE_UNCONFIRMED`로 바꿨다. 기존 테스트의 수동 셀러론 HUMAN_REVIEW 자료(결정 없음)는 `HUMAN_DECISION_MISSING`으로 기대값을 바꿨다.
-- **TASK-006 V-01과 수정(MODIFY)의 긴장.** V-01은 변경안 항목 전체(문구 포함)를 공문 규칙과 비교하므로 검수자가 문구를 고친 revision은 `VALUE_MISMATCH` FAIL이 되어 승인할 수 없다. 공문 규칙과 같은 내용으로 다시 수정해야 PASS가 난다(AC-07 테스트가 두 경로를 모두 보인다). TASK-006 완료 조건을 사후 완화하지 않았고, 완화 여부는 아래 결정 사항.
+- **TASK-006 V-01과 수정(MODIFY)의 긴장(명확한 한계).** V-01은 변경안 항목 전체(설명 문구 포함)를 공문 규칙과 비교하므로 검수자가 설명 문구만 고친 revision도 `VALUE_MISMATCH` FAIL이 되어 승인할 수 없다. 공문 규칙과 같은 내용으로 다시 수정해야 PASS가 난다(AC-07 테스트가 두 경로를 모두 보인다). 이번 Task에서는 검사 기준을 완화하지 않았다. 완화는 별도 Task 계획([TASK-013](TASK-013_변경안-검사-기준-문구-수정-허용.md))으로 제안한다.
 - 철회는 공문 단위 사건이다. 철회를 알게 된 뒤에는 이전 업무일 조회도 `WITHDRAWN`이며, 철회 전 기준 시각으로만 선택됐던 사실이 보인다. 첫 테스트 초안은 이를 잘못 가정했고 기대값을 기존 정책에 맞게 고쳤다(업무 로직 변경 없음).
 
 ## Implementation Result / AI self-review / 인간 검수 / 결정 기록
@@ -178,7 +178,7 @@
 - Java `./gradlew clean test bootJar --offline --no-daemon`: 142건 실행, 통과 142, 실패 0, 건너뜀 0 (기존 130 + 신규 12).
 - Python 로컬(비공개 artifact 제공): 62건 실행, 통과 62, 실패 0, 건너뜀 0. 공개 CI 조건: 62건 실행, 통과 60, 건너뜀 2(비공개 snapshot artifact 없음). 공개 CI 실제 결과는 PR checks.
 - 보호 수치(코드 기준): migration 8, 애플리케이션 테이블 35, 보호 trigger 70.
-- AC-01~15 자동 검증 통과. AC-02의 "항목 3개"는 응답이 checklist 항목을 싣지 않으므로 DB 저장(격리 테스트)으로 확인했고 응답에는 version ID, 출처, 결정 ID가 실린다. AC-11은 결정 입력에 `knownAt`이 없어 과거 시각 입력 자체가 불가능하며 결정 시각이 서비스 시계와 같음을 확인했다. 인간 검수와 완료 판정은 미실시.
+- AC-01~15 자동 검증 통과. AC-02는 첫 구현에서 DB 저장으로만 확인했으나 사용자 지적(동일한 검증이 아님)에 따라 응답 `approvedChecklist.items`를 추가하고 실제 반환 결과의 항목 내용·순서·근거 규칙 version·출처·결정 ID를 검증했다(보완 commit). AC-11은 결정 입력에 `knownAt`이 없어 과거 시각 입력 자체가 불가능하며 결정 시각이 서비스 시계와 같음을 확인했다. 인간 검수와 완료 판정은 미실시.
 
 ### AI self-review
 
