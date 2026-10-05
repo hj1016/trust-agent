@@ -3,7 +3,7 @@
 - 상태: **승인됨, 실행 대기** (의존 조건: TASK-001 병합)
 - 담당자 / 인간 결정자: AI(참조 조사, 실행, 검증) / 사용자(실행 승인, 검수)
 - 요구사항 출처: [자산 audit](TASK-000_자산-audit-초안.md) 4.2 및 7절 제안 3 채택(결정자 사용자). 조건: 실제 삭제 전 사용처, 문서 참조, 복구용 사본, 대상 목록 확인 후 정확한 삭제와 참조 정리 범위를 Task에 명시.
-- 관련: [TASK-001](TASK-001_미커밋-Day-5-자산-보존.md) 이후 실행
+- 관련: [TASK-001](TASK-001_합성-공문-조회-자산-보존.md) 이후 실행
 
 ## Goal / 관련 요구사항
 
@@ -27,7 +27,7 @@
 | `scripts/migrate_public_kb_pipeline_v2.py:22` `COLLECTION_RUN_ID` | 테스트에서 직접 사용 없음(스크립트 내부용) | 삭제와 함께 소멸. 커밋된 collection attempt의 run_id 값은 데이터에 이미 들어 있어 영향 없음 |
 | `docs/tasks/TASK-000_초기-수집-자산-기준선-점검.md:69` | audit 점검 목록에 파일명 언급 | **유지** (역사 기록) |
 | `docs/tasks/TASK-000_자산-audit-초안.md` | DROP 판정 기록 | **유지** |
-| `docs/evidence/DAY_03_HARDENING_EVIDENCE.md` 등 커밋된 evidence | 마이그레이션 실행 기록이 있을 수 있음 | **유지** (과거 evidence 덮어쓰기 금지). 실행 전 grep으로 확인해 목록에 추가 |
+| `docs/evidence/PUBLIC_KB_OBSERVATION_HARDENING_EVIDENCE.md` 등 커밋된 evidence | 마이그레이션 실행 기록이 있을 수 있음 | **유지** (과거 evidence 덮어쓰기 금지). 실행 전 grep으로 확인해 목록에 추가 |
 | README, AGENTS, CI | 참조 없음 | 변경 없음 |
 
 복구용 사본: 삭제 직전 `scripts/migrate_public_kb_pipeline_v2.py`와 `tests/contract/test_public_product_versions.py` 원본을 `/Users/faker/Dev/trust-agent-backups/`에 Task ID로 복사한다. Git history에도 남는다.

@@ -310,9 +310,9 @@ Quote fact를 ProductTermsVersion에서 제거하면 기존 fact set hash를 유
 - Migration run ID는 임의 생성하지 않고 version이 고정된 migration ID를 주입합니다.
   Observation과 attempt ID를 포함한 모든 산출물이 재실행마다 동일해야 합니다.
 
-기존 `docs/evidence/DAY_03_EVIDENCE.md`는 당시 실행 결과를 나타내므로 덮어쓰지
+기존 `docs/evidence/PUBLIC_KB_PRODUCT_FACTS_EVIDENCE.md`는 당시 실행 결과를 나타내므로 덮어쓰지
 않습니다. 정정 안내와 새 evidence 링크만 추가하고, 상세 migration 결과는
-`docs/evidence/DAY_03_HARDENING_EVIDENCE.md`에 기록합니다.
+`docs/evidence/PUBLIC_KB_OBSERVATION_HARDENING_EVIDENCE.md`에 기록합니다.
 
 ## Contract 변경
 

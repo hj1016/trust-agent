@@ -1,11 +1,11 @@
-# 넷째 날 전체 검증 기록
+# Core service와 공개 상품 조회 종합 검증 기록
 
 Day 4는 한 번에 구현하지 않고 4a 기반, 4b 적재, 4c 조회와 확정 차단으로 나눴습니다.
 세부 설계와 테스트는 다음 문서가 기준입니다.
 
-- `DAY_04A_EVIDENCE.md`: Spring Boot, PostgreSQL schema, append-only 감사와 health
-- `DAY_04B_EVIDENCE.md`: 공개·정제 baseline importer, 충돌·rollback과 최소 권한
-- `DAY_04C_EVIDENCE.md`: 관측 상태 API, 시간 의미, evidence visibility와 freshness
+- `CORE_SERVICE_SCHEMA_AUDIT_EVIDENCE.md`: Spring Boot, PostgreSQL schema, append-only 감사와 health
+- `PUBLIC_PRODUCT_BASELINE_IMPORTER_EVIDENCE.md`: 공개·정제 baseline importer, 충돌·rollback과 최소 권한
+- `PUBLIC_PRODUCT_OBSERVED_STATE_EVIDENCE.md`: 관측 상태 API, 시간 의미, evidence visibility와 freshness
 - `../PUBLIC_PRODUCT_ERD.md`: Flyway V1~V3 기준 관계 요약
 
 ## 최종 자동 검증

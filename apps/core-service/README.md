@@ -1,8 +1,8 @@
 # Core Service
 
-Spring Boot 기반 핵심 서비스입니다. Day 4a의 애플리케이션 골격과 감사 저장 기반,
-Day 4b의 baseline importer, Day 4c의 공개 상품 관측 상태 조회와 freshness 및
-confirmation policy, Day 5a와 5b의 합성 공문 적재 및 기준일 조회를 구현했습니다.
+Spring Boot 기반 핵심 서비스입니다. 애플리케이션 골격과 append-only 감사 저장 기반,
+공개 상품 baseline importer, 공개 상품 관측 상태 조회와 freshness 및 confirmation policy,
+합성 공문 적재와 적용 공문 기준일 조회를 구현했습니다.
 Flyway V5부터는 최종 기획서의 대표 사례인 중도상환수수료 변경 전후, 시행일, 조건과
 예외를 `structuredChange`로 보존하고 적용 공문 조회 API에서 반환합니다. 변경 proposal,
 자동 검증 결과와 사람의 제공 승인은 아직 구현하지 않았습니다. 일반 서버 기동 중에는
@@ -138,8 +138,8 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew clean test bootJar --offline
 테스트는 digest로 고정한 PostgreSQL 18.6 Testcontainer에서 Flyway와 DB 권한을 직접
 검증합니다. 운영 DB의 URL, username과 password는 환경 변수로 주입하며 저장소에
 커밋하지 않습니다. 구현 범위와 검증 결과는
-`docs/evidence/DAY_04A_EVIDENCE.md`, `docs/evidence/DAY_04B_EVIDENCE.md`와
-`docs/evidence/DAY_04C_EVIDENCE.md`에 기록합니다.
+`docs/evidence/CORE_SERVICE_SCHEMA_AUDIT_EVIDENCE.md`, `docs/evidence/PUBLIC_PRODUCT_BASELINE_IMPORTER_EVIDENCE.md`와
+`docs/evidence/PUBLIC_PRODUCT_OBSERVED_STATE_EVIDENCE.md`에 기록합니다.
 
 Management endpoint는 기본적으로 `127.0.0.1:8081`에 별도로 열립니다. 배포 환경에서
 address를 바꿀 때는 외부 ingress에 노출하지 않고 내부 probe와 운영자 경로만 허용해야

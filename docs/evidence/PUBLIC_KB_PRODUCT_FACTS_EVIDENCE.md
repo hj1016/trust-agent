@@ -1,8 +1,8 @@
-# 셋째 날 완료 증거
+# 공개 KB 상품 fact 정규화와 버전 관리 검증 기록
 
 > 이 문서는 최초 Day 3 구현 당시의 실행 결과를 보존합니다. 이후 광고 금리 quote와
 > 상품 조건 version을 분리한 hardening으로 active contract와 baseline이 변경됐습니다.
-> 현재 결과와 정정 내용은 `DAY_03_HARDENING_EVIDENCE.md`를 기준으로 봅니다.
+> 현재 결과와 정정 내용은 `PUBLIC_KB_OBSERVATION_HARDENING_EVIDENCE.md`를 기준으로 봅니다.
 
 ## 검증 시점
 

@@ -4,13 +4,13 @@
 - 작성: AI / 결정자: 사용자
 - 상태: **계획 채택(조건부).** TASK-001, TASK-002 실행 승인. TASK-003 중단, TASK-004 취소([ADR-009](../adr/ADR-009-oracle-core-database.md) PostgreSQL 유지). TASK-005 이후 착수는 각각 별도 승인.
 - 전제: Core 업무 DB는 PostgreSQL(ADR-009). [자산 audit](TASK-000_자산-audit-초안.md) 판정.
-- 관련: [ADR-008](../adr/ADR-008-internal-notice-effective-policy-and-review.md) Day 5c 범위, README MVP 목표 4~6단계와 8~9단계
+- 관련: [ADR-008](../adr/ADR-008-internal-notice-effective-policy-and-review.md)의 변경 후보, validation, 사람 검토 범위, README MVP 목표 4~6단계와 8~9단계
 
 ## 0. 번호 이력
 
 | 번호 | 현재 내용 | 이력 |
 |---|---|---|
-| TASK-001 | 미커밋 Day 5 자산 보존 | 승인, PR #11 |
+| TASK-001 | 미커밋 합성 공문 조회 자산 보존 | 승인, PR #11 병합 |
 | TASK-002 | 일회성 migrate 스크립트 DROP 실행 | 승인, TASK-001 병합 뒤 실행 |
 | TASK-003 | Oracle 위험 검증 spike | **중단, 실험 미완료.** 번호와 문서 보존 |
 | TASK-004 | (Oracle 전환 1단계) | **취소.** 번호 재사용 금지 |
@@ -50,9 +50,9 @@
 
 역할은 Task별로 정한다. 기본 제안: AI가 조사, 초안, 구현, 자동 검증, self-review를 맡고 사용자가 범위, AC 확정, 제안 판단, 검수, Explainability Gate를 맡는다.
 
-### TASK-001 미커밋 Day 5 자산 보존
+### TASK-001 미커밋 합성 공문 조회 자산 보존
 
-정식 문서: [TASK-001](TASK-001_미커밋-Day-5-자산-보존.md). PR #11. PostgreSQL 기준 Pre-SDLC 기준선.
+정식 문서: [TASK-001](TASK-001_합성-공문-조회-자산-보존.md). PR #11. PostgreSQL 기준 Pre-SDLC 기준선.
 
 ### TASK-002 일회성 migrate 스크립트 DROP 실행
 

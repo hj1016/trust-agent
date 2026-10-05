@@ -1,4 +1,4 @@
-# 셋째 날 pipeline hardening 완료 증거
+# 공개 KB 관측 파이프라인 hardening 검증 기록
 
 ## 검증 시점과 기준선
 

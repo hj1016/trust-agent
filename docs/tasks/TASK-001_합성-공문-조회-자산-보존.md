@@ -1,4 +1,4 @@
-# TASK-001 미커밋 Day 5 자산을 검증 가능한 Pre-SDLC 기준선으로 보존
+# TASK-001 미커밋 합성 공문과 적용 공문 조회 자산을 검증 가능한 Pre-SDLC 기준선으로 보존
 
 - 상태: **검증/검수 대기.** 구현과 자동 검증 완료, PR #11 병합됨(사용자). 인간 검수와 Explainability Gate는 미기록.
 - 담당자 / 인간 결정자: AI(조사, 초안, 실행, 자동 검증, self-review) / 사용자(범위, AC 확정, 검수, Explainability Gate)
@@ -7,7 +7,7 @@
 
 ## Goal / 관련 요구사항
 
-- Goal: 작업 트리에만 있는 Day 5b와 최종 기획서 정합화 작업(25항목)을 Git history에 보존해, 대표 시나리오 데이터, 계약, 적용 공문 조회 로직, 테스트가 검증 가능한 Pre-SDLC 기준선이 되게 한다. 후속 기능 Task(proposal, validation, 사람 결정)는 이 기준선 위에서 PostgreSQL schema를 확장한다.
+- Goal: 작업 트리에만 있는 적용 공문 조회와 최종 기획서 정합화 작업(25항목)을 Git history에 보존해, 대표 시나리오 데이터, 계약, 적용 공문 조회 로직, 테스트가 검증 가능한 Pre-SDLC 기준선이 되게 한다. 후속 기능 Task(proposal, validation, 사람 결정)는 이 기준선 위에서 PostgreSQL schema를 확장한다.
 - 관련 요구사항: 자산 audit 4.1, 4.3, 4.4, 4.6 판정(KEEP, MODIFY 보존), ADR-009 5절 evidence 표기.
 - 사용자: 저장소 관리자(사용자), 후속 Task를 수행하는 AI.
 - 사전조건: 복구용 사본 `/Users/faker/Dev/trust-agent-backups/2026-10-05-uncommitted-day5/`(target-list 25항목, patch, tar) 존재. 로컬 `main`이 `origin/main`(PR #9 병합 커밋 `acd572b`)보다 뒤에 있음.
@@ -30,11 +30,11 @@
 - A. `datasets/synthetic/internal/notices/prepayment-fee-v1.json`, `-v2.json`, `datasets/synthetic/internal/receipts/prepayment-fee-*.receipt.json` 2개, `datasets/derived/synthetic-internal/policy-extraction-attempts/prepayment-fee-*.extraction.json` 2개, `contracts/synthetic-internal-notice.schema.json` diff, `datasets/synthetic/internal/notices/seller-loan-checklist-v1.json`, `-v2.json` diff, `tests/contract/test_day_05_contracts.py` diff
 - B. `apps/core-service/src/main/java/com/trustagent/core/internalpolicy/query/` 6개 파일, `apps/core-service/src/test/java/com/trustagent/core/bootstrap/AppendOnlyBootstrapChecksTest.java`
 - C. `apps/core-service/src/main/resources/db/migration/V5__add_structured_internal_policy_changes.sql`, `SyntheticInternalImporter.java` diff, `application.yml` diff, 테스트 4개 diff(`CoreApplicationIntegrationTest`, `RuntimeDatasourcePropertiesTest`, `PublicProductSchemaIntegrationTest`, `SyntheticInternalImporterIntegrationTest`), `apps/core-service/src/test/java/com/trustagent/core/internalpolicy/query/InternalPolicyApplicableIntegrationTest.java`
-- D. `docs/evidence/DAY_05B_EVIDENCE.md`, `docs/evidence/FINAL_PROPOSAL_ALIGNMENT_EVIDENCE.md`, `README.md` diff, `apps/core-service/README.md` diff, `AGENTS.md` diff
+- D. `docs/evidence/INTERNAL_POLICY_APPLICABLE_QUERY_EVIDENCE.md`, `docs/evidence/FINAL_PROPOSAL_ALIGNMENT_EVIDENCE.md`, `README.md` diff, `apps/core-service/README.md` diff, `AGENTS.md` diff
 
 제외 범위: 이번 세션에서 작성한 audit, ADR-009, PLAN-001, TASK-001~003 문서와 개발 규칙/템플릿/CLAUDE.md 수정은 별도 문서 PR로 분리한다(이 Task의 업무 결과가 아님). `docs/tasks/TASK-000_*.md` 수정도 같다.
 
-기존 자산 구분: 전부 Pre-SDLC Asset. 커밋 `a6149bb`(Day 5a) 이후 작성됐고 PostgreSQL 기준으로 검증됐다.
+기존 자산 구분: 전부 Pre-SDLC Asset. 커밋 `a6149bb`(합성 공문 계약과 저장 구조) 이후 작성됐고 PostgreSQL 기준으로 검증됐다.
 
 ## Acceptance Criteria (구현 전 고정)
 
@@ -92,7 +92,7 @@
 **판단**
 - [x] 채택
 - 판단자 / 검토 대상 revision 또는 PR: 사용자 / 이 Task 초안
-- 이유 / 승인 범위: 이번 세션의 audit, ADR, PLAN, Task 문서와 개발 규칙, 템플릿, CLAUDE.md 변경은 별도 문서 PR. Day 5 보존 PR에 혼입하지 않음. 문서 PR에서도 실행 승인, 구현 완료, 인간 검수 통과를 구분
+- 이유 / 승인 범위: 이번 세션의 audit, ADR, PLAN, Task 문서와 개발 규칙, 템플릿, CLAUDE.md 변경은 별도 문서 PR. 자산 보존 PR에 혼입하지 않음. 문서 PR에서도 실행 승인, 구현 완료, 인간 검수 통과를 구분
 
 ## Implementation Result (구현 결과와 자동 검증)
 

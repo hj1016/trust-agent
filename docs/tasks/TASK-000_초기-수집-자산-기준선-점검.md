@@ -103,4 +103,4 @@ Git 상태/문서 구조 확인 → 기존 수정 문서와 기준 초안 외부
 
 ## 자산 audit 초안
 
-위 "다음 자산 audit 범위"의 7개 영역에 대한 AI 판정 초안을 [TASK-000 자산 audit 초안](TASK-000_자산-audit-초안.md)에 작성했다. 미커밋 Day 5 작업 처리안과 공개 상품 파이프라인 선택지를 포함한다. 관련 초안은 [ADR-009 Oracle 전환 검토 종료와 PostgreSQL 유지](../adr/ADR-009-oracle-core-database.md)과 [PLAN-001 Task 분할](PLAN-001_중도상환수수료-흐름-Task-분할-초안.md)이다. 판정은 audit 문서 7절에 기록했고, 실행은 [TASK-001](TASK-001_미커밋-Day-5-자산-보존.md), [TASK-002](TASK-002_일회성-migrate-스크립트-DROP-실행.md), [TASK-003](TASK-003_Oracle-위험-검증-spike.md)에서 별도 승인으로 진행한다. 이 기록은 audit 완료나 인간 검수 통과를 뜻하지 않는다.
+위 "다음 자산 audit 범위"의 7개 영역에 대한 AI 판정 초안을 [TASK-000 자산 audit 초안](TASK-000_자산-audit-초안.md)에 작성했다. 미커밋 합성 공문 조회 작업 처리안과 공개 상품 파이프라인 선택지를 포함한다. 관련 초안은 [ADR-009 Oracle 전환 검토 종료와 PostgreSQL 유지](../adr/ADR-009-oracle-core-database.md)과 [PLAN-001 Task 분할](PLAN-001_중도상환수수료-흐름-Task-분할-초안.md)이다. 판정은 audit 문서 7절에 기록했고, 실행은 [TASK-001](TASK-001_합성-공문-조회-자산-보존.md), [TASK-002](TASK-002_일회성-migrate-스크립트-DROP-실행.md), [TASK-003](TASK-003_Oracle-위험-검증-spike.md)에서 별도 승인으로 진행한다. 이 기록은 audit 완료나 인간 검수 통과를 뜻하지 않는다.

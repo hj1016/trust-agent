@@ -1,4 +1,4 @@
-# 넷째 날 A단계 완료 증거
+# Core service schema와 append-only 감사 검증 기록
 
 ## 상태
 
