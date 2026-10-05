@@ -26,7 +26,7 @@ def validate(record, schema_name):
 class DayFiveContractTest(unittest.TestCase):
     def test_notice_inventory_and_supersession_are_valid(self):
         notices = [load(path) for path in sorted(NOTICE_ROOT.glob("*.json"))]
-        self.assertEqual(2, len(notices))
+        self.assertEqual(4, len(notices))
         for notice in notices:
             validate(notice, "synthetic-internal-notice.schema.json")
             self.assertIn("합성", notice["disclaimer"])
@@ -35,7 +35,8 @@ class DayFiveContractTest(unittest.TestCase):
 
         by_id = {notice["notice_id"]: notice for notice in notices}
         roots = [notice for notice in notices if notice["supersedes_notice_id"] is None]
-        self.assertEqual(1, len(roots))
+        self.assertEqual(2, len(roots))
+        self.assertEqual(len({notice["family_id"] for notice in notices}), len(roots))
         for notice in notices:
             predecessor = notice["supersedes_notice_id"]
             if predecessor is not None:
@@ -47,8 +48,8 @@ class DayFiveContractTest(unittest.TestCase):
         notices = {record["notice_id"] for record in map(load, NOTICE_ROOT.glob("*.json"))}
         receipts = [load(path) for path in sorted(RECEIPT_ROOT.glob("*.json"))]
         extractions = [load(path) for path in sorted(EXTRACTION_ROOT.glob("*.json"))]
-        self.assertEqual(2, len(receipts))
-        self.assertEqual(2, len(extractions))
+        self.assertEqual(4, len(receipts))
+        self.assertEqual(4, len(extractions))
         by_receipt = {}
         for receipt in receipts:
             validate(receipt, "synthetic-internal-notice-receipt.schema.json")
@@ -69,6 +70,15 @@ class DayFiveContractTest(unittest.TestCase):
         del invalid["rules"][0]["public_cross_check"]["subject_type"]
         with self.assertRaises(ValidationError):
             validate(invalid, "synthetic-internal-notice.schema.json")
+
+    def test_final_proposal_prepayment_fee_change_is_structured(self):
+        notice = load(NOTICE_ROOT / "prepayment-fee-v2.json")
+        change = notice["rules"][0]["structured_change"]
+        self.assertEqual("prepayment_fee_rate_percent", change["field_key"])
+        self.assertEqual("1.2", change["before_value"])
+        self.assertEqual("0.8", change["after_value"])
+        self.assertEqual("PERCENT", change["unit"])
+        self.assertEqual(notice["effective_from"], change["effective_on"])
 
     def test_invalid_effective_interval_is_rejected_by_invariant(self):
         notice = load(NOTICE_ROOT / "seller-loan-checklist-v1.json")

@@ -1,0 +1,57 @@
+{
+  "dataset_class": "SYNTHETIC_INTERNAL",
+  "synthetic": true,
+  "disclaimer": "프로젝트 시연을 위해 생성한 합성 공문이며 실제 KB 내부자료가 아닙니다.",
+  "notice_id": "SIN-PREPAYMENT-FEE-V2",
+  "family_id": "SIN-PREPAYMENT-FEE",
+  "version": 2,
+  "title": "[합성] 기업여신 중도상환수수료 기준 변경 안내 v2",
+  "document_status": "ISSUED",
+  "issued_on": "2026-09-24",
+  "effective_from": "2026-10-01",
+  "effective_to": null,
+  "supersedes_notice_id": "SIN-PREPAYMENT-FEE-V1",
+  "rules": [
+    {
+      "rule_key": "CHECK_PREPAYMENT_FEE_RATE",
+      "instruction": "기업여신 상담 시 변경된 중도상환수수료율 0.8퍼센트와 적용 조건을 원문 근거에서 확인한다.",
+      "evidence_required": true,
+      "structured_change": {
+        "change_type": "NUMERIC_POLICY_CHANGE",
+        "field_key": "prepayment_fee_rate_percent",
+        "before_value": "1.2",
+        "after_value": "0.8",
+        "unit": "PERCENT",
+        "effective_on": "2026-10-01",
+        "applicable_product_keys": ["kb-seller-loan"],
+        "conditions": ["기업 고객의 기업여신 상담 건", "2026-10-01 이후 중도상환"],
+        "exceptions": ["별도 약정으로 수수료 면제가 확인된 경우"]
+      },
+      "public_cross_check": null
+    },
+    {
+      "rule_key": "CHECK_CUSTOMER_CONTRACT_DATE",
+      "instruction": "변경 기준 적용 여부를 판단하기 위해 고객 약정일과 중도상환 예정일을 확인한다.",
+      "evidence_required": true,
+      "structured_change": {
+        "change_type": "CHECKLIST_ITEM_CHANGE",
+        "field_key": "customer_contract_date_check",
+        "before_value": null,
+        "after_value": true,
+        "unit": "BOOLEAN",
+        "effective_on": "2026-10-01",
+        "applicable_product_keys": ["kb-seller-loan"],
+        "conditions": ["수수료율 변경 공문과 상담 건의 적용 관계 확인"],
+        "exceptions": []
+      },
+      "public_cross_check": null
+    },
+    {
+      "rule_key": "CHECK_NOTICE_SOURCE",
+      "instruction": "상담 안내 전 적용 공문 버전과 원문 근거 위치를 확인한다.",
+      "evidence_required": true,
+      "structured_change": null,
+      "public_cross_check": null
+    }
+  ]
+}

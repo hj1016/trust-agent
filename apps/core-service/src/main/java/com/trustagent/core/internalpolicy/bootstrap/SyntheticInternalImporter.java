@@ -233,8 +233,12 @@ public final class SyntheticInternalImporter {
             String ruleHash = hasher.canonicalize(rule).sha256();
             String ruleId = "policy-rule:" + ruleHash;
             jdbc.sql("""
-                            insert into internal_policy_rule_version values (
-                              :id,'SYNTHETIC_INTERNAL',:key,:instruction,:required,:hash)
+                            insert into internal_policy_rule_version
+                              (rule_version_id,dataset_class,rule_key,instruction,evidence_required,
+                               source_record_hash,structured_change)
+                            values (
+                              :id,'SYNTHETIC_INTERNAL',:key,:instruction,:required,:hash,
+                              cast(:structuredChange as jsonb))
                             on conflict (rule_version_id) do nothing
                             """)
                     .param("id", ruleId)
@@ -242,6 +246,7 @@ public final class SyntheticInternalImporter {
                     .param("instruction", text(rule, "instruction"))
                     .param("required", rule.get("evidence_required").asBoolean())
                     .param("hash", ruleHash)
+                    .param("structuredChange", json(rule.get("structured_change")))
                     .update();
             JsonNode cross = rule.get("public_cross_check");
             if (!cross.isNull()) {
@@ -333,7 +338,8 @@ public final class SyntheticInternalImporter {
                 JsonNode rule = rules.get(i);
                 String ruleHash = hasher.canonicalize(rule).sha256();
                 Map<String, Object> storedRule = jdbc.sql("""
-                                select rule_key,instruction,evidence_required,source_record_hash
+                                select rule_key,instruction,evidence_required,source_record_hash,
+                                       structured_change::text as structured_change
                                 from internal_policy_rule_version where rule_version_id=:id
                                 """)
                         .param("id", "policy-rule:" + ruleHash)
@@ -348,6 +354,10 @@ public final class SyntheticInternalImporter {
                         "evidence_required");
                 requireEqual(
                         ruleHash, storedRule.get("source_record_hash"), "rule source_record_hash");
+                requireEqual(
+                        rule.get("structured_change"),
+                        readJson(storedRule.get("structured_change")),
+                        "structured_change");
                 JsonNode cross = rule.get("public_cross_check");
                 if (!cross.isNull()) {
                     Map<String, Object> reference = jdbc.sql("""
@@ -643,6 +653,14 @@ public final class SyntheticInternalImporter {
             return mapper.writeValueAsString(value);
         } catch (Exception exception) {
             throw failure("JSON_WRITE_FAILED", "감사 JSON을 만들 수 없습니다.");
+        }
+    }
+
+    private JsonNode readJson(Object value) {
+        try {
+            return mapper.readTree(String.valueOf(value));
+        } catch (Exception exception) {
+            throw failure("JSON_READ_FAILED", "저장된 구조화 변경 JSON을 읽을 수 없습니다.");
         }
     }
 

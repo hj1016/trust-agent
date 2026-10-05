@@ -98,7 +98,7 @@ class SyntheticInternalImporterIntegrationTest {
     void importsAllRecordsAndUsesConfiguredBusinessTimezone() throws Exception {
         SyntheticInternalImportResult result = importBaseline("11");
 
-        assertEquals(2, result.counts().get("internal_notice_version"));
+        assertEquals(4, result.counts().get("internal_notice_version"));
         assertEquals("2026-09-11", scalar("""
                 select received_business_date::text from internal_notice_receipt
                 where receipt_id='notice-receipt:11111111111111111111111111111111'
@@ -110,7 +110,7 @@ class SyntheticInternalImporterIntegrationTest {
         importBaseline("11");
         importBaseline("22");
 
-        assertEquals(2, countNotices());
+        assertEquals(4, countNotices());
     }
 
     @Test
@@ -139,7 +139,7 @@ class SyntheticInternalImporterIntegrationTest {
                 select status from synthetic_internal_import_run
                 where import_run_id='synthetic-import:22222222222222222222222222222222'
                 """));
-        assertEquals(2, countNotices());
+        assertEquals(4, countNotices());
     }
 
     @Test

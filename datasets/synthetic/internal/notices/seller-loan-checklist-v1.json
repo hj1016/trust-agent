@@ -5,7 +5,7 @@
   "title": "[합성] 셀러론 상담 준비 체크리스트 안내 v1", "document_status": "ISSUED",
   "issued_on": "2026-09-10", "effective_from": "2026-09-15", "effective_to": "2026-10-01", "supersedes_notice_id": null,
   "rules": [
-    {"rule_key":"CHECK_CORPORATE_LIMIT_SOURCE","instruction":"법인사업자 상담 준비 시 공개 상품 원문의 최대 20억원 표기와 근거 위치를 확인한다.","evidence_required":true,"public_cross_check":{"dataset_class":"PUBLIC_KB","product_key":"kb-seller-loan","snapshot_hash":"sha256:def6b5b670fc0adf36909ffd1ce47bd416a67e213f7127b5058c44681fe7e44b","fact_key":"max_limit_corporate_krw","subject_type":"CORPORATION","value_type":"INTEGER","expected_value":2000000000,"unit":"KRW","evidence_requirement":"REQUIRED"}},
-    {"rule_key":"CHECK_HUMAN_REVIEW","instruction":"자동 검증 결과와 별도로 담당자의 검토 기록을 남긴다.","evidence_required":true,"public_cross_check":null}
+    {"rule_key":"CHECK_CORPORATE_LIMIT_SOURCE","instruction":"법인사업자 상담 준비 시 공개 상품 원문의 최대 20억원 표기와 근거 위치를 확인한다.","evidence_required":true,"structured_change":null,"public_cross_check":{"dataset_class":"PUBLIC_KB","product_key":"kb-seller-loan","snapshot_hash":"sha256:def6b5b670fc0adf36909ffd1ce47bd416a67e213f7127b5058c44681fe7e44b","fact_key":"max_limit_corporate_krw","subject_type":"CORPORATION","value_type":"INTEGER","expected_value":2000000000,"unit":"KRW","evidence_requirement":"REQUIRED"}},
+    {"rule_key":"CHECK_HUMAN_REVIEW","instruction":"자동 검증 결과와 별도로 담당자의 검토 기록을 남긴다.","evidence_required":true,"structured_change":null,"public_cross_check":null}
   ]
 }

@@ -33,7 +33,7 @@ class PublicProductSchemaIntegrationTest {
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
                 .cleanDisabled(true)
                 .load();
-        assertEquals(4, flyway.migrate().migrationsExecuted);
+        assertEquals(5, flyway.migrate().migrationsExecuted);
         assertEquals(0, flyway.migrate().migrationsExecuted);
 
         try (Connection connection = adminConnection(); Statement statement = connection.createStatement()) {
@@ -92,7 +92,7 @@ class PublicProductSchemaIntegrationTest {
                     LIMIT 1
                     """)) {
                 assertTrue(result.next());
-                assertEquals("4", result.getString(1));
+                assertEquals("5", result.getString(1));
             }
             try (ResultSet result = statement.executeQuery("""
                     SELECT count(*)

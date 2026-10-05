@@ -1,9 +1,26 @@
 # Core Service
 
 Spring Boot 기반 핵심 서비스입니다. Day 4a의 애플리케이션 골격과 감사 저장 기반,
-Day 4b의 baseline importer에 이어 Day 4c의 공개 상품 관측 상태 조회와 freshness 및
-confirmation policy를 구현했습니다. 일반 서버 기동 중에는 baseline importer bean을
-만들거나 데이터를 자동 적재하지 않습니다.
+Day 4b의 baseline importer, Day 4c의 공개 상품 관측 상태 조회와 freshness 및
+confirmation policy, Day 5a와 5b의 합성 공문 적재 및 기준일 조회를 구현했습니다.
+Flyway V5부터는 최종 기획서의 대표 사례인 중도상환수수료 변경 전후, 시행일, 조건과
+예외를 `structuredChange`로 보존하고 적용 공문 조회 API에서 반환합니다. 변경 proposal,
+자동 검증 결과와 사람의 제공 승인은 아직 구현하지 않았습니다. 일반 서버 기동 중에는
+baseline importer bean을 만들거나 데이터를 자동 적재하지 않습니다.
+
+현재 구현은 PostgreSQL 기준이며 Core 업무 DB의 Oracle 전환(ADR-009)은 완료되지 않았습니다.
+
+## 합성 내부 공문 기준일 조회
+
+```text
+GET /api/v1/internal-policy/checklists/{familyId}/applicable
+    ?businessDate=YYYY-MM-DD
+    &knownAt=RFC3339 instant
+```
+
+최종 기획서 대표 family는 `SIN-PREPAYMENT-FEE`입니다. 응답은 합성 고지, 선택된 공문,
+구조화 규칙과 원문 JSON Pointer 근거를 포함합니다. 검증과 사람 승인 전에는
+`internalChecklistUseAllowed=false`로 유지합니다.
 
 ## 공개 상품 관측 상태 조회
 
