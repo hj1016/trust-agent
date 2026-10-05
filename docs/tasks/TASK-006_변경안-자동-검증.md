@@ -1,6 +1,6 @@
 # TASK-006 checklist 변경안의 자동 검증
 
-- 상태: **구현 중** (설계와 구현 착수 승인. 완료 확인 조건 15개 확정. 완료와 인간 검수는 미기록)
+- 상태: **완료** (PR #21 병합 commit `38349fd`. 인간 검수와 Explainability Gate 통과, 완료 승인: 사용자)
 - 담당자 / 인간 결정자: AI(계획, 구현, 자동 검증, self-review) / 사용자(범위, 완료 확인 조건 확정, 제안 판단, 착수 승인, 검수)
 - 요구사항 출처: [PLAN-001](PLAN-001_중도상환수수료-흐름-Task-분할-초안.md) TASK-006, [ADR-003](../adr/ADR-003-validation-and-human-approval.md) 자동 검증과 사람 승인 분리, [ADR-008](../adr/ADR-008-internal-notice-effective-policy-and-review.md) "자동 검증" 절, README MVP 목표 5단계 "숫자 및 시행일 오류 차단".
 - 관련: [TASK-005](TASK-005_checklist-변경-후보-proposal-생성.md)(입력인 변경안), 후속 TASK-007(사람 결정은 검증 결과를 입력으로 받는다)
@@ -157,11 +157,11 @@
 
 ### 구현 결과 (AI 작성, 사실)
 
-- 검증 대상: 브랜치 `feat/proposal-automated-validation`, PR(본문에 commit 기재). 상세: [검증 기록](../evidence/CHECKLIST_PROPOSAL_AUTOMATED_VALIDATION_EVIDENCE.md).
+- 검증 대상: 브랜치 `feat/proposal-automated-validation` commit `fe741e8`, PR #21(병합 commit `38349fd`, 공개 CI Gradle/Python 통과). 상세: [검증 기록](../evidence/CHECKLIST_PROPOSAL_AUTOMATED_VALIDATION_EVIDENCE.md).
 - Java `./gradlew clean test bootJar --offline --no-daemon`: 130건 실행, 통과 130, 실패 0, 건너뜀 0 (기존 106 + 신규 24).
 - Python 로컬(비공개 artifact 제공): 62건 실행, 통과 62, 실패 0, 건너뜀 0. 공개 CI 조건(비공개 artifact 없음): 62건 실행, 통과 60, 건너뜀 2(사유 "비공개 snapshot artifact가 제공되지 않았습니다."). 공개 CI의 실제 실행은 PR checks로 확인.
 - 보호 수치(코드 기준): migration 7, 애플리케이션 테이블 33, 보호 trigger 66.
-- AC-01~15는 자동 검증을 통과했다. 인간 검수와 완료 판정은 미실시.
+- AC-01~15는 자동 검증을 통과했다.
 
 ### AI self-review
 
@@ -171,6 +171,30 @@
 - 기존 테스트 기대값 변경은 수치(schema 7, 33, 66)와 fixture family 수(2)에 한정했고 변경 목록을 evidence에 적었다.
 - 한계: CLI 전용, 참고용 공개 참조 데이터 없음(단위 테스트만), 유효 기간 기준은 평가 시각.
 
-### 인간 검수 / 결정
+## 인간 검수와 Explainability Gate
 
-미기록. 사용자 검수 뒤 기록.
+- REVIEW_CHECKLIST 적용 / 검수자 / 검수 대상 revision / 결과: [검수 체크리스트](../development/REVIEW_CHECKLIST.md) / 사용자 / PR #21(브랜치 `feat/proposal-automated-validation`, 커밋 `fe741e8`, 병합 `38349fd`) / **통과**
+- 인간이 확인한 내용: 아래 검수 자료의 사례 3건(정상 변경안의 PASS와 사람 승인 전 사용 불가, 잘못 적은 수수료율의 FAIL과 오류 이유, 과거 기준 시각 조회에서 이후 결과 비노출), 테스트별 검증 범위, 과거 조회에서 유효 기간을 현재 평가 시각으로 판단하는 이유, 남은 한계를 확인했고 승인한 검사·저장·조회 범위에 부합한다고 기록했다.
+- Explainability Gate: **통과**(결정자 사용자).
+- 아래 검수 자료는 AI가 작성한 확인용 자료다.
+
+### 인간 검수 자료
+
+자료 출처: 적용 공문 조회 통합 테스트(`InternalPolicyApplicableIntegrationTest`)의 한 데이터. 변경안 `checklist-proposal:sha256:1111…`(중도상환수수료 v2 대상, 생성 2026-10-03T00:00:00Z), 검증 결과 FAIL `validation:ffff…`(저장 2026-10-03T01:00:00Z), WARN `validation:bbbb…`(2026-10-04T08:00:00Z), PASS `validation:cccc…`(2026-10-04T12:00:00Z). 평가 시각 2026-10-05T03:00:00Z, 업무일 2026-10-01.
+
+**사례 1. 정상 변경안은 PASS지만 사람 승인 전이라 사용 불가** (`validationResultDrivesChecklistStatusWithoutAllowingUse`): 기준 시각 2026-10-04T19:59:59Z에서 보이는 최신 결과는 PASS `validation:cccc…`. 상태 `PENDING_REVIEW`, 차단 사유 `HUMAN_REVIEW_PENDING`, 사용 허용 false, `validatedProposalId`=`…1111…`, `validationResultId`=`validation:cccc…`, 승인 checklist null. 같은 변경 내용(1.2 → 0.8, 시행일 2026-10-01)에 대해 검사기가 실제로 PASS와 INFO 2건을 만드는 것은 격리 DB 테스트(`consistentPrepaymentProposalPassesAndMatchesExpectedFixture`, 결과 `validation:aaaa…`)로 확인한다.
+
+**사례 2. 수수료율을 0.08로 잘못 적으면 FAIL과 이유가 나온다** (`afterValueDifferentFromNoticeFails`): 공문 값 "0.8"에 변경안이 "0.08"을 적으면 FAIL, 오류 `VALUE_MISMATCH`, 규칙 `CHECK_PREPAYMENT_FEE_RATE`, 메시지 "변경안의 변경 후 내용이 공문의 구조화 규칙과 다릅니다", 세부에 변경안 값 "0.08"과 공문 값 "0.8"이 나란히 저장된다. FAIL 결과의 조회 반영은 위 데이터의 `validation:ffff…`로 확인한다(기준 시각 2026-10-03T12:00:00Z → `VALIDATION_FAILED`, 사용 허용 false).
+
+**사례 3. 과거 기준 시각 조회에서는 이후 결과가 보이지 않는다** (`knownAtEarlierThanValidatedAtHidesTheResultAndEqualTimeShowsIt`): 기준 시각 2026-10-04T11:59:59Z → WARN `validation:bbbb…`(`PENDING_REVIEW`). 2026-10-04T12:00:00Z(PASS 저장과 같은 시각) → PASS `validation:cccc…`. 2026-10-03T00:59:59Z → 결과 없음, `PENDING_VALIDATION`, 두 ID null. 모두 과거 조회라 `HISTORICAL_KNOWN_AT`가 붙고 사용 허용 false.
+
+**유효 기간의 기준**: 기록의 가시성은 `knownAt`(저장 시각 ≤ 기준 시각)이 정하고, 사용 가능 여부와 오래됨은 현재 평가 시각이 정한다. 과거 조회는 항상 `HISTORICAL_KNOWN_AT`로 사용이 막힌다.
+
+**직접 확인하는 방법**: `./gradlew :apps:core-service:test --tests '*InternalPolicyApplicableIntegrationTest' --tests '*ProposalValidationIntegrationTest' --tests '*ProposalValidatorTest' --offline --no-daemon`(Docker 필요). 또는 core README의 검증 명령 실행 뒤 `select severity, code, rule_key, message, details from automated_validation_issue order by issue_order`로 오류 이유를 본다.
+
+## 결정 기록과 완료
+
+- 최종 결정 / 결정자 / 승인 범위 / 검토 대상 revision 또는 PR: **완료** / 사용자 / 승인한 검사·저장·조회 범위(검사 V-01~V-11과 PASS/WARN/FAIL 판정, 결과·issue·실행 기록의 한 트랜잭션 저장과 DB 모순 거부, 적용 공문 조회의 상태 반영과 `validatedProposalId`/`validationResultId`, 셀러론 예시 데이터, production 차단) / PR #21
+- Acceptance Criteria 충족 / evidence / ADR / PR: AC-01~AC-15 전부 통과. evidence `docs/evidence/CHECKLIST_PROPOSAL_AUTOMATED_VALIDATION_EVIDENCE.md`. ADR-008, ADR-009. PR #21.
+- 이 완료는 **사람 승인, 화면, AI 기능까지 완료됐다는 뜻이 아니다.** 검증 통과는 사용 허용이 아니다.
+- 잔여 위험 / 후속 Task: CLI 전용, 참고용 공개 참조 데이터 없음(단위 테스트만), 유효 기간 기준은 평가 시각, PASS/WARN은 사람 검토 대기에서 멈춤. TASK-007 사람 검토 결정과 승인 checklist 발행(계획 PR #22).
