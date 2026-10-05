@@ -17,6 +17,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
@@ -194,6 +195,78 @@ class InternalPolicyApplicableIntegrationTest {
     }
 
     @Test
+    void sameBusinessDayAsEvaluationIsNotFutureButRemainsBlockedByPendingValidation() throws Exception {
+        // 평가 시각 2026-10-05T03:00:00Z는 서울 2026-10-05 12:00이므로 같은 날 업무일은 미래가 아니다.
+        JsonNode result = body(get(path("SIN-SELLER-CHECKLIST", "2026-10-05", null)));
+
+        assertEquals("2026-10-05", result.get("evaluatedBusinessDate").stringValue());
+        assertFalse(result.get("businessDateInFuture").booleanValue());
+        assertFalse(result.get("historicalKnownAt").booleanValue());
+        java.util.List<String> blocking = strings(result.get("blockingReasons"));
+        assertFalse(blocking.contains("FUTURE_BUSINESS_DATE"));
+        assertFalse(blocking.contains("HISTORICAL_KNOWN_AT"));
+        // 시간 차단 사유가 없고 승인 checklist fixture가 있어도(AVAILABLE) 검증과 공개 근거 재평가 전에는 사용이 차단된다.
+        assertEquals("SIN-SELLER-CHECKLIST-V2", result.get("selectedNotice").get("noticeId").stringValue());
+        assertEquals("AVAILABLE", result.get("checklistAvailabilityStatus").stringValue());
+        assertTrue(blocking.contains("CURRENT_VALIDATION_NOT_EVALUATED"));
+        assertTrue(blocking.contains("CURRENT_PUBLIC_EVIDENCE_NOT_EVALUATED"));
+        assertFalse(result.get("internalChecklistUseAllowed").booleanValue());
+
+        // 승인 checklist가 없는 family는 같은 날이어도 검증 대기로 차단된다.
+        JsonNode pending = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-05", null)));
+        assertFalse(pending.get("businessDateInFuture").booleanValue());
+        assertEquals("SIN-PREPAYMENT-FEE-V2", pending.get("selectedNotice").get("noticeId").stringValue());
+        assertEquals("PENDING_VALIDATION", pending.get("checklistAvailabilityStatus").stringValue());
+        assertTrue(strings(pending.get("blockingReasons")).contains("CHECKLIST_VALIDATION_PENDING"));
+        assertFalse(pending.get("internalChecklistUseAllowed").booleanValue());
+    }
+
+    @Test
+    void knownAtEqualToEvaluatedAtIsNeitherHistoricalNorFuture() throws Exception {
+        JsonNode same = body(get(path("SIN-SELLER-CHECKLIST", "2026-10-05", "2026-10-05T03:00:00Z")));
+        assertEquals("2026-10-05T03:00:00Z", same.get("knownAt").stringValue());
+        assertFalse(same.get("historicalKnownAt").booleanValue());
+        java.util.List<String> blocking = strings(same.get("blockingReasons"));
+        assertFalse(blocking.contains("HISTORICAL_KNOWN_AT"));
+        assertFalse(blocking.contains("FUTURE_BUSINESS_DATE"));
+        // 시간 사유는 없지만 검증 미완료 사유로 사용은 차단된다.
+        assertTrue(blocking.contains("CURRENT_VALIDATION_NOT_EVALUATED"));
+        assertFalse(same.get("internalChecklistUseAllowed").booleanValue());
+
+        // 1초만 앞서도 과거 지식 조회로 차단 사유가 붙는다. 1초 뒤는 기존 테스트가 400으로 확인한다.
+        JsonNode oneSecondEarlier = body(get(path("SIN-SELLER-CHECKLIST", "2026-10-05", "2026-10-05T02:59:59Z")));
+        assertTrue(oneSecondEarlier.get("historicalKnownAt").booleanValue());
+        assertTrue(strings(oneSecondEarlier.get("blockingReasons")).contains("HISTORICAL_KNOWN_AT"));
+    }
+
+    @Test
+    void evaluatedBusinessDateFollowsSeoulMidnightNotUtcDate() throws Exception {
+        try {
+            // UTC 2026-10-05 15:30 = 서울 2026-10-06 00:30. 평가 업무일은 10-06이어야 하고 10-06 조회는 미래가 아니다.
+            CLOCK.set(Instant.parse("2026-10-05T15:30:00Z"));
+            JsonNode afterMidnight = body(get(path("SIN-SELLER-CHECKLIST", "2026-10-06", null)));
+            assertEquals("2026-10-06", afterMidnight.get("evaluatedBusinessDate").stringValue());
+            assertEquals("2026-10-05T15:30:00Z", afterMidnight.get("evaluatedAt").stringValue());
+            assertFalse(afterMidnight.get("businessDateInFuture").booleanValue());
+            assertFalse(strings(afterMidnight.get("blockingReasons")).contains("FUTURE_BUSINESS_DATE"));
+            assertFalse(afterMidnight.get("internalChecklistUseAllowed").booleanValue());
+
+            JsonNode nextDay = body(get(path("SIN-SELLER-CHECKLIST", "2026-10-07", null)));
+            assertTrue(nextDay.get("businessDateInFuture").booleanValue());
+            assertTrue(strings(nextDay.get("blockingReasons")).contains("FUTURE_BUSINESS_DATE"));
+
+            // UTC 2026-10-05 14:59:59 = 서울 2026-10-05 23:59:59. 평가 업무일은 아직 10-05이므로 10-06 조회는 미래다.
+            CLOCK.set(Instant.parse("2026-10-05T14:59:59Z"));
+            JsonNode beforeMidnight = body(get(path("SIN-SELLER-CHECKLIST", "2026-10-06", null)));
+            assertEquals("2026-10-05", beforeMidnight.get("evaluatedBusinessDate").stringValue());
+            assertTrue(beforeMidnight.get("businessDateInFuture").booleanValue());
+            assertTrue(strings(beforeMidnight.get("blockingReasons")).contains("FUTURE_BUSINESS_DATE"));
+        } finally {
+            CLOCK.reset();
+        }
+    }
+
+    @Test
     void futureInvalidAndUnknownRequestsHaveStableTraceableErrors() throws Exception {
         assertErrorCode(get(path(
                 "SIN-SELLER-CHECKLIST", "2026-09-20", "2026-10-05T03:00:01Z")),
@@ -325,12 +398,45 @@ class InternalPolicyApplicableIntegrationTest {
         return result;
     }
 
+    /**
+     * 기본값은 EVALUATED_AT으로 고정된 시계다. 서울 자정 경계 테스트만 평가 시각을 바꾸고 끝나면 되돌린다.
+     * 업무 로직은 Clock.instant()만 읽으므로 테스트 전용 조정이 서비스 동작을 바꾸지 않는다.
+     */
+    static final class AdjustableClock extends Clock {
+        private volatile Instant instant = EVALUATED_AT;
+
+        void set(Instant value) {
+            instant = value;
+        }
+
+        void reset() {
+            instant = EVALUATED_AT;
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return ZoneOffset.UTC;
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            return this;
+        }
+
+        @Override
+        public Instant instant() {
+            return instant;
+        }
+    }
+
+    private static final AdjustableClock CLOCK = new AdjustableClock();
+
     @TestConfiguration(proxyBeanMethods = false)
     static class FixedClockConfiguration {
         @Bean
         @Primary
         Clock fixedClock() {
-            return Clock.fixed(EVALUATED_AT, ZoneOffset.UTC);
+            return CLOCK;
         }
     }
 }

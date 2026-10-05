@@ -57,7 +57,7 @@ PostgreSQL 18.6 image digest를 사용합니다.
 JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew clean test bootJar --offline --no-daemon
 ```
 
-최종 기획서 정합화 검증에서는 Java 테스트 82개와 executable jar 생성이 통과했습니다. 상세
+Java 테스트 85개와 executable jar 생성이 통과했습니다. 상세
 증거는 `docs/evidence/CORE_SERVICE_SCHEMA_AUDIT_EVIDENCE.md`와
 `docs/evidence/PUBLIC_PRODUCT_BASELINE_IMPORTER_EVIDENCE.md`, `docs/evidence/PUBLIC_PRODUCT_OBSERVED_STATE_EVIDENCE.md`,
 `docs/evidence/SYNTHETIC_NOTICE_SCHEMA_EVIDENCE.md`, `docs/evidence/INTERNAL_POLICY_APPLICABLE_QUERY_EVIDENCE.md`에 기록합니다.
