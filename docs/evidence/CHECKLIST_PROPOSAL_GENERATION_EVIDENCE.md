@@ -25,7 +25,7 @@
 
 ```text
 ./gradlew clean test bootJar --offline --no-daemon
-106 tests completed (82 + 24), failures 0, skipped 0
+106 tests completed (기존 85 + 신규 21), failures 0, skipped 0
 executable jar 생성
 
 python3 -m unittest discover -s tests   (비공개 artifact 지정)
@@ -37,13 +37,15 @@ OK
 
 | 테스트 | 보장 | AC |
 |---|---|---|
-| 생성기 단위 3건 | 추가/수정/삭제 분류와 규칙 키 정렬, 같은 입력의 같은 ID(입력 순서 무관, 생성기 버전 다르면 다른 ID), 규칙 키 중복과 부동소수점 거부 | AC-01, 02, 07 |
-| 변경안 통합 6건 | 정답 파일과 일치하는 변경안 생성, 재실행 멱등(실행 기록만 증가), 승인 checklist 없는 공문군은 `NO_BASE_CHECKLIST` 실패 기록, 미수신/철회 공문은 `TARGET_NOTICE_NOT_VISIBLE`, 항목 형태 제약(23514)과 append-only(42501), 같은 변경안 두 번 대체 거부(23505)와 다른 공문군 FK 거부(23503) | AC-01~07 |
-| 예시 데이터 통합 5건 | 멱등 적재와 실행 기록 2건, 같은 ID 내용 불일치 거부(`FIXTURE_CONTENT_CONFLICT`)와 rollback, HUMAN_REVIEW 존재 시 거부(`HUMAN_APPROVAL_EXISTS`), 공문군 불일치 FK(23503)와 규칙 키 중복(23505)과 두 번째 root schedule(23505)과 append-only(42501), importer 계정 INSERT 불가와 runtime 허용 | AC-11~16 |
-| 적용 공문 조회 추가 3건 | 예시 checklist가 있는 v1 기간은 `AVAILABLE`이지만 검증과 공개 근거 재평가 전이라 사용 불가, v2 기간은 v1로 대체하지 않고 `PENDING_VALIDATION`, 응답 필드 집합 19개 불변 | AC-08, 09, 22 |
-| 운영 기동 거부 4건 | 변경안 생성 단독, 예시 적재 단독, 둘 다, 둘 다 꺼짐 또는 미설정 | AC-17~21 |
-| 기존 schema 테스트 갱신 | migration 6개, 애플리케이션 테이블 30개, 보호 trigger 60개, schema version 6 | AC-15 |
+| 생성기 단위 3건 (`ChecklistChangeProposalGeneratorTest`) | 추가/수정/삭제 분류와 규칙 키 정렬, 같은 입력의 같은 ID(입력 순서 무관, 생성기 버전 다르면 다른 ID), 규칙 키 중복과 부동소수점 거부 | AC-01, 02, 07 |
+| 변경안 통합 6건 (`ChecklistProposalIntegrationTest`) | 정답 파일과 일치하는 변경안 생성, 재실행 멱등(실행 기록만 증가), 승인 checklist 없는 공문군은 `NO_BASE_CHECKLIST` 실패 기록, 미수신/철회 공문은 `TARGET_NOTICE_NOT_VISIBLE`, 항목 형태 제약(23514)과 append-only(42501), 같은 변경안 두 번 대체 거부(23505)와 다른 공문군 FK 거부(23503) | AC-01~07 |
+| 예시 데이터 통합 5건 (`ChecklistProposalIntegrationTest`) | 멱등 적재와 실행 기록 2건, 같은 ID 내용 불일치 거부(`FIXTURE_CONTENT_CONFLICT`)와 rollback, HUMAN_REVIEW 존재 시 거부(`HUMAN_APPROVAL_EXISTS`), 공문군 불일치 FK(23503)와 규칙 키 중복(23505)과 두 번째 root schedule(23505)과 append-only(42501), importer 계정 INSERT 불가와 runtime 허용 | AC-11~16 |
+| 적용 공문 조회 추가 3건 (`InternalPolicyApplicableIntegrationTest` 11 → 14) | 예시 checklist가 있는 v1 기간은 `AVAILABLE`이지만 검증과 공개 근거 재평가 전이라 사용 불가, v2 기간은 v1로 대체하지 않고 `PENDING_VALIDATION`, 응답 필드 집합 19개 불변 | AC-08, 09, 22 |
+| 운영 기동 거부 4건 (`DemoFeatureProductionGuardTest`) | 변경안 생성 단독, 예시 적재 단독, 둘 다, 둘 다 꺼짐 또는 미설정 | AC-17~21 |
+| 기존 schema 테스트 갱신 (개수 변화 없음) | migration 6개, 애플리케이션 테이블 30개, 보호 trigger 60개, schema version 6 | AC-15 |
 | Python 계약 3건 | 예시 데이터 2종 schema와 FIXTURE 표시, 항목이 v1 공문 규칙과 규칙 version ID에 대응, 정답 변경안이 schema를 만족하고 두 공문에서 재계산한 해시와 ID가 일치 | AC-23 |
+
+기존 85개는 클래스별 개수가 main과 같고 시간 경계 테스트 3건(같은 업무일, 같은 기준 시각, 서울 자정)도 유지됐다. 신규 21 = 3 + 11 + 4 + 3.
 
 첫 실행에서 테스트 1건이 실패했다. 원인은 테스트 설계 오류(이미 대체된 변경안을 다시 대체하려 해 FK 전에 unique 위반이 발생)였고 기대값을 고쳤다. 업무 로직 결함은 아니다.
 

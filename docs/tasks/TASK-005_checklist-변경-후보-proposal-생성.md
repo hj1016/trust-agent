@@ -164,7 +164,7 @@ Vertical slice: fixture 적재 → generate command → proposal 저장 → 조�
 
 | AC ID | 검증 대상 revision | 실행 명령/절차 | 환경/버전 | 결과 | evidence 경로 |
 |---|---|---|---|---|---|
-| AC-01~25 | 브랜치 `feat/checklist-change-proposal` HEAD | `./gradlew clean test bootJar --offline --no-daemon`, `python3 -m unittest discover -s tests` | 로컬 macOS arm64, Java 21, Docker, PostgreSQL 18.6 Testcontainers, Python 3.11.8 | Java 106 통과(82 + 24), 실패 0, skip 0, jar 생성. Python 60 통과(57 + 3) | evidence 문서 표. 원격 CI는 PR에 기록 |
+| AC-01~25 | 브랜치 `feat/checklist-change-proposal` HEAD | `./gradlew clean test bootJar --offline --no-daemon`, `python3 -m unittest discover -s tests` | 로컬 macOS arm64, Java 21, Docker, PostgreSQL 18.6 Testcontainers, Python 3.11.8 | Java 106 통과(기존 85 + 신규 21), 실패 0, skip 0, jar 생성. Python 60 통과(57 + 3) | evidence 문서 표. 원격 CI는 PR에 기록 |
 
 ## AI self-review
 
@@ -174,7 +174,33 @@ Vertical slice: fixture 적재 → generate command → proposal 저장 → 조�
 
 ## 인간 검수와 Explainability Gate
 
-미기록.
+미기록. 아래 검수 자료는 AI가 작성한 확인용 자료이며 검수 통과 기록이 아니다.
+
+### 인간 검수 자료
+
+**대표 변경안의 전후 값** (`contracts/fixtures/prepayment-fee-v2-proposal.expected.json`, 통합 테스트 `generatesTheExpectedPrepaymentFeeProposalFromFixtureBaseline`이 DB 저장 결과와 대조)
+
+| 항목 | 종류 | 변경 전 (v1 기준 checklist) | 변경 후 (v2 공문) |
+|---|---|---|---|
+| `CHECK_PREPAYMENT_FEE_RATE` | 수정 | 수수료율 after_value "1.2", 시행일 2026-09-15, 조건 1개("기업 고객의 기업여신 상담 건"), 예외 1개 | after_value "0.8"(before_value "1.2"), 시행일 2026-10-01, 조건 2개(+"2026-10-01 이후 중도상환"), 예외 1개 |
+| `CHECK_CUSTOMER_CONTRACT_DATE` | 추가 | 없음 | 고객 약정일과 중도상환 예정일 확인, boolean true, 시행일 2026-10-01 |
+| `CHECK_NOTICE_SOURCE` | 변경 없음 | 같은 내용 | 같은 내용 (항목 생성 안 함) |
+
+값은 문자열 십진수로 저장되며("1.2", "0.8") 부동소수점은 생성기와 Python 계약 테스트가 거부한다.
+
+**반복 실행 시 중복 방지** (`sameInputIsIdempotentAndOnlyAddsARunRecord`): 같은 입력으로 두 번 실행하면 변경안 ID가 같고(`checklist-proposal:sha256:59ad46b8...`), 변경안 1건과 항목 2건은 그대로이며 실행 기록만 2건이 된다. 두 번째 결과의 `created=false`.
+
+**기준 checklist가 없을 때** (`familyWithoutApprovedChecklistFailsWithNoBaseChecklistAndAuditsTheRun`): 셀러론 공문군은 승인 checklist가 없어 변경안이 만들어지지 않고(0건), 실행 기록에 `FAILED`와 `NO_BASE_CHECKLIST`가 남는다. 미수신 또는 철회된 공문은 `TARGET_NOTICE_NOT_VISIBLE`(`unknownOrWithdrawnTargetIsNotVisible`).
+
+**테스트용 데이터가 승인이나 사용 허용을 대신하지 않는 근거**
+- `fixtureChecklistIsAvailableForItsOwnNoticeButNeverUnlocksUse`: 예시 checklist가 있는 v1 기간(2026-09-20) 조회는 `AVAILABLE`이지만 차단 사유 `CURRENT_VALIDATION_NOT_EVALUATED`, `CURRENT_PUBLIC_EVIDENCE_NOT_EVALUATED`가 남고 `internalChecklistUseAllowed=false`.
+- `fixtureChecklistDoesNotFallBackToTheNewNoticePeriod`: v2 기간(2026-10-01)은 v1 예시로 대체하지 않고 `PENDING_VALIDATION`, `approvedChecklist=null`, 사용 불가.
+- `fixtureIsRefusedWhenHumanReviewedChecklistExistsForTheFamily`: 사람 검토 승인(`origin=HUMAN_REVIEW`)이 있는 공문군에는 예시 적재가 `HUMAN_APPROVAL_EXISTS`로 거부된다.
+- DB 컬럼 `origin`은 출처 구분이며 `FIXTURE` 값과 면책 문구가 데이터에 들어 있다. 응답 계약은 바뀌지 않았다(`applicableResponseContractIsUnchangedByProposalWork`).
+
+**production 차단 결과** (`DemoFeatureProductionGuardTest` 4건): 변경안 생성 설정만 켠 경우, 예시 적재 설정만 켠 경우, 둘 다 켠 경우 모두 기동이 거부되고 오류 메시지에 `DEMO_FEATURE_ENABLED_IN_PROD`와 해당 설정 키가 들어간다. 둘 다 꺼져 있거나 없으면 기동한다.
+
+**직접 확인하는 방법**: 통합 테스트 2클래스 실행 `./gradlew :apps:core-service:test --tests '*ChecklistProposalIntegrationTest' --tests '*InternalPolicyApplicableIntegrationTest' --offline --no-daemon`(Docker 필요). 또는 로컬 PostgreSQL에서 core README의 두 명령(예시 적재, 변경안 생성)을 실행한 뒤 `select rule_key, change_type, before_json, after_json from checklist_change_proposal_item order by item_order`로 전후 값을 본다.
 
 ## 결정 기록과 완료
 
