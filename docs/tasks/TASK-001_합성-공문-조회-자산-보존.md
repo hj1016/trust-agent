@@ -175,7 +175,7 @@
 - 인증과 권한이 없다. actor를 신뢰하지 않으며 test/demo 범위다.
 - 승인 checklist, 자동 검증, 사람 결정이 없어 `internalChecklistUseAllowed`는 항상 false다(TASK-005~007).
 - 영업일 휴일 달력 없이 Asia/Seoul 달력 날짜를 쓴다.
-- 테스트 `futureBusinessDateAndHistoricalKnowledgeAreExplicitlyBlocked`는 고정 날짜 `2026-10-06`을 미래로 가정해 실제 시계에 의존한다. 그 날짜가 지나면 실패하므로 고정 `Clock` 주입으로 바꿔야 한다(후속 테스트 Task 후보).
+- 통합 테스트는 평가 시각을 `2026-10-05T03:00:00Z`(서울 2026-10-05 12:00)로 고정한 시계를 주입하므로 실제 날짜에 의존하지 않는다(처음 작성한 검수 자료의 "실제 시계 의존" 서술은 오류였고 정정한다). 경계 검증 현황: 미래 업무일(+1일)과 과거 인지 시각, 미래 인지 시각(+1초, 400)은 단언돼 있으나 **같은 날(업무일 = 평가 업무일)과 같은 시각(인지 시각 = 평가 시각)이 차단되지 않는 경우**는 단언이 없다. 서울 자정 전후 업무일 변환은 단위 테스트(`BusinessTimePolicyTest`)에서만 확인된다.
 - Java 검증은 PostgreSQL 18.6 Testcontainers 기준이며 CI 원격 실행 기록은 PR #11과 main run에 있다.
 
 
