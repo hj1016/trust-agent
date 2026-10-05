@@ -1,6 +1,6 @@
 # TASK-001 미커밋 합성 공문과 적용 공문 조회 자산을 검증 가능한 Pre-SDLC 기준선으로 보존
 
-- 상태: **검증/검수 대기.** 구현과 자동 검증 완료, PR #11 병합됨(사용자). 인간 검수와 Explainability Gate는 미기록.
+- 상태: **완료.** 구현과 자동 검증 완료, PR #11 병합, 인간 검수와 Explainability Gate 통과(결정자 사용자). 승인 범위는 아래 결정 기록 참조.
 - 담당자 / 인간 결정자: AI(조사, 초안, 실행, 자동 검증, self-review) / 사용자(범위, AC 확정, 검수, Explainability Gate)
 - 요구사항 출처: [자산 audit](TASK-000_자산-audit-초안.md) 5절 처리안 1 조건부 채택(결정자 사용자, 검토 대상 audit 초안 미커밋 revision)
 - 관련: [TASK-000](TASK-000_초기-수집-자산-기준선-점검.md), [ADR-008](../adr/ADR-008-internal-notice-effective-policy-and-review.md), [ADR-009](../adr/ADR-009-oracle-core-database.md), [PLAN-001](PLAN-001_중도상환수수료-흐름-Task-분할-초안.md)
@@ -121,7 +121,10 @@
 
 ## 인간 검수와 Explainability Gate
 
-미기록. 사용자의 실행 승인과 PR 병합은 검수 통과가 아니다. REVIEW_CHECKLIST 적용과 설명은 사용자가 기록한다.
+- REVIEW_CHECKLIST 적용 / 검수자 / 검수 대상 revision / 결과: [검수 체크리스트](../development/REVIEW_CHECKLIST.md) / 사용자 / main `598f165`(PR #11) + 검수 자료(PR #15) + 시간 경계 테스트(PR #16, TASK-012) / **통과**
+- 인간이 확인한 내용: 아래 "인간 검수 자료"의 보존 범위와 커밋/PR, businessDate와 knownAt의 구분, 모호한 공문 선택(AMBIGUOUS fail-closed), 미검증/미승인 checklist의 사용 차단, 대표 테스트 근거, 조회 예시와 예상 결과, 남은 한계를 확인했고 설명한 동작과 한계를 이해했다고 기록했다.
+- Explainability Gate: **통과**(결정자 사용자). 기능 필요성, 요청 처리 흐름, 읽고 쓰는 데이터, 시간 경계, 실패 시 차단 동작, 각 테스트가 보장하는 것을 사용자가 확인했다.
+- 설명하지 못한 항목 / 보완 결과 / 재검수: 처음 검수 자료의 "실제 시계 의존" 서술 오류를 정정했고(PR #15), 같은 업무일, 같은 기준 시각, 서울 자정 경계는 TASK-012 테스트 3건으로 보완해 재확인했다(PR #16).
 
 ### 인간 검수 자료 (AI 작성. 검수 통과 기록이 아니다)
 
@@ -181,7 +184,7 @@
 
 ## 결정 기록과 완료
 
-- 병합: 사용자가 PR #11을 Squash and merge(main `598f165`).
-- Acceptance Criteria: AC-01~AC-10 전부 통과(위 표).
-- 완료 판정: **대기.** 인간 검수와 Explainability Gate 기록 뒤 사용자가 결정한다.
-- 잔여 위험 / 후속 Task: TASK-002(migrate 스크립트 DROP 실행), TASK-005(proposal 생성).
+- 최종 결정 / 결정자 / 승인 범위 / 검토 대상 revision 또는 PR: **완료** / 사용자 / 기존 자산 보존, 적용 공문 조회, 날짜와 시각 경계, 미검증·미승인 checklist 사용 차단 / main `598f165`(PR #11), PR #15, PR #16
+- Acceptance Criteria 충족 / evidence / ADR / PR: AC-01~AC-10 전부 통과(위 표). evidence: `docs/evidence/INTERNAL_POLICY_APPLICABLE_QUERY_EVIDENCE.md`, `docs/evidence/FINAL_PROPOSAL_ALIGNMENT_EVIDENCE.md`, `docs/evidence/APPLICABLE_QUERY_TIME_BOUNDARY_TESTS_EVIDENCE.md`. ADR-008, ADR-009. PR #11, #15, #16.
+- 이 완료는 **후속 기능(checklist 변경안 생성, 자동 검증, 사람 결정, 행원 업무 제공)까지 완료됐다는 뜻이 아니다.**
+- 잔여 위험 / 후속 Task: 인증 없음(test/demo), 승인 checklist와 검증과 사람 결정 미구현으로 사용 허용은 항상 false, 휴일 달력 없음. 후속 TASK-005(checklist 변경안 생성), TASK-006, TASK-007.
