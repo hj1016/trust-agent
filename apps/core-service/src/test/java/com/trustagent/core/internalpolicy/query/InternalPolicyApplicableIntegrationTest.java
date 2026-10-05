@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.trustagent.core.TrustAgentCoreApplication;
 import com.trustagent.core.internalpolicy.bootstrap.SyntheticInternalImporter;
+import com.trustagent.core.internalpolicy.proposal.FixtureApprovedChecklistLoader;
 import com.trustagent.core.publicproduct.baseline.BaselineImporter;
 import com.trustagent.core.web.RequestTraceFilter;
 import java.net.URI;
@@ -82,6 +83,9 @@ class InternalPolicyApplicableIntegrationTest {
                 .importBaseline(root, "baseline:89898989898989898989898989898989");
         new SyntheticInternalImporter(JdbcClient.create(dataSource), objectMapper, manager, "Asia/Seoul")
                 .importBaseline(root, "synthetic-import:89898989898989898989898989898989");
+        // TASK-005: 중도상환수수료 family의 test/demo 전용 승인 checklist 예시 데이터(origin=FIXTURE)
+        new FixtureApprovedChecklistLoader(JdbcClient.create(dataSource), objectMapper, manager, CLOCK)
+                .load(root, "checklist-fixture-run:89898989898989898989898989898989");
         insertApprovedSchedules();
         insertRetroactiveFamily();
         insertWithdrawnFamily();
@@ -264,6 +268,45 @@ class InternalPolicyApplicableIntegrationTest {
         } finally {
             CLOCK.reset();
         }
+    }
+
+    @Test
+    void fixtureChecklistIsAvailableForItsOwnNoticeButNeverUnlocksUse() throws Exception {
+        // TASK-005 AC-08: v1 기간 조회. fixture checklist가 있어 AVAILABLE이지만 검증과 공개 근거 재평가 전이라 사용 불가.
+        JsonNode v1 = body(get(path("SIN-PREPAYMENT-FEE", "2026-09-20", "2026-09-20T00:00:00Z")));
+        assertEquals("SIN-PREPAYMENT-FEE-V1", v1.get("selectedNotice").get("noticeId").stringValue());
+        assertEquals("AVAILABLE", v1.get("checklistAvailabilityStatus").stringValue());
+        assertEquals("approved-checklist:2eaa5be6af97d149ee1d05a293c7e3a2",
+                v1.get("approvedChecklist").get("approvedChecklistVersionId").stringValue());
+        java.util.List<String> blocking = strings(v1.get("blockingReasons"));
+        assertTrue(blocking.contains("CURRENT_VALIDATION_NOT_EVALUATED"));
+        assertTrue(blocking.contains("CURRENT_PUBLIC_EVIDENCE_NOT_EVALUATED"));
+        assertFalse(v1.get("internalChecklistUseAllowed").booleanValue());
+    }
+
+    @Test
+    void fixtureChecklistDoesNotFallBackToTheNewNoticePeriod() throws Exception {
+        // TASK-005 AC-09: v2 기간 조회. v1 fixture로 대체 반환하지 않고 검증 대기.
+        JsonNode v2 = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-09-25T02:00:00Z")));
+        assertEquals("SIN-PREPAYMENT-FEE-V2", v2.get("selectedNotice").get("noticeId").stringValue());
+        assertEquals("PENDING_VALIDATION", v2.get("checklistAvailabilityStatus").stringValue());
+        assertTrue(v2.get("approvedChecklist").isNull());
+        assertTrue(strings(v2.get("blockingReasons")).contains("CHECKLIST_VALIDATION_PENDING"));
+        assertFalse(v2.get("internalChecklistUseAllowed").booleanValue());
+    }
+
+    @Test
+    void applicableResponseContractIsUnchangedByProposalWork() throws Exception {
+        // TASK-005 AC-22: 응답 필드 집합 불변. latestProposalId 없음(제안 3 보류).
+        JsonNode result = body(get(path("SIN-PREPAYMENT-FEE", "2026-10-01", "2026-09-25T02:00:00Z")));
+        java.util.Set<String> fields = new java.util.TreeSet<>();
+        result.propertyNames().forEach(fields::add);
+        assertEquals(new java.util.TreeSet<>(java.util.List.of(
+                "familyId", "datasetClass", "synthetic", "disclaimer", "businessDate", "knownAt", "evaluatedAt",
+                "evaluatedBusinessDate", "businessDateInFuture", "historicalKnownAt", "noticeSelectionStatus",
+                "checklistAvailabilityStatus", "blockingReasons", "warningReasons", "internalChecklistUseAllowed",
+                "candidateNoticeIds", "selectedNotice", "rules", "approvedChecklist")), fields);
+        assertFalse(fields.contains("latestProposalId"));
     }
 
     @Test

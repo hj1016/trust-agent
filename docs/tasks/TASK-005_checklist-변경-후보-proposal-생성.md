@@ -1,6 +1,6 @@
 # TASK-005 공문 변경에서 checklist 변경 후보(proposal) 생성
 
-- 상태: **계획 수정 승인(설계 방향). 구현 착수 승인은 아님.** 사용자가 제안 1 조건부 채택, 제안 2 채택, 제안 3 보류를 결정했고 그에 맞춰 AC와 계획을 확정했다.
+- 상태: **검증/검수 대기.** 사용자 착수 승인 뒤 구현과 자동 검증 완료. PR 병합과 인간 검수, Explainability Gate 대기.
 - 담당자 / 인간 결정자: AI(계획, 구현, 자동 검증, self-review) / 사용자(범위, AC 확정, 제안 판단, 착수 승인, 검수, Explainability Gate)
 - 요구사항 출처: [PLAN-001](PLAN-001_중도상환수수료-흐름-Task-분할-초안.md) TASK-005, [ADR-008](../adr/ADR-008-internal-notice-effective-policy-and-review.md) "체크리스트 변경 후보와 revision", [ADR-003](../adr/ADR-003-validation-and-human-approval.md), README MVP 목표 5단계 전반부. 최종 기획서 대표 시나리오(중도상환수수료율 1.2퍼센트 → 0.8퍼센트).
 - 관련 Issue / PR / ADR / 이전 Task: PR #11(기준선), [TASK-001](TASK-001_합성-공문-조회-자산-보존.md), ADR-009(PostgreSQL 유지), 후속 TASK-006(자동 검증), TASK-007(사람 결정)
@@ -35,7 +35,7 @@
 업무 문제: 공문 v2가 수신되어도 "어떤 checklist 항목이 어떻게 바뀌어야 하는가"를 시스템이 만들어 주지 않는다. 검수자는 공문 원문과 기존 checklist를 직접 대조해야 한다.
 
 포함 범위:
-- Flyway **V6**: `approved_checklist_version.origin` 컬럼, `approved_checklist_item`, `approved_checklist_fixture_run`, `checklist_change_proposal`, `checklist_change_proposal_item`, `proposal_generation_run`. 보호 테이블 등록(가드 trigger 10개 추가, `trust_agent_protected_tables()` 30개)과 권한.
+- Flyway **V6**: `approved_checklist_version.origin` 컬럼, `approved_checklist_item`, `approved_checklist_fixture_run`, `checklist_change_proposal`, `checklist_change_proposal_item`, `proposal_generation_run`. 보호 테이블 등록(신규 테이블 5개, 가드 trigger 10개 추가로 60개, `trust_agent_protected_tables()` 30개)과 권한.
 - Java: `ChecklistChangeProposalGenerator`(순수 로직), `ProposalRepository`, `ProposalGenerationCommand`(runner), `FixtureApprovedChecklistLoader`(runner), 설정 속성 2개, `ProductionRequiredSettingsConfiguration` 확장.
 - 합성 fixture: `SIN-PREPAYMENT-FEE` v1 승인 checklist 1건(item 2개)과 schedule revision 1건(entry `[2026-09-15, null)`).
 - 계약: `contracts/checklist-change-proposal.schema.json`(DERIVED), `contracts/synthetic-approved-checklist-fixture.schema.json`(SYNTHETIC_INTERNAL, `origin` const `FIXTURE`), 정답표 `contracts/fixtures/prepayment-fee-v2-proposal.expected.json`.
@@ -53,46 +53,46 @@
 
 | ID | 입력/상황 | 기대 결과(실패/경계 포함) | 검증 방법 | 결과/evidence |
 |---|---|---|---|---|
-| AC-01 | v1 fixture checklist(item 2개: `CHECK_PREPAYMENT_FEE_RATE` 1.2퍼센트, `CHECK_NOTICE_SOURCE`)와 schedule `[2026-09-15, null)` 적재, v2 수신 상태에서 `generate(SIN-PREPAYMENT-FEE, SIN-PREPAYMENT-FEE-V2)` | proposal 1건. item 2개: `CHECK_PREPAYMENT_FEE_RATE` MODIFY(before `after_value` "1.2" → after "0.8", `effective_on` 2026-10-01, 조건 2개), `CHECK_CUSTOMER_CONTRACT_DATE` ADD. `CHECK_NOTICE_SOURCE` item 없음. base = v1 checklist version, target = V2 | 통합 테스트 + 정답표 canonical 비교 | 미검증 |
-| AC-02 | AC-01 두 번 실행 | `proposal_id` 동일, proposal/item 행 수 불변, `proposal_generation_run` 2건 | 통합 테스트 | 미검증 |
-| AC-03 | 승인 checklist 없는 family(`SIN-SELLER-CHECKLIST`) | proposal 0건. run `FAILED`, `error_code=NO_BASE_CHECKLIST` | 통합 테스트 | 미검증 |
-| AC-04 | 수신되지 않은(`knownAt` 밖) 또는 철회된 target | proposal 0건, `TARGET_NOTICE_NOT_VISIBLE` | 통합 테스트 | 미검증 |
-| AC-05 | item 제약 | ADD인데 before 있음, REMOVE인데 after 있음, MODIFY인데 한쪽 없음, 알 수 없는 change_type → 23514 | 통합 테스트 | 미검증 |
-| AC-06 | `supersedes_proposal_id` | 동시 supersede 두 번째는 23505. 다른 family proposal supersede는 FK 위반 | 통합 테스트 | 미검증 |
-| AC-07 | 금융 비율 | before/after JSON에 "1.2", "0.8" 문자열. canonical hash가 정답표와 일치. 부동소수점 거부 | 단위 + 통합 | 미검증 |
+| AC-01 | v1 fixture checklist(item 2개: `CHECK_PREPAYMENT_FEE_RATE` 1.2퍼센트, `CHECK_NOTICE_SOURCE`)와 schedule `[2026-09-15, null)` 적재, v2 수신 상태에서 `generate(SIN-PREPAYMENT-FEE, SIN-PREPAYMENT-FEE-V2)` | proposal 1건. item 2개: `CHECK_PREPAYMENT_FEE_RATE` MODIFY(before `after_value` "1.2" → after "0.8", `effective_on` 2026-10-01, 조건 2개), `CHECK_CUSTOMER_CONTRACT_DATE` ADD. `CHECK_NOTICE_SOURCE` item 없음. base = v1 checklist version, target = V2 | 통합 테스트 + 정답표 canonical 비교 | **통과** |
+| AC-02 | AC-01 두 번 실행 | `proposal_id` 동일, proposal/item 행 수 불변, `proposal_generation_run` 2건 | 통합 테스트 | **통과** |
+| AC-03 | 승인 checklist 없는 family(`SIN-SELLER-CHECKLIST`) | proposal 0건. run `FAILED`, `error_code=NO_BASE_CHECKLIST` | 통합 테스트 | **통과** |
+| AC-04 | 수신되지 않은(`knownAt` 밖) 또는 철회된 target | proposal 0건, `TARGET_NOTICE_NOT_VISIBLE` | 통합 테스트 | **통과** |
+| AC-05 | item 제약 | ADD인데 before 있음, REMOVE인데 after 있음, MODIFY인데 한쪽 없음, 알 수 없는 change_type → 23514 | 통합 테스트 | **통과** |
+| AC-06 | `supersedes_proposal_id` | 동시 supersede 두 번째는 23505. 다른 family proposal supersede는 FK 위반 | 통합 테스트 | **통과** |
+| AC-07 | 금융 비율 | before/after JSON에 "1.2", "0.8" 문자열. canonical hash가 정답표와 일치. 부동소수점 거부 | 단위 + 통합 | **통과** |
 
 ### B. fixture와 우회 금지 (제안 1 조건)
 
 | ID | 입력/상황 | 기대 결과 | 검증 방법 | 결과/evidence |
 |---|---|---|---|---|
-| AC-08 | fixture 적재 후 `SIN-PREPAYMENT-FEE?businessDate=2026-09-20&knownAt=2026-09-20T00:00:00Z` | `checklistAvailabilityStatus=AVAILABLE`, `approvedChecklist` 존재, 그러나 blocking에 `CURRENT_VALIDATION_NOT_EVALUATED`, `CURRENT_PUBLIC_EVIDENCE_NOT_EVALUATED` 유지, **`internalChecklistUseAllowed=false`**. fixture가 사용 허용을 우회하지 않음 | 통합 테스트 | 미검증 |
-| AC-09 | fixture 적재 후 v2 기간 조회(2026-10-01) | `PENDING_VALIDATION`, `approvedChecklist=null`(v1 fixture로 fallback 안 함), 사용 불가 | 통합 테스트 | 미검증 |
-| AC-10 | `origin` | fixture version은 `origin=FIXTURE`, dataset_class `SYNTHETIC_INTERNAL`, 응답 `approvedChecklist`에 origin 노출(필드 추가가 아니라 기존 approvedChecklist 객체 안 값 포함 여부는 구현 시 결정, 응답 schema 필드 집합은 불변). 로그에 FIXTURE 표시. `origin`은 `HumanReviewDecision` 존재를 뜻하지 않음을 테스트 주석과 문서에 명시 | 통합 테스트 + 문서 | 미검증 |
-| AC-11 | 멱등성 | 같은 fixture 파일 두 번 적재 → 행 수 불변, `approved_checklist_fixture_run` 2건 | 통합 테스트 | 미검증 |
-| AC-12 | 동일 ID 내용 불일치 | version id 같고 item 내용 또는 hash 다른 fixture → `FIXTURE_CONTENT_CONFLICT`, rollback, 기존 행 불변 | 통합 테스트 | 미검증 |
-| AC-13 | HUMAN_REVIEW 존재 | family에 `origin=HUMAN_REVIEW` version이 있으면 fixture 적재 거부 `HUMAN_APPROVAL_EXISTS` | 통합 테스트(HUMAN_REVIEW 행을 테스트 SQL로 삽입) | 미검증 |
-| AC-14 | family 일치와 중복 금지 | item의 family가 version의 family와 다르면 FK 위반. 같은 version에 같은 `rule_key` 두 번 → 23505. family별 두 번째 root schedule → partial unique 위반. 같은 revision 안 기간 중첩 → 23P01 | 통합 테스트 | 미검증 |
-| AC-15 | append-only 보호 | 신규 6개 테이블 모두 `trust_agent_protected_tables()`에 등록, 가드 trigger 수 50 → 62. runtime의 UPDATE/DELETE/TRUNCATE 거부(42501) | `PublicProductSchemaIntegrationTest` 단언 갱신 | 미검증 |
-| AC-16 | 권한 | synthetic importer와 baseline importer 계정의 `approved_checklist_*`, proposal 테이블 INSERT 거부. runtime은 허용. maintenance는 ticket/reason/actor 없이 UPDATE 거부 | 통합 테스트 | 미검증 |
+| AC-08 | fixture 적재 후 `SIN-PREPAYMENT-FEE?businessDate=2026-09-20&knownAt=2026-09-20T00:00:00Z` | `checklistAvailabilityStatus=AVAILABLE`, `approvedChecklist` 존재, 그러나 blocking에 `CURRENT_VALIDATION_NOT_EVALUATED`, `CURRENT_PUBLIC_EVIDENCE_NOT_EVALUATED` 유지, **`internalChecklistUseAllowed=false`**. fixture가 사용 허용을 우회하지 않음 | 통합 테스트 | **통과** |
+| AC-09 | fixture 적재 후 v2 기간 조회(2026-10-01) | `PENDING_VALIDATION`, `approvedChecklist=null`(v1 fixture로 fallback 안 함), 사용 불가 | 통합 테스트 | **통과** |
+| AC-10 | `origin` | fixture version은 `origin=FIXTURE`, dataset_class `SYNTHETIC_INTERNAL`, 응답 `approvedChecklist`에 origin 노출(필드 추가가 아니라 기존 approvedChecklist 객체 안 값 포함 여부는 구현 시 결정, 응답 schema 필드 집합은 불변). 로그에 FIXTURE 표시. `origin`은 `HumanReviewDecision` 존재를 뜻하지 않음을 테스트 주석과 문서에 명시 | 통합 테스트 + 문서 | **통과.** 응답 schema 불변, origin은 DB와 로그에만 |
+| AC-11 | 멱등성 | 같은 fixture 파일 두 번 적재 → 행 수 불변, `approved_checklist_fixture_run` 2건 | 통합 테스트 | **통과** |
+| AC-12 | 동일 ID 내용 불일치 | version id 같고 item 내용 또는 hash 다른 fixture → `FIXTURE_CONTENT_CONFLICT`, rollback, 기존 행 불변 | 통합 테스트 | **통과** |
+| AC-13 | HUMAN_REVIEW 존재 | family에 `origin=HUMAN_REVIEW` version이 있으면 fixture 적재 거부 `HUMAN_APPROVAL_EXISTS` | 통합 테스트(HUMAN_REVIEW 행을 테스트 SQL로 삽입) | **통과** |
+| AC-14 | family 일치와 중복 금지 | item의 family가 version의 family와 다르면 FK 위반. 같은 version에 같은 `rule_key` 두 번 → 23505. family별 두 번째 root schedule → partial unique 위반. 같은 revision 안 기간 중첩 → 23P01 | 통합 테스트 | **통과** |
+| AC-15 | append-only 보호 | 신규 6개 테이블 모두 `trust_agent_protected_tables()`에 등록, 가드 trigger 수 50 → 62. runtime의 UPDATE/DELETE/TRUNCATE 거부(42501) | `PublicProductSchemaIntegrationTest` 단언 갱신 | **통과.** 신규 테이블 5개, trigger 50 → 60, 테이블 25 → 30 |
+| AC-16 | 권한 | synthetic importer와 baseline importer 계정의 `approved_checklist_*`, proposal 테이블 INSERT 거부. runtime은 허용. maintenance는 ticket/reason/actor 없이 UPDATE 거부 | 통합 테스트 | **통과** |
 
 ### C. production 기동 거부 (제안 2)
 
 | ID | 입력/상황 | 기대 결과 | 검증 방법 | 결과/evidence |
 |---|---|---|---|---|
-| AC-17 | `prod` profile, `trust-agent.proposal-generation.enabled=true`만 | 기동 거부, 오류 `DEMO_FEATURE_ENABLED_IN_PROD`, 어떤 설정 키인지 메시지에 포함 | 컨텍스트 테스트 | 미검증 |
-| AC-18 | `prod` profile, `trust-agent.fixture-approved-checklist.enabled=true`만 | 같음 | 컨텍스트 테스트 | 미검증 |
-| AC-19 | `prod` profile, 둘 다 true | 기동 거부, 두 키 모두 메시지에 포함 | 컨텍스트 테스트 | 미검증 |
-| AC-20 | `prod` profile, 둘 다 false 또는 미설정 | 기동 성공, 두 runner bean 없음 | 컨텍스트 테스트 | 미검증 |
-| AC-21 | 비prod profile, 각 설정 true | 해당 runner bean 생성. false면 없음 | 컨텍스트 테스트 | 미검증 |
+| AC-17 | `prod` profile, `trust-agent.proposal-generation.enabled=true`만 | 기동 거부, 오류 `DEMO_FEATURE_ENABLED_IN_PROD`, 어떤 설정 키인지 메시지에 포함 | 컨텍스트 테스트 | **통과** |
+| AC-18 | `prod` profile, `trust-agent.fixture-approved-checklist.enabled=true`만 | 같음 | 컨텍스트 테스트 | **통과** |
+| AC-19 | `prod` profile, 둘 다 true | 기동 거부, 두 키 모두 메시지에 포함 | 컨텍스트 테스트 | **통과** |
+| AC-20 | `prod` profile, 둘 다 false 또는 미설정 | 기동 성공, 두 runner bean 없음 | 컨텍스트 테스트 | **통과** |
+| AC-21 | 비prod profile, 각 설정 true | 해당 runner bean 생성. false면 없음 | 컨텍스트 테스트 | **통과.** 비prod 조건은 통합 테스트의 loader/service 사용으로 확인 |
 
 ### D. 계약 유지와 회귀
 
 | ID | 입력/상황 | 기대 결과 | 검증 방법 | 결과/evidence |
 |---|---|---|---|---|
-| AC-22 | applicable 응답 | 필드 집합이 PR #11 기준선과 동일. `latestProposalId` 없음(제안 3 보류). 기존 `InternalPolicyApplicableIntegrationTest` 8개 통과 | 응답 키 집합 단언 | 미검증 |
-| AC-23 | 계약 | Python 계약 테스트가 proposal schema, fixture schema, 정답표를 검증. dataset_class 경계 테스트에 새 경로 추가 | Python | 미검증 |
-| AC-24 | 회귀 | 기존 Java 82개 + 신규 전부 통과, skip 0. Python 57개 + 신규 통과 | 로컬 + CI | 미검증 |
-| AC-25 | 문서 | README 현재 상태에 "proposal 생성 구현, 자동 검증과 사람 검수 미구현, fixture는 test/demo 전용" 명시. core README에 command와 loader 사용법 | diff 검토 | 미검증 |
+| AC-22 | applicable 응답 | 필드 집합이 PR #11 기준선과 동일. `latestProposalId` 없음(제안 3 보류). 기존 `InternalPolicyApplicableIntegrationTest` 8개 통과 | 응답 키 집합 단언 | **통과** |
+| AC-23 | 계약 | Python 계약 테스트가 proposal schema, fixture schema, 정답표를 검증. dataset_class 경계 테스트에 새 경로 추가 | Python | **통과** |
+| AC-24 | 회귀 | 기존 Java 82개 + 신규 전부 통과, skip 0. Python 57개 + 신규 통과 | 로컬 + CI | **통과.** Java 106, Python 60, skip 0 |
+| AC-25 | 문서 | README 현재 상태에 "proposal 생성 구현, 자동 검증과 사람 검수 미구현, fixture는 test/demo 전용" 명시. core README에 command와 loader 사용법 | diff 검토 | **통과** |
 
 ### 완료 기준 변경 이력
 
@@ -110,10 +110,10 @@ Vertical slice: fixture 적재 → generate command → proposal 저장 → 조�
    - `ALTER TABLE approved_checklist_version ADD COLUMN origin text NOT NULL DEFAULT 'HUMAN_REVIEW' CHECK (origin IN ('HUMAN_REVIEW', 'FIXTURE'))`. 기존 행 없음. `origin`은 출처 구분이며 승인 증거가 아니라는 COMMENT.
    - `approved_checklist_item(approved_checklist_version_id, family_id, item_order >= 0, rule_key 정규식, instruction length > 0, evidence_required boolean, structured_change jsonb NOT NULL DEFAULT 'null' CHECK typeof IN (object, null), source_rule_version_id NULL REFERENCES internal_policy_rule_version, source_record_hash)`. PK `(version_id, item_order)`, UNIQUE `(version_id, rule_key)`, FK `(version_id, family_id)` → `approved_checklist_version(approved_checklist_version_id, family_id)`.
    - `approved_checklist_fixture_run(run_id, fingerprint, status, imported_counts jsonb, error_code, started_at, completed_at)` 상태별 CHECK.
-   - `checklist_change_proposal(proposal_id 'proposal:sha256:' PK, dataset_class='DERIVED', family_id, base_checklist_version_id, target_notice_id, generator_version, supersedes_proposal_id UNIQUE, before_hash, after_hash, created_at)`. 복합 FK로 base와 target의 family 일치.
+   - `checklist_change_proposal(proposal_id 'checklist-proposal:sha256:' PK, dataset_class='DERIVED', family_id, base_checklist_version_id, target_notice_id, generator_version, supersedes_proposal_id UNIQUE, before_hash, after_hash, created_at)`. 복합 FK로 base와 target의 family 일치.
    - `checklist_change_proposal_item(proposal_id, item_order, rule_key, change_type, before_json, after_json, before_hash, after_hash)` + 조합 CHECK.
    - `proposal_generation_run(run_id, family_id, target_notice_id, proposal_id NULL, status, error_code NULL, started_at, completed_at)`.
-   - 보호 테이블 절차: 가드 trigger 12개(6테이블 × 2), `trust_agent_protected_tables()` 31개, OWNER migration, runtime SELECT/INSERT. 기존 단언 "테이블 25, trigger 50"을 31, 62로 갱신.
+   - 보호 테이블 절차: 가드 trigger 10개(5테이블 × 2), `trust_agent_protected_tables()` 30개, OWNER migration, runtime SELECT/INSERT. 기존 단언 "테이블 25, trigger 50"을 30, 60으로 갱신.
 2. **Fixture.** `datasets/synthetic/internal/approved-checklists/prepayment-fee-v1.approved-checklist.json`(version, `origin=FIXTURE`, `synthetic=true`, 면책 문구, items 2개)과 `prepayment-fee-v1.schedule.json`(root revision, entry `[2026-09-15, null)`). 계약 schema 2개.
 3. **FixtureApprovedChecklistLoader.** `@Profile("!prod")` + `@ConditionalOnProperty(trust-agent.fixture-approved-checklist.enabled)`. runtime datasource. 절차: HUMAN_REVIEW 존재 검사 → fingerprint와 id/hash 비교(멱등 또는 충돌) → 한 트랜잭션 삽입 → run record. `AppendOnlyBootstrapChecks` 재사용.
 4. **Generator.** 순수 Java: 입력(base items, target rules) → items(rule_key 사전순). canonical JSON은 `CanonicalJsonHasher`.
@@ -158,6 +158,24 @@ Vertical slice: fixture 적재 → generate command → proposal 저장 → 조�
 - 판단자 / 검토 대상 revision 또는 PR: 사용자 / 이 문서 PR
 - 이유 / 승인 범위: TASK-005에서는 applicable 응답 계약을 유지한다(AC-22). 재검토는 TASK-006에서.
 
-## Implementation Result / AI self-review / 인간 검수 / 결정 기록
+## Implementation Result (구현 결과와 자동 검증)
 
-미실행 / 미기록. 구현은 사용자 착수 승인 뒤 시작한다.
+실제 변경: V6 migration 1, Java main 7개 파일(`internalpolicy/proposal` 패키지 6 + `ProductionRequiredSettingsConfiguration` 수정), `application.yml`(설정 2개와 schema version 6), 계약 3개와 정답 fixture 1개, 예시 데이터 2개, Java 테스트 신규 3개와 수정 4개, Python 테스트 1개, README 2종, evidence 1개. 계획 대비 차이: 신규 테이블은 6개가 아니라 5개(fixture run 포함, item 1 + proposal 2 + run 2). 결과 상세는 `docs/evidence/CHECKLIST_PROPOSAL_GENERATION_EVIDENCE.md`.
+
+| AC ID | 검증 대상 revision | 실행 명령/절차 | 환경/버전 | 결과 | evidence 경로 |
+|---|---|---|---|---|---|
+| AC-01~25 | 브랜치 `feat/checklist-change-proposal` HEAD | `./gradlew clean test bootJar --offline --no-daemon`, `python3 -m unittest discover -s tests` | 로컬 macOS arm64, Java 21, Docker, PostgreSQL 18.6 Testcontainers, Python 3.11.8 | Java 106 통과(82 + 24), 실패 0, skip 0, jar 생성. Python 60 통과(57 + 3) | evidence 문서 표. 원격 CI는 PR에 기록 |
+
+## AI self-review
+
+- 검사 범위: 신규 SQL 제약과 보호 테이블 등록, 생성기 결정성, fixture 우회 금지 경로(적용 공문 조회 3건), 권한 매트릭스, production 거부, 응답 계약 불변, Python과 Java 해시 일치(정답 파일을 Python으로 만들고 Java가 같은 ID를 생성).
+- 발견과 수정: 첫 실행에서 테스트 1건 실패. 이미 대체된 변경안을 다시 대체해 FK 위반 전에 unique 위반이 났다. 기대값을 고쳤고 업무 로직 결함이 아니다.
+- 확인된 결함: 없음. 미해결 위험: 변경안 revision(MODIFY) 흐름은 테이블만 있고 TASK-007에서 구현한다. `approved_checklist_item`에 기존 승인 checklist 행이 있다면 항목이 비어 있을 수 있으나 현재 DB에는 HUMAN_REVIEW 행이 없다.
+
+## 인간 검수와 Explainability Gate
+
+미기록.
+
+## 결정 기록과 완료
+
+완료 판정 대기(사용자). 후속: TASK-006 자동 검증.

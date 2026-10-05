@@ -33,7 +33,7 @@ class PublicProductSchemaIntegrationTest {
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
                 .cleanDisabled(true)
                 .load();
-        assertEquals(5, flyway.migrate().migrationsExecuted);
+        assertEquals(6, flyway.migrate().migrationsExecuted);
         assertEquals(0, flyway.migrate().migrationsExecuted);
 
         try (Connection connection = adminConnection(); Statement statement = connection.createStatement()) {
@@ -73,7 +73,7 @@ class PublicProductSchemaIntegrationTest {
     }
 
     @Test
-    void migrationCreatesTwentyFiveApplicationTablesAndVersionFour() throws SQLException {
+    void migrationCreatesAllProtectedApplicationTablesAndLatestSchemaVersion() throws SQLException {
         try (Connection connection = adminConnection(); Statement statement = connection.createStatement()) {
             try (ResultSet result = statement.executeQuery("""
                     SELECT count(*)
@@ -82,7 +82,7 @@ class PublicProductSchemaIntegrationTest {
                       AND table_name <> 'flyway_schema_history'
                     """)) {
                 assertTrue(result.next());
-                assertEquals(25, result.getInt(1));
+                assertEquals(30, result.getInt(1));
             }
             try (ResultSet result = statement.executeQuery("""
                     SELECT version
@@ -92,7 +92,7 @@ class PublicProductSchemaIntegrationTest {
                     LIMIT 1
                     """)) {
                 assertTrue(result.next());
-                assertEquals("5", result.getString(1));
+                assertEquals("6", result.getString(1));
             }
             try (ResultSet result = statement.executeQuery("""
                     SELECT count(*)
@@ -110,7 +110,7 @@ class PublicProductSchemaIntegrationTest {
                     WHERE actual.tgenabled = 'O'
                     """)) {
                 assertTrue(result.next());
-                assertEquals(50, result.getInt(1));
+                assertEquals(60, result.getInt(1));
             }
 
             SQLException missingPrimaryKey = assertThrows(

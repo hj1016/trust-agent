@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/checklist-change-proposal.schema.json",
+  "title": "TrustAgent Checklist Change Proposal",
+  "description": "새 공문 version의 구조화 rule과 직전 승인 checklist의 차이를 담은 결정적 변경안. 승인이 아니며 DERIVED로 분류한다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset_class", "proposal_id", "family_id", "base_checklist_version_id", "target_notice_id", "generator_version", "supersedes_proposal_id", "revision_reason", "before_hash", "after_hash", "items"],
+  "properties": {
+    "dataset_class": {"const": "DERIVED"},
+    "proposal_id": {"type": "string", "pattern": "^checklist-proposal:sha256:[a-f0-9]{64}$"},
+    "family_id": {"type": "string", "pattern": "^SIN-[A-Z0-9-]+$"},
+    "base_checklist_version_id": {"type": "string", "pattern": "^approved-checklist:[a-f0-9]{32}$"},
+    "target_notice_id": {"type": "string", "pattern": "^SIN-[A-Z0-9-]+-V[1-9][0-9]*$"},
+    "generator_version": {"type": "string", "pattern": "^[a-z][a-z0-9-]+$"},
+    "supersedes_proposal_id": {"type": ["string", "null"], "pattern": "^checklist-proposal:sha256:[a-f0-9]{64}$"},
+    "revision_reason": {"type": ["string", "null"], "minLength": 1},
+    "before_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "after_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item_order", "rule_key", "change_type", "before_json", "after_json", "before_hash", "after_hash"],
+        "properties": {
+          "item_order": {"type": "integer", "minimum": 0},
+          "rule_key": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"},
+          "change_type": {"enum": ["ADD", "MODIFY", "REMOVE"]},
+          "before_json": {"$ref": "#/$defs/content_or_null"},
+          "after_json": {"$ref": "#/$defs/content_or_null"},
+          "before_hash": {"type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$"},
+          "after_hash": {"type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$"}
+        },
+        "allOf": [
+          {"if": {"properties": {"change_type": {"const": "ADD"}}}, "then": {"properties": {"before_json": {"type": "null"}, "before_hash": {"type": "null"}, "after_json": {"type": "object"}, "after_hash": {"type": "string"}}}},
+          {"if": {"properties": {"change_type": {"const": "REMOVE"}}}, "then": {"properties": {"after_json": {"type": "null"}, "after_hash": {"type": "null"}, "before_json": {"type": "object"}, "before_hash": {"type": "string"}}}},
+          {"if": {"properties": {"change_type": {"const": "MODIFY"}}}, "then": {"properties": {"before_json": {"type": "object"}, "after_json": {"type": "object"}, "before_hash": {"type": "string"}, "after_hash": {"type": "string"}}}}
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "content_or_null": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rule_key", "instruction", "evidence_required", "structured_change"],
+          "properties": {
+            "rule_key": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"},
+            "instruction": {"type": "string", "minLength": 1},
+            "evidence_required": {"type": "boolean"},
+            "structured_change": {"type": ["object", "null"]}
+          }
+        }
+      ]
+    }
+  }
+}
