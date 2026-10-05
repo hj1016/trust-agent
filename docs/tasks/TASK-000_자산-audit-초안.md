@@ -118,7 +118,7 @@ Java 4,547 LOC, 43개 클래스.
 | 자산 | 근거 | 인간 판정 |
 |---|---|---|
 | Python 58개 | DB 무사용. `test_private_migration_is_deterministic_with_fixed_run_ids` 1개는 DROP | **KEEP**, 1개 DROP |
-| `tests/contract/test_day_05_contracts.py` (PR #11) | 우선 흐름 계약 테스트 | **KEEP** |
+| `tests/contract/test_synthetic_notice_contracts.py` (PR #11) | 우선 흐름 계약 테스트 | **KEEP** |
 | Java 단위 11개 클래스 23개 | SQL 없음 | **KEEP** |
 | `SyntheticInternalSchemaIntegrationTest` (7), `PublicProductSchemaIntegrationTest` (9) | PostgreSQL 메커니즘과 SQLSTATE 검증. R-ID 불변식 명세 그 자체 | **MODIFY → KEEP(재평가).** 이전 "불변식만 재사용, Oracle 검증 신규"는 대체됨 |
 | `SyntheticInternalImporterIntegrationTest` (8), `InternalPolicyApplicableIntegrationTest` (8, PR #11) | 업무 단언. PostgreSQL fixture SQL | **MODIFY → KEEP(재평가)** |
@@ -143,7 +143,7 @@ Java 4,547 LOC, 43개 클래스.
 
 | 묶음 | 파일 | 성격 |
 |---|---|---|
-| A. 우선 흐름 데이터와 계약 | prepayment-fee 6개, notice schema diff, seller-loan `structured_change: null` diff, `test_day_05_contracts.py` diff | 대표 시나리오 |
+| A. 우선 흐름 데이터와 계약 | prepayment-fee 6개, notice schema diff, seller-loan `structured_change: null` diff, `test_synthetic_notice_contracts.py` diff | 대표 시나리오 |
 | B. 적용 공문 조회 (SQL 없는 부분) | `internalpolicy/query/` 중 Service, Controller, State, Exception, Handler, `AppendOnlyBootstrapChecksTest` | 서비스 로직 |
 | C. PostgreSQL 부분 | `InternalPolicyApplicableRepository`, `SyntheticInternalImporter` diff, `V5` SQL, `application.yml` diff, 통합 테스트 4개 diff, `InternalPolicyApplicableIntegrationTest` | 현재 구현 수단. 재작성 대상 아님(재평가) |
 | D. 문서 | `INTERNAL_POLICY_APPLICABLE_QUERY_EVIDENCE.md`, `FINAL_PROPOSAL_ALIGNMENT_EVIDENCE.md`, README 3종, AGENTS.md diff | evidence와 현황 설명 |
