@@ -134,7 +134,7 @@ class CoreApplicationIntegrationTest {
         assertEquals(Status.DOWN, mismatch.getStatus());
         assertEquals("SCHEMA_VERSION_MISMATCH", mismatch.getDetails().get("code"));
         assertEquals("999", mismatch.getDetails().get("expectedVersion"));
-        assertEquals("4", mismatch.getDetails().get("actualVersion"));
+        assertEquals("5", mismatch.getDetails().get("actualVersion"));
     }
 
     @Test
@@ -149,7 +149,7 @@ class CoreApplicationIntegrationTest {
                 .send(applicationHealthRequest, HttpResponse.BodyHandlers.ofString());
         assertEquals(404, applicationHealthResponse.statusCode());
 
-        jdbcClient.sql("update flyway_schema_history set version = '999' where version = '4'")
+        jdbcClient.sql("update flyway_schema_history set version = '999' where version = '5'")
                 .update();
         try {
             var request = HttpRequest.newBuilder()
@@ -165,7 +165,7 @@ class CoreApplicationIntegrationTest {
             assertTrue(response.body().contains("schemaCompatibility"));
             assertTrue(response.body().contains("SCHEMA_VERSION_MISMATCH"));
         } finally {
-            jdbcClient.sql("update flyway_schema_history set version = '4' where version = '999'")
+            jdbcClient.sql("update flyway_schema_history set version = '5' where version = '999'")
                     .update();
         }
     }

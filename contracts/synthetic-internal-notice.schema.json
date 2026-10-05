@@ -22,11 +22,34 @@
       "type": "array", "minItems": 1,
       "items": {
         "type": "object", "additionalProperties": false,
-        "required": ["rule_key", "instruction", "evidence_required", "public_cross_check"],
+        "required": ["rule_key", "instruction", "evidence_required", "structured_change", "public_cross_check"],
         "properties": {
           "rule_key": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"},
           "instruction": {"type": "string", "minLength": 1},
           "evidence_required": {"type": "boolean"},
+          "structured_change": {
+            "oneOf": [
+              {"type": "null"},
+              {
+                "type": "object", "additionalProperties": false,
+                "required": ["change_type", "field_key", "before_value", "after_value", "unit", "effective_on", "applicable_product_keys", "conditions", "exceptions"],
+                "properties": {
+                  "change_type": {"enum": ["NUMERIC_POLICY_CHANGE", "CHECKLIST_ITEM_CHANGE"]},
+                  "field_key": {"type": "string", "pattern": "^[a-z][a-z0-9_]+$"},
+                  "before_value": {"type": ["integer", "string", "boolean", "null"]},
+                  "after_value": {"type": ["integer", "string", "boolean", "null"]},
+                  "unit": {"enum": ["PERCENT", "KRW", "TEXT", "BOOLEAN"]},
+                  "effective_on": {"type": "string", "format": "date"},
+                  "applicable_product_keys": {
+                    "type": "array", "minItems": 1, "uniqueItems": true,
+                    "items": {"type": "string", "pattern": "^[a-z0-9-]+$"}
+                  },
+                  "conditions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+                  "exceptions": {"type": "array", "items": {"type": "string", "minLength": 1}}
+                }
+              }
+            ]
+          },
           "public_cross_check": {
             "oneOf": [
               {"type": "null"},
