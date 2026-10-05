@@ -15,7 +15,7 @@
 | TASK-003 | Oracle 위험 검증 spike | **중단, 실험 미완료.** 번호와 문서 보존 |
 | TASK-004 | (Oracle 전환 1단계) | **취소.** 번호 재사용 금지 |
 | TASK-005 | checklist 변경안(proposal) 생성 | **완료**(PR #18, 검수 통과). 자동 검증과 인간 승인은 미완 |
-| TASK-006 | checklist 변경안 자동 검증 | 구현 착수 승인, [TASK-006](TASK-006_변경안-자동-검증.md) 구현 PR 검수 대기 |
+| TASK-006 | checklist 변경안 자동 검증 | **완료**(PR #21, 검수 통과), [TASK-006](TASK-006_변경안-자동-검증.md) |
 | TASK-007 | 사람 검수 결정과 승인 checklist 발행 | 같음 |
 | TASK-008 | Core Tool API | 같음 |
 | TASK-009 | Elasticsearch 검색 기준선 | 같음 |
