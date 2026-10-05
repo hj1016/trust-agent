@@ -1,6 +1,6 @@
 # TASK-001 미커밋 Day 5 자산을 검증 가능한 Pre-SDLC 기준선으로 보존
 
-- 상태: **구현 중** (실행 승인됨. AC는 승인 시 지시된 수정을 반영)
+- 상태: **검증/검수 대기.** 구현과 자동 검증 완료, PR #11 병합됨(사용자). 인간 검수와 Explainability Gate는 미기록.
 - 담당자 / 인간 결정자: AI(조사, 초안, 실행, 자동 검증, self-review) / 사용자(범위, AC 확정, 검수, Explainability Gate)
 - 요구사항 출처: [자산 audit](TASK-000_자산-audit-초안.md) 5절 처리안 1 조건부 채택(결정자 사용자, 검토 대상 audit 초안 미커밋 revision)
 - 관련: [TASK-000](TASK-000_초기-수집-자산-기준선-점검.md), [ADR-008](../adr/ADR-008-internal-notice-effective-policy-and-review.md), [ADR-009](../adr/ADR-009-oracle-core-database.md), [PLAN-001](PLAN-001_중도상환수수료-흐름-Task-분할-초안.md)
@@ -96,16 +96,36 @@
 
 ## Implementation Result (구현 결과와 자동 검증)
 
-미실행.
+실제 변경: 브랜치 `feat/day-05-pre-sdlc-baseline` 커밋 2개(`d6a0fbc` 보존 30파일, `ce64bee` Core DB 표기 PostgreSQL 유지 정정 5파일). PR #11을 사용자가 Squash and merge해 main 커밋 `598f165`("feat: 합성 중도상환수수료 공문과 적용 공문 조회 추가 (#11)")가 됐다. 계획 대비 차이: 허용 변경 3건에 더해 README.md와 AGENTS.md의 Core DB 문장 정정이 추가됐다(변경 이력 참조). 코드 로직 변경 없음.
+
+| AC ID | 검증 대상 revision | 실행 명령/절차 | 환경/버전 | 결과(실패/skip 포함) | evidence 경로 |
+|---|---|---|---|---|---|
+| AC-01 | 작업 트리 vs worktree | 파일 단위 목록(추적 수정 13 + 미추적 17 = 30)과 sha256 대조 | 로컬 macOS arm64, Python 3.11.8 | **통과.** 허용 변경 3파일만 차이 | 복구용 사본 `task-001-file-lists.json` |
+| AC-02 | `d6a0fbc` | `git show --stat`, 제외 목록 11파일 작업 트리 존재 확인 | 같음 | **통과.** 30파일 커밋, 제외 목록 미포함 | PR #11 diff |
+| AC-03 | `d6a0fbc`, `ce64bee` | evidence 2건 diff 검토 | — | **통과.** 머리 표기 1단락, 본문 숫자와 서술 불변 | PR #11 diff |
+| AC-04 | 같음 | core README diff 검토 | — | **통과.** 1문장 추가 | PR #11 diff |
+| AC-05 | `d6a0fbc`, `ce64bee` | `python3 -m unittest discover -s tests` (worktree, 비공개 artifact 지정) / Public Git 조건 | 같음 | **통과.** 58 통과, 실패 0, skip 0 / 55 통과, 3 skip | 로컬 출력. 원격: CI run 37258568194 Python contracts 통과 14초 |
+| AC-06 | `d6a0fbc` | `./gradlew clean test bootJar --offline --no-daemon` (worktree) | Java 21(ms-21.0.11), Docker, PostgreSQL 18.6 Testcontainers | **통과.** 82 통과, 실패 0, skip 0, jar 생성 | 로컬 출력. 원격: CI run 37258568194 Gradle tests 통과 1분 47초 |
+| AC-07 | `d6a0fbc` | 커밋 메시지 검토 | — | **통과.** `feat: 합성 중도상환수수료 공문과 적용 공문 조회를 Pre-SDLC 기준선으로 보존`. 병합 커밋 메시지는 사용자가 지정 | git log |
+| AC-08 | `d6a0fbc`, `ce64bee` | 금지 파일 패턴 검사, 변경 내용과 추적 파일 비밀 패턴 검색, 후보 검토 | — | **통과.** 금지 파일 없음. 후보는 테스트 fixture 문자열("secret", "runtime-password" 등 Testcontainers role), 설정 placeholder, 변수명. 실제 비밀 없음 | PR #11 본문 |
+| AC-09 | PR #11 | PR 검토 | — | **통과.** 한국어 제목, 본문에 묶음 A~D와 검증. Squash and merge, 예외 기록 없음 | https://github.com/hj1016/trust-agent/pull/11 |
+| AC-10 | — | 디렉터리 존재 확인 | — | **통과.** 복구용 사본 유지 | `/Users/faker/Dev/trust-agent-backups/2026-10-05-uncommitted-day5/` |
+
+원격 CI 기록(이 Task의 검증): PR #11 브랜치 run `37258568194`(Python contracts 통과, Gradle tests 통과). 병합 뒤 main run `37259090769`(통과). 링크: https://github.com/hj1016/trust-agent/actions/runs/37258568194 , https://github.com/hj1016/trust-agent/actions/runs/37259090769
 
 ## AI self-review
 
-미실행. 실행 후 AC-01, AC-02 대조 결과와 테스트 출력을 여기에 기록한다.
+- 검사 범위: 파일 목록과 sha256 대조, 제외 목록, 두 커밋의 diff, 비밀 패턴 검색, 로컬과 원격 테스트 결과.
+- 발견 사항: (1) 처음 worktree 복사가 동시 실행된 다른 명령의 `cd` 때문에 빈 상태로 끝났고, 절대 경로로 다시 실행해 AC-01을 통과했다. (2) worktree에는 `.private-artifacts`가 없어 비공개 artifact 경로를 메인 작업 트리로 지정해 58개 전부 실행했다. (3) 두 번째 커밋은 Core DB 결정 변경에 따른 문구 정정이며 Java 재실행은 하지 않았다(Java 외 문서만 변경). 원격 CI가 두 커밋 모두 통과를 확인했다.
+- 미해결 위험: 없음. 후속 Task는 이 기준선 위에서 schema를 확장한다.
 
 ## 인간 검수와 Explainability Gate
 
-미기록. 사용자의 실행 승인은 검수 통과가 아니다.
+미기록. 사용자의 실행 승인과 PR 병합은 검수 통과가 아니다. REVIEW_CHECKLIST 적용과 설명은 사용자가 기록한다.
 
 ## 결정 기록과 완료
 
-미완료.
+- 병합: 사용자가 PR #11을 Squash and merge(main `598f165`).
+- Acceptance Criteria: AC-01~AC-10 전부 통과(위 표).
+- 완료 판정: **대기.** 인간 검수와 Explainability Gate 기록 뒤 사용자가 결정한다.
+- 잔여 위험 / 후속 Task: TASK-002(migrate 스크립트 DROP 실행), TASK-005(proposal 생성).
