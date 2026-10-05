@@ -59,6 +59,8 @@ public record InternalPolicyApplicableState(
             String scheduleRevisionId,
             LocalDate effectiveFrom,
             LocalDate effectiveTo,
-            Instant createdAt) {
+            Instant createdAt,
+            String origin,
+            String decisionId) {
     }
 }

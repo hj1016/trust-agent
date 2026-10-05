@@ -5,7 +5,7 @@ Spring Boot 기반 핵심 서비스입니다. 애플리케이션 골격과 appen
 합성 공문 적재와 적용 공문 기준일 조회를 구현했습니다.
 Flyway V5부터는 최종 기획서의 대표 사례인 중도상환수수료 변경 전후, 시행일, 조건과
 예외를 `structuredChange`로 보존하고 적용 공문 조회 API에서 반환합니다. Flyway V6와 checklist 변경안
-생성, Flyway V7과 변경안 자동 검증(아래)을 구현했습니다. 사람의 검수와 제공 승인은 아직 구현하지 않았으며 자동 검증 통과는 사용 허용이 아닙니다. 일반 서버 기동 중에는
+생성, Flyway V7과 변경안 자동 검증, Flyway V8과 사람 검토 결정·승인 checklist 발행(아래)을 구현했습니다. 자동 검증 통과는 사용 허용이 아니며 사람 승인 기록이 있는 checklist만 사용 허용 후보입니다. 인증과 화면은 구현하지 않았습니다. 일반 서버 기동 중에는
 baseline importer bean을 만들거나 데이터를 자동 적재하지 않습니다.
 
 Core 업무 DB는 PostgreSQL이며(ADR-009) 이 README의 구현 설명은 PostgreSQL 18.6 기준입니다.
@@ -58,6 +58,22 @@ GET /api/v1/internal-policy/checklists/{familyId}/applicable
 FAIL `VALIDATION_FAILED`, `trust-agent.validation-policy.max-validation-age` 초과 `VALIDATION_STALE`, PASS/WARN `PENDING_REVIEW`)
 그리고 사용한 결과를 `validatedProposalId`, `validationResultId`로 돌려줍니다(없으면 null). 어떤 결과도 `internalChecklistUseAllowed`를
 true로 만들지 않습니다. production profile은 `TRUST_AGENT_VALIDATION_MAX_AGE`(0보다 큰 기간)와 `TRUST_AGENT_VALIDATION_POLICY_VERSION`을 요구합니다.
+
+4. 사람 검토 결정. 승인(APPROVE)은 결정 기록, HUMAN_REVIEW 출처 승인 checklist(기준 checklist에 변경안을 적용한 항목), 적용 일정 revision(직전 구간 종료일 제한 + 새 구간)을
+   한 트랜잭션으로 저장합니다. 수정(MODIFY)은 고친 내용으로 새 변경안 revision만 만들고(재검증 필요), 반려(REJECT)는 결정만 남깁니다. 승인은 최신 검증 결과가
+   PASS 또는 WARN(사유 필수)이고 결정 시점 기준 유효 기간 안이며 변경안 내용 해시가 같을 때만 됩니다. 검수자 ID는 합성 값입니다.
+
+```bash
+./gradlew :apps:core-service:bootRun --offline --no-daemon \
+  --args='--spring.main.web-application-type=none --trust-agent.human-review.enabled=true --trust-agent.human-review.proposal-id=checklist-proposal:sha256:<64 hex> --trust-agent.human-review.decision=APPROVE --trust-agent.human-review.reviewer-id=SYN-REVIEWER-01'
+```
+
+수정은 `--trust-agent.human-review.decision=MODIFY --trust-agent.human-review.reason=<사유> --trust-agent.human-review.revised-rules-json=<규칙 JSON 배열>`, 반려는
+`--trust-agent.human-review.decision=REJECT --trust-agent.human-review.reason=<사유>`를 씁니다. 결과는 `human_review_decision`, `human_review_run` 테이블과
+기존 승인 checklist·일정 테이블에 append-only로 남습니다. 적용 공문 조회는 사람 결정이 있는 HUMAN_REVIEW checklist에만 사용 허용을 주고
+(`approvedChecklist.origin`, `approvedChecklist.decisionId`), 테스트용 출처는 `FIXTURE_CHECKLIST_NOT_APPROVED`, 결정 없는 HUMAN_REVIEW는 `HUMAN_DECISION_MISSING`,
+반려된 변경안은 `UNAVAILABLE` + `PROPOSAL_REJECTED`, 필수 공개 근거 미확인은 `PUBLIC_EVIDENCE_UNCONFIRMED`, 일정 구간은 덮지만 다른 공문용 checklist면
+`APPROVED_CHECKLIST_NOTICE_MISMATCH`로 차단합니다. 승인 뒤 검증 결과의 기간 경과만으로는 만료되지 않습니다.
 
 ## 공개 상품 관측 상태 조회
 

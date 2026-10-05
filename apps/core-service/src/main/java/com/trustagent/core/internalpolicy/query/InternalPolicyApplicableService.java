@@ -29,6 +29,7 @@ class InternalPolicyApplicableService {
     private final InternalChecklistUsePolicy policy;
     private final BusinessTimePolicy businessTimePolicy;
     private final com.trustagent.core.internalpolicy.InternalValidationPolicyProperties validationPolicy;
+    private final com.trustagent.core.publicproduct.query.PublicProductObservedStateService publicProducts;
     private final Clock clock;
 
     InternalPolicyApplicableService(
@@ -36,11 +37,13 @@ class InternalPolicyApplicableService {
             InternalChecklistUsePolicy policy,
             BusinessTimePolicy businessTimePolicy,
             com.trustagent.core.internalpolicy.InternalValidationPolicyProperties validationPolicy,
+            com.trustagent.core.publicproduct.query.PublicProductObservedStateService publicProducts,
             Clock clock) {
         this.repository = repository;
         this.policy = policy;
         this.businessTimePolicy = businessTimePolicy;
         this.validationPolicy = validationPolicy;
+        this.publicProducts = publicProducts;
         this.clock = clock;
     }
 
@@ -73,6 +76,8 @@ class InternalPolicyApplicableService {
         InternalPolicyApplicableState.ApprovedChecklist checklist = null;
         String validatedProposalId = null;
         String validationResultId = null;
+        boolean approvedByHuman = false;
+        boolean publicEvidenceConfirmed = false;
 
         addTimeReasons(historicalKnownAt, futureBusinessDate, blockingReasons);
         addNoticeReasons(selection, blockingReasons);
@@ -81,6 +86,11 @@ class InternalPolicyApplicableService {
             checklistConditions.add(ChecklistStatus.UNAVAILABLE);
         } else {
             var selected = selection.selected();
+            // TASK-007: 일정 구간이 업무일을 덮지만 그 checklist가 선택된 공문의 것이 아니면 따로 알린다
+            // (예: 새 공문이 선택됐는데 승인 checklist는 이전 공문용). 상태는 아래 추출·변경안·검증 단계가 정한다.
+            if (coveredByOtherNoticeChecklist(familyId, selected.noticeId(), businessDate, knownAt)) {
+                blockingReasons.add("APPROVED_CHECKLIST_NOTICE_MISMATCH");
+            }
             if (selected.effectiveFrom().isBefore(selected.receivedBusinessDate())) {
                 warningReasons.add("RETROACTIVE_NOTICE");
             }
@@ -99,9 +109,14 @@ class InternalPolicyApplicableService {
                     // TASK-006: knownAt까지 보이는 최신 변경안의 최신 자동 검증 결과로 상태를 정한다.
                     // 어떤 결과도 사람 승인을 대신하지 않으므로 사용 허용은 여전히 false다.
                     var proposal = repository.findLatestVisibleProposal(familyId, selected.noticeId(), knownAt);
-                    var validation = proposal.flatMap(row ->
-                            repository.findLatestVisibleValidation(row.proposalId(), knownAt));
-                    if (validation.isEmpty()) {
+                    var reject = proposal.flatMap(row -> repository.findVisibleReject(row.proposalId(), knownAt));
+                    var validation = reject.isPresent() ? Optional.<InternalPolicyApplicableRepository.ValidationRow>empty()
+                            : proposal.flatMap(row -> repository.findLatestVisibleValidation(row.proposalId(), knownAt));
+                    if (reject.isPresent()) {
+                        // TASK-007: 반려된 변경안은 이전 검사 통과 결과로 검토 대기에 되돌아가지 않는다.
+                        checklistConditions.add(ChecklistStatus.UNAVAILABLE);
+                        blockingReasons.add("PROPOSAL_REJECTED");
+                    } else if (validation.isEmpty()) {
                         checklistConditions.add(ChecklistStatus.PENDING_VALIDATION);
                         blockingReasons.add("CHECKLIST_VALIDATION_PENDING");
                     } else {
@@ -122,10 +137,18 @@ class InternalPolicyApplicableService {
                     }
                 } else {
                     checklistConditions.add(ChecklistStatus.AVAILABLE);
-                    // Day 5c가 validation freshness, public evidence와 semantic match를 연결하기 전에는
-                    // 승인 checklist가 존재해도 현재 상담 사용을 확정하지 않습니다.
-                    blockingReasons.add("CURRENT_VALIDATION_NOT_EVALUATED");
-                    blockingReasons.add("CURRENT_PUBLIC_EVIDENCE_NOT_EVALUATED");
+                    // TASK-007: 사람 결정이 있는 HUMAN_REVIEW checklist만 사용 허용 후보다.
+                    // 검증 유효 기간은 승인 시점에 확인했고(HumanReviewService), 승인 뒤 기간 경과만으로 만료시키지 않는다.
+                    if ("FIXTURE".equals(checklist.origin())) {
+                        blockingReasons.add("FIXTURE_CHECKLIST_NOT_APPROVED");
+                    } else if (checklist.decisionId() == null) {
+                        blockingReasons.add("HUMAN_DECISION_MISSING");
+                    } else {
+                        approvedByHuman = true;
+                    }
+                    // 공개 근거: 선택된 공문의 참조가 있으면 조회 시점 기준으로 확인한다. 참조가 없으면 해당 없음(확인된 것으로 본다).
+                    publicEvidenceConfirmed = evaluatePublicEvidence(
+                            selected.noticeId(), knownAt, historicalKnownAt, blockingReasons, warningReasons);
                 }
             }
         }
@@ -135,9 +158,9 @@ class InternalPolicyApplicableService {
                 checklistConditions,
                 historicalKnownAt,
                 futureBusinessDate,
-                false,
-                false,
-                false));
+                approvedByHuman,
+                publicEvidenceConfirmed,
+                checklist != null));
 
         return new InternalPolicyApplicableState(
                 familyId,
@@ -176,6 +199,36 @@ class InternalPolicyApplicableService {
         if (leaves.isEmpty()) return Optional.empty();
         return repository.findApplicableChecklist(
                 leaves.getFirst().scheduleRevisionId(), noticeId, businessDate, knownAt);
+    }
+
+    private boolean coveredByOtherNoticeChecklist(
+            String familyId, String noticeId, LocalDate businessDate, Instant knownAt) {
+        List<InternalPolicyApplicableRepository.ScheduleRevisionRow> leaves =
+                repository.findVisibleScheduleLeaves(familyId, knownAt);
+        if (leaves.size() != 1) return false;
+        return repository.findCoveringChecklistNoticeIds(leaves.getFirst().scheduleRevisionId(), businessDate, knownAt)
+                .stream().anyMatch(id -> !id.equals(noticeId));
+    }
+
+    /** 필수 참조가 하나라도 확인되지 않으면 차단, 참고용은 경고. 과거 조회는 이미 차단이므로 확인 결과만 false로 둔다. */
+    private boolean evaluatePublicEvidence(
+            String noticeId, Instant knownAt, boolean historicalKnownAt,
+            List<String> blockingReasons, List<String> warningReasons) {
+        List<InternalPolicyApplicableRepository.ReferenceRow> references = repository.findReferences(noticeId);
+        if (references.isEmpty()) return true;
+        if (historicalKnownAt) return false;
+        boolean confirmed = true;
+        for (InternalPolicyApplicableRepository.ReferenceRow reference : references) {
+            var state = publicProducts.get(reference.productKey(), knownAt.toString());
+            if (state.publicEvidenceConfirmationAllowed()) continue;
+            if ("REQUIRED".equals(reference.evidenceRequirement())) {
+                confirmed = false;
+                blockingReasons.add("PUBLIC_EVIDENCE_UNCONFIRMED");
+            } else {
+                warningReasons.add("INFORMATIONAL_PUBLIC_EVIDENCE_UNCONFIRMED");
+            }
+        }
+        return confirmed;
     }
 
     private static NoticeSelection selectNotice(

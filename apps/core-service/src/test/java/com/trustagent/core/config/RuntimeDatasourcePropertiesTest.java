@@ -50,9 +50,9 @@ class RuntimeDatasourcePropertiesTest {
     @Test
     void configuredSchemaVersionMatchesTheLatestClasspathMigration() {
         var validator = new ClasspathSchemaVersionValidator(
-                new PathMatchingResourcePatternResolver(), "7");
+                new PathMatchingResourcePatternResolver(), "8");
 
-        assertEquals("7", validator.classpathVersion());
+        assertEquals("8", validator.classpathVersion());
         assertThrows(
                 IllegalStateException.class,
                 () -> new ClasspathSchemaVersionValidator(
@@ -73,7 +73,7 @@ class RuntimeDatasourcePropertiesTest {
                 "TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent",
                 "TRUST_AGENT_DB_USERNAME", "runtime",
                 "TRUST_AGENT_DB_PASSWORD", "secret",
-                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "7"))) {
+                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "8"))) {
             assertThrows(RuntimeException.class, missingPolicyContext::refresh);
         }
 
@@ -81,7 +81,7 @@ class RuntimeDatasourcePropertiesTest {
                 "TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent",
                 "TRUST_AGENT_DB_USERNAME", "runtime",
                 "TRUST_AGENT_DB_PASSWORD", "secret",
-                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "7",
+                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "8",
                 "TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1",
                 "TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h",
                 "TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE", "Asia/Seoul",
@@ -98,7 +98,7 @@ class RuntimeDatasourcePropertiesTest {
         runtimeOnly.put("TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent");
         runtimeOnly.put("TRUST_AGENT_DB_USERNAME", "runtime");
         runtimeOnly.put("TRUST_AGENT_DB_PASSWORD", "runtime-secret");
-        runtimeOnly.put("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "7");
+        runtimeOnly.put("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "8");
         runtimeOnly.put("TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1");
         runtimeOnly.put("TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h");
         runtimeOnly.put("TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE", "Asia/Seoul");
@@ -125,7 +125,7 @@ class RuntimeDatasourcePropertiesTest {
         settings.put("TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent");
         settings.put("TRUST_AGENT_DB_USERNAME", "runtime");
         settings.put("TRUST_AGENT_DB_PASSWORD", "runtime-secret");
-        settings.put("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "7");
+        settings.put("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "8");
         settings.put("TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1");
         settings.put("TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h");
         settings.put("TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE", "Asia/Seoul");

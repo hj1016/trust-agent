@@ -78,6 +78,39 @@ class ProposalDemoConfiguration {
                 required(environment, "trust-agent.proposal-validation.validator-version")));
     }
 
+    @Bean
+    @ConditionalOnProperty(name = "trust-agent.human-review.enabled", havingValue = "true")
+    HumanReviewService humanReviewService(
+            JdbcClient jdbc, ObjectMapper mapper, PlatformTransactionManager manager, Clock clock,
+            com.trustagent.core.internalpolicy.InternalValidationPolicyProperties validationPolicy) {
+        return new HumanReviewService(jdbc, mapper, manager, clock, validationPolicy.maxValidationAge());
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "trust-agent.human-review.enabled", havingValue = "true")
+    ApplicationRunner humanReviewRunner(HumanReviewService service, Environment environment, ObjectMapper mapper) {
+        return (ApplicationArguments args) -> {
+            String revised = environment.getProperty("trust-agent.human-review.revised-rules-json");
+            java.util.List<ChecklistItemContent> revisedRules = new java.util.ArrayList<>();
+            if (revised != null && !revised.isBlank()) {
+                for (tools.jackson.databind.JsonNode rule : mapper.readTree(revised)) {
+                    revisedRules.add(new ChecklistItemContent(
+                            rule.get("rule_key").stringValue(), rule.get("instruction").stringValue(),
+                            rule.get("evidence_required").asBoolean(),
+                            rule.get("structured_change") == null || rule.get("structured_change").isNull() ? null : rule.get("structured_change")));
+                }
+            }
+            service.decide(new HumanReviewService.Request(
+                    required(environment, "trust-agent.human-review.proposal-id"),
+                    environment.getProperty("trust-agent.human-review.validation-result-id"),
+                    HumanReviewService.Decision.valueOf(required(environment, "trust-agent.human-review.decision")),
+                    required(environment, "trust-agent.human-review.reviewer-id"),
+                    environment.getProperty("trust-agent.human-review.reason"),
+                    revisedRules,
+                    environment.getProperty("trust-agent.human-review.run-id")));
+        };
+    }
+
     private static String required(Environment environment, String key) {
         String value = environment.getProperty(key);
         if (value == null || value.isBlank()) {
