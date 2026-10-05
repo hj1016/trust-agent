@@ -1,11 +1,11 @@
 # 기능 완료 전 인간 검수 체크리스트
 
-Task / 검수자 / 검수일 / 검수 대상 revision:
+Task / 검수자 / 검수 대상 revision 또는 PR:
 확인 후 체크하고 해당 없음은 Task에 이유를 적는다. AI는 인간 검수 결과를 대신 작성하지 않는다.
 
 ## Requirement / 요구사항
 - [ ] 최신 승인 기준과 업무 가치, Task 범위가 일치한다.
-- [ ] Acceptance Criteria가 구현 전에 정의되었고 변경 이유/일자/결정자가 기록되었다.
+- [ ] Acceptance Criteria가 구현 전에 정의되었고 변경 이유/결정자/승인 범위/검토 대상 revision이 기록되었다.
 
 ## Architecture / 아키텍처
 - [ ] Java + Spring Boot Core가 Oracle 업무 DB와 업무 규칙/권한/상태/트랜잭션/감사를 소유한다.
@@ -51,7 +51,7 @@ Task / 검수자 / 검수일 / 검수 대상 revision:
 
 ## Test / 테스트
 - [ ] AC와 정상/경계/권한/동시성/실패 테스트가 연결되고 각 테스트의 보장 범위를 설명한다.
-- [ ] 환경/일자/명령/결과/evidence와 미실행/skip/실패를 기록했다.
+- [ ] 검증 대상 revision/환경/명령/결과/evidence와 미실행/skip/실패를 기록했다.
 
 ## Code Review / 코드 리뷰
 - [ ] AI self-review의 누락/오류/불필요한 복잡도/잔여 위험을 검토했다.
@@ -87,4 +87,4 @@ Task / 검수자 / 검수일 / 검수 대상 revision:
 - [ ] 수정 필요
 - [ ] 보류
 
-결정자 / 일자 / 이유 / 후속 Task:
+결정자 / 이유 / 승인 범위 / 검토 대상 revision 또는 PR / 후속 Task:
