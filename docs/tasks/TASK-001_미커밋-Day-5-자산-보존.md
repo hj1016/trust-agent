@@ -7,7 +7,7 @@
 
 ## Goal / 관련 요구사항
 
-- Goal: 작업 트리에만 있는 Day 5b와 최종 기획서 정합화 작업(25항목)을 Git history에 보존해, 대표 시나리오 데이터, 계약, 적용 공문 조회 로직, 테스트가 검증 가능한 Pre-SDLC 기준선이 되게 한다. Oracle 전환(TASK-004)은 이 기준선을 비교 대상으로 삼는다.
+- Goal: 작업 트리에만 있는 Day 5b와 최종 기획서 정합화 작업(25항목)을 Git history에 보존해, 대표 시나리오 데이터, 계약, 적용 공문 조회 로직, 테스트가 검증 가능한 Pre-SDLC 기준선이 되게 한다. 후속 기능 Task(proposal, validation, 사람 결정)는 이 기준선 위에서 PostgreSQL schema를 확장한다.
 - 관련 요구사항: 자산 audit 4.1, 4.3, 4.4, 4.6 판정(KEEP, MODIFY 보존), ADR-009 5절 evidence 표기.
 - 사용자: 저장소 관리자(사용자), 후속 Task를 수행하는 AI.
 - 사전조건: 복구용 사본 `/Users/faker/Dev/trust-agent-backups/2026-10-05-uncommitted-day5/`(target-list 25항목, patch, tar) 존재. 로컬 `main`이 `origin/main`(PR #9 병합 커밋 `acd572b`)보다 뒤에 있음.
@@ -20,7 +20,7 @@
 - 권한: push와 PR 생성은 사용자 승인 뒤 AI가 실행하거나 사용자가 직접 실행.
 - 실패 시나리오: 커밋 후 테스트 실패 시 커밋을 되돌리지 않고 원인을 Task에 기록해 사용자 판단. 사본과 작업 트리 불일치 시 중단.
 - 테스트: 기존 Python 58개, Java 82개 재실행(PostgreSQL). 새 테스트 없음.
-- Out of Scope: Oracle 관련 수정, 코드 로직 변경, migrate 스크립트 삭제(TASK-002), 공개 기능 비활성 계약, 문서 날짜 외 내용 변경.
+- Out of Scope: DB 제품 변경, 코드 로직 변경, migrate 스크립트 삭제(TASK-002), 문서 날짜와 허용된 표기 외 내용 변경.
 
 ## 요구사항과 범위
 
@@ -44,8 +44,8 @@
 |---|---|---|---|---|
 | AC-01 | 커밋 직전 | 보존 대상을 **파일 단위 목록**(추적 수정 13 + 미추적 17 = 30파일. status 항목 25개는 디렉터리 포함 수)으로 확정하고, 각 파일의 내용을 현재 작업 트리와 sha256으로 대조. 허용된 변경(AC-03, AC-04 대상 3파일)만 다를 수 있음. 그 외 차이 있으면 중단 | 파일 목록과 sha256 비교 스크립트 출력 | 미검증 |
 | AC-02 | 새 브랜치(origin/main 기준)에 커밋 | 커밋 변경 파일이 AC-01의 30파일과 정확히 일치. **제외 목록**(이번 세션 문서 PR 대상과 그 외 변경)은 별도 목록으로 관리하고 작업 트리에 그대로 보존. 제외 목록 파일이 커밋에 없음 | `git show --stat` 대조, 제외 목록 파일의 작업 트리 존재 확인 | 미검증 |
-| AC-03 | evidence 2건 | 머리에 "PostgreSQL 18.6 Testcontainers 기준 Pre-SDLC 증거이며 Oracle 기준에서는 재검증되지 않음" 표기 1단락 추가. 본문 숫자와 서술은 변경 없음. 이 변경과 앞서 승인된 날짜 표기 제거는 **백업 대비 허용된 변경**으로 구분해 기록 | diff 검토 | 미검증 |
-| AC-04 | `apps/core-service/README.md` | "PostgreSQL 기준 구현이며 Oracle 전환(ADR-009) 미완" 1문장 추가. 그 외 변경 없음. 백업 대비 허용된 변경으로 구분 | diff 검토 | 미검증 |
+| AC-03 | evidence 2건 | 머리에 "PostgreSQL 18.6 Testcontainers 기준 Pre-SDLC 증거. Core 업무 DB는 PostgreSQL 유지로 결정(ADR-009). 현재 기준의 인간 검수 통과를 뜻하지 않음" 표기 1단락 추가. 본문 숫자와 서술은 변경 없음. 이 변경과 앞서 승인된 날짜 표기 제거는 **백업 대비 허용된 변경**으로 구분해 기록 | diff 검토 | 미검증 |
+| AC-04 | `apps/core-service/README.md` | "Core 업무 DB는 PostgreSQL이며(ADR-009) 구현 설명은 PostgreSQL 18.6 기준" 1문장 추가. 그 외 변경 없음. 백업 대비 허용된 변경으로 구분 | diff 검토 | 미검증 |
 | AC-05 | 커밋 후 Python | **커밋 대상만 포함한 별도 체크아웃(git worktree)**에서 `python3 -m unittest discover -s tests` 58개 통과, 실패 0. Public Git 조건(`TRUSTAGENT_PRIVATE_ARTIFACT_ROOT` 빈 경로)에서 skip 3, 실패 0. 제외된 미커밋 파일에 의존하지 않음을 확인 | 명령 출력 | 미검증 |
 | AC-06 | 커밋 후 Java | 같은 별도 체크아웃에서 `./gradlew clean test bootJar --offline --no-daemon` 82개 통과, 실패 0, skip 0, jar 생성(PostgreSQL 18.6 Testcontainers) | 명령 출력, `build/test-results` | 미검증 |
 | AC-07 | 커밋 메시지 | `feat: 합성 중도상환수수료 공문과 적용 공문 조회를 Pre-SDLC 기준선으로 보존` 형식(타입 + 한국어). AI 사용 사실 없음 | 메시지 검토 | 미검증 |
@@ -62,6 +62,8 @@
 | AC-03, AC-04 | 표기 추가 | 백업 대비 허용된 변경으로 구분 | 승인된 변경과 미승인 차이를 분리 | 사용자 | 같음 | 같음 | diff 검토 |
 | AC-05, AC-06 | 커밋 후 테스트 | 커밋 대상만 포함한 체크아웃에서 테스트 | 제외된 미커밋 파일 의존 배제 | 사용자 | 같음 | 같음 | worktree 실행 |
 | AC-08 | 금지 파일명 검사 | 내용 검사와 후보 검토 포함 | 파일명만으로는 secret 누락 | 사용자 | 같음 | 같음 | 검색 출력과 검토 표 |
+| AC-03, AC-04 | Oracle 전환 전제 표기("Oracle 기준 미검증", "Oracle 전환 미완") | PostgreSQL 유지 결정(ADR-009) 반영 표기 | Core DB 결정 변경. 기능 범위 확대 없음 | 사용자 | 충돌 문구와 링크 정정만 허용 | PR #11 | diff 검토, 테스트 재실행 |
+| 범위 D | README.md, AGENTS.md의 "Core 업무 DB Oracle" 문장은 그대로 보존 | PostgreSQL 유지와 ES/Core Tool API 미구현으로 정정 | 새 DB 결정과 충돌하는 문구 정정 | 사용자 | 같음 | PR #11 | diff 검토 |
 
 ## Implementation Plan (AI 구현 전 계획)
 
@@ -82,7 +84,7 @@
 ### 제안 1: 이번 세션 문서(audit, ADR-009, PLAN-001, TASK-001~003, 규칙/템플릿/CLAUDE.md 수정)를 별도 문서 PR로 분리
 
 **AI 제안**
-내용: 보존 PR은 Pre-SDLC 자산만 담고, AI-native SDLC 문서는 `docs: 자산 audit 판정과 Oracle 전환 ADR 초안 추가` 같은 별도 PR로 낸다.
+내용: 보존 PR은 Pre-SDLC 자산만 담고, AI-native SDLC 문서는 별도 PR(PR #10)로 낸다.
 대안: 한 PR에 합친다.
 기대 효과: "하나의 PR은 하나의 업무 결과" 유지. Pre-SDLC 자산과 현재 기준 문서가 history에서 구분된다.
 위험: PR 2개로 검수 횟수 증가.

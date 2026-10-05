@@ -8,8 +8,8 @@ Task / 검수자 / 검수 대상 revision 또는 PR:
 - [ ] Acceptance Criteria가 구현 전에 정의되었고 변경 이유/결정자/승인 범위/검토 대상 revision이 기록되었다.
 
 ## Architecture / 아키텍처
-- [ ] Java + Spring Boot Core가 Oracle 업무 DB와 업무 규칙/권한/상태/트랜잭션/감사를 소유한다.
-- [ ] Python + FastAPI AI는 Core Tool API로만 필요한 업무 데이터를 조회하며 Oracle 직접 접근이 없다.
+- [ ] Java + Spring Boot Core가 PostgreSQL 업무 DB와 업무 규칙/권한/상태/트랜잭션/감사를 소유한다.
+- [ ] Python + FastAPI AI는 Core Tool API로만 필요한 업무 데이터를 조회하며 업무 DB 직접 접근이 없다.
 - [ ] Redis는 단기 상태/중복 방지/캐시이며 LangGraph는 상태/분기/재시도가 필요한 workflow에만 사용한다.
 - [ ] 현재 구현과 목표 baseline을 구분하고 pgvector/PostgreSQL 검색을 현재 baseline으로 사용하지 않는다.
 

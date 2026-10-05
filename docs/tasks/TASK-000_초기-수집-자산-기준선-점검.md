@@ -68,12 +68,12 @@ Git 상태/문서 구조 확인 → 기존 수정 문서와 기준 초안 외부
 | 데이터 | datasets/public/kb, datasets/derived, datasets/synthetic, contracts, 비공개 원문 | 출처/hash/분류/schema/참조/시행일/조건/예외 및 공개 범위 |
 | 수집 스크립트 | scripts/collect_public_kb_snapshots.py, extract_public_kb_product_facts.py, public_product_freshness.py, migrate_public_kb_pipeline_v2.py | native 수집/정규화/추적/중복/재관측/실패 및 회귀 |
 | 기존 코드 | apps/core-service, apps/ai-service, apps/frontend | 구현/placeholder 구분, 업무 규칙/권한/상태/감사, Core Tool API 경계 |
-| DB 및 검색 설정 | Core application.yml, db/migration, 검색 관련 구성 | PostgreSQL 현 구현과 Oracle 목표 차이, 이전/rollback, ES 인덱스/정합성/평가 |
-| Docker·환경 | infra/docker, 로컬 실행/환경변수/의존성 구성 | Oracle/ES/Redis 필요 범위, 재현성/비밀/기동/장애 |
+| DB 및 검색 설정 | Core application.yml, db/migration, 검색 관련 구성 | PostgreSQL 구현 점검(DB 제품 교체는 ADR-009로 범위 밖), 이전/rollback, ES 인덱스/정합성/평가 |
+| Docker·환경 | infra/docker, 로컬 실행/환경변수/의존성 구성 | PostgreSQL/ES/Redis 필요 범위, 재현성/비밀/기동/장애 |
 | 테스트 | tests, Core 단위/통합 테스트 | 각 테스트 보장 범위, 현 환경 재실행, 숫자/시행일/권한/동시성/실패 |
 | CI | .github/workflows, Gradle wrapper/lock/verification | 실제 checks/실행 환경/skip, 목표 기술 전환 시 필요한 검증 |
 
-각 항목의 판정 이유, 대안, 위험, 검증 결과와 인간 판단을 추가 기록한다. 수정/삭제/신규 구현은 별도 승인된 Task 범위에서 수행한다. 이번 작업으로 Oracle 전환, ES 구축, 전체 데이터 품질 검증이 완료된 것은 아니다.
+각 항목의 판정 이유, 대안, 위험, 검증 결과와 인간 판단을 추가 기록한다. 수정/삭제/신규 구현은 별도 승인된 Task 범위에서 수행한다. 이번 작업으로 ES 구축, 전체 데이터 품질 검증이 완료된 것은 아니다. Core 업무 DB는 PostgreSQL 유지로 결정됐다(ADR-009).
 
 ## AI 제안 및 인간 판단 기록
 
@@ -103,4 +103,4 @@ Git 상태/문서 구조 확인 → 기존 수정 문서와 기준 초안 외부
 
 ## 자산 audit 초안
 
-위 "다음 자산 audit 범위"의 7개 영역에 대한 AI 판정 초안을 [TASK-000 자산 audit 초안](TASK-000_자산-audit-초안.md)에 작성했다. 미커밋 Day 5 작업 처리안과 공개 상품 파이프라인 선택지를 포함한다. 관련 초안은 [ADR-009 Oracle 전환](../adr/ADR-009-oracle-core-database.md)과 [PLAN-001 Task 분할](PLAN-001_중도상환수수료-흐름-Task-분할-초안.md)이다. 판정은 audit 문서 7절에 기록했고, 실행은 [TASK-001](TASK-001_미커밋-Day-5-자산-보존.md), [TASK-002](TASK-002_일회성-migrate-스크립트-DROP-실행.md), [TASK-003](TASK-003_Oracle-위험-검증-spike.md)에서 별도 승인으로 진행한다. 이 기록은 audit 완료나 인간 검수 통과를 뜻하지 않는다.
+위 "다음 자산 audit 범위"의 7개 영역에 대한 AI 판정 초안을 [TASK-000 자산 audit 초안](TASK-000_자산-audit-초안.md)에 작성했다. 미커밋 Day 5 작업 처리안과 공개 상품 파이프라인 선택지를 포함한다. 관련 초안은 [ADR-009 Oracle 전환 검토 종료와 PostgreSQL 유지](../adr/ADR-009-oracle-core-database.md)과 [PLAN-001 Task 분할](PLAN-001_중도상환수수료-흐름-Task-분할-초안.md)이다. 판정은 audit 문서 7절에 기록했고, 실행은 [TASK-001](TASK-001_미커밋-Day-5-자산-보존.md), [TASK-002](TASK-002_일회성-migrate-스크립트-DROP-실행.md), [TASK-003](TASK-003_Oracle-위험-검증-spike.md)에서 별도 승인으로 진행한다. 이 기록은 audit 완료나 인간 검수 통과를 뜻하지 않는다.

@@ -21,9 +21,9 @@ PUBLIC_KB, SYNTHETIC_INTERNAL, SYNTHETIC_WORK, DERIVED를 저장소, 계약, API
 ## 최신 기술 경계
 
 - Core: Java + Spring Boot. 업무 규칙/권한/상태/트랜잭션/감사를 소유한다.
-- Core 업무 DB: Oracle. 기존 PostgreSQL 구현은 Pre-SDLC Asset이며 별도 전환 Task의 검증 대상이다.
+- Core 업무 DB: PostgreSQL. Oracle 전환 검토는 ADR-009에서 종료됐다. 기존 PostgreSQL 구현은 Pre-SDLC Asset으로 audit 대상이지만 DB 제품 교체 대상은 아니다.
 - Redis: 단기 상태 / 중복 방지 / 캐시. 영구 업무 원장이나 DB 무결성 제약을 대체하지 않는다.
-- AI Service: Python + FastAPI. Oracle 직접 접근 및 업무 DB 자격증명 보유를 금지한다. Core Tool API를 통해 필요한 업무 데이터만 조회한다.
+- AI Service: Python + FastAPI. 업무 DB 직접 접근 및 업무 DB 자격증명 보유를 금지한다. Core Tool API를 통해 필요한 업무 데이터만 조회한다.
 - Search: Elasticsearch, BM25 + dense vector k-NN + metadata filter + reranker. pgvector/PostgreSQL 검색은 현재 baseline이 아니다. 검색 인덱스는 업무 원장이 아니다.
 - LangGraph: 모든 AI 기능에 적용하지 않고 상태/분기/재시도가 필요한 workflow에만 사용한다.
 

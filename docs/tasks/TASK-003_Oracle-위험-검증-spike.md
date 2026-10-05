@@ -1,6 +1,6 @@
 # TASK-003 Oracle 전환 위험 검증 spike
 
-- 상태: **구현 중** (착수 승인됨)
+- 상태: **중단, 실험 미완료.** Core 업무 DB PostgreSQL 유지 결정(ADR-009)으로 Oracle 실행 승인이 철회됐다. 산출물은 보존하고 커밋, push, 삭제, 재실행하지 않는다.
 - 담당자 / 인간 결정자: AI(실험 설계, 구현, 실행, 기록) / 사용자(범위, AC 확정, 결과 판단, 검수)
 - 요구사항 출처: [ADR-009](../adr/ADR-009-oracle-core-database.md) 판단 기록(제안 1 수정, R-12 검증 후보, R-02 대표 범위 수작업, R-04 실험 검증), [PLAN-001](PLAN-001_중도상환수수료-흐름-Task-분할-초안.md) 제안 B 채택
 - 관련: ADR-009 2.3절 후보 표, TASK-004
@@ -137,6 +137,35 @@
 - 판단자 / 검토 대상 revision 또는 PR: 사용자 / 이 Task 초안
 - 이유 / 승인 범위: 검증된 사실과 미검증 후보 상태는 문서에 바로 반영해도 된다. 새로운 설계 선택이나 승인된 범위 변경만 갱신안을 제시하고 판단을 받는다.
 
-## Implementation Result / AI self-review / 인간 검수 / 결정 기록
+## Implementation Result (중단 시점)
 
-미실행 / 미기록.
+실제 변경 파일: 로컬 worktree `/Users/faker/Dev/trust-agent-wt/spike`(브랜치 `spike/oracle-core-risk`, 커밋 0건, 원격 없음)의 `settings.gradle`, `gradle/verification-metadata.xml`, `spikes/oracle-core/**` 12개 파일. CI yml 변경은 실행되지 않았다. 파일 목록과 결과는 [TASK-003 spike evidence](../evidence/TASK-003_ORACLE_SPIKE_EVIDENCE.md).
+
+| AC ID | 검증 대상 revision | 실행 명령/절차 | 환경/버전 | 결과(실패/skip 포함) | evidence 경로 |
+|---|---|---|---|---|---|
+| E-01 | spike worktree (acd572b 기준 미커밋) | `./gradlew :spikes:oracle-core:test --offline` | 로컬 arm64, Java 21, Testcontainers 2.0.5 | **통과.** 기동 15~20초, JDBC 접속, arm64 manifest | evidence 문서 "검증된 사실" |
+| E-02 | — | CI 미실행 | — | **미실행** | — |
+| E-03 | 같음 | `:spikes:oracle-core:dependencies --write-locks --write-verification-metadata sha256` | Gradle 8.14.5 | **통과.** ojdbc11 23.26.3.0.0, flyway-database-oracle 12.4.0, testcontainers-oracle-free 2.0.5 | 같음 |
+| E-04 | 같음 | 테스트 | 같음 | **미실행** (2회 실패 후 수정, 재실행 전 중단) | 같음 |
+| E-05 | 같음 | 테스트 | 같음 | **통과.** 지원/미지원 목록 기록. `IS NOT DISTINCT FROM` 미지원 | 같음 |
+| E-06 | — | — | — | **미작성** (결정 철회) | — |
+| R12-01~07 | 같음 | 테스트 | 같음 | **미실행** (초기화 단계 실패로 본 실험 미도달) | 같음 |
+| R04-01~05 | 같음 | 테스트 | 같음 | **미실행** | 같음 |
+| R02-01~06 | 같음 | 테스트 | 같음 | **미실행** | 같음 |
+| M-01~08 | 같음 | 테스트 | 같음 | **미실행** | 같음 |
+
+## AI self-review
+
+- 검사 범위: 3회 실행 로그, worktree 상태, 컨테이너와 이미지 상태.
+- 발견 사항: (1) `GRANT SELECT ON dba_*`는 SYSTEM으로도 ORA-01031이라 `SELECT ANY DICTIONARY`로 수정했다. (2) ojdbc 23의 autocommit `commit()` ORA-17273으로 초기화가 실패해 `commit()` 호출을 autocommit 확인 뒤로 바꿨다. (3) Flyway는 비어 있지 않은 schema에 `baselineOnMigrate`가 필요했다. 세 수정은 파일에 반영됐지만 재실행하지 않았다.
+- 미해결: R-12, R-04, R-02, M 그룹 전부. **Oracle 핵심 무결성 검증은 완료되지 않았다.** 이 Task의 어떤 결과도 "Oracle에서 업무 규칙을 보장할 수 있다"는 근거가 아니다.
+
+## 인간 검수와 Explainability Gate
+
+미기록. 중단 결정은 사용자가 했다.
+
+## 결정 기록과 완료
+
+- 최종 결정: **중단.** 결정자: 사용자. 이유: Core 업무 DB PostgreSQL 유지(ADR-009). 승인 범위: 산출물 보존, 커밋/push/삭제/재실행 금지.
+- 이전 착수 승인(제안 1, 2 채택)은 이 결정으로 대체됐다. 기록은 위에 그대로 남긴다.
+- 후속 Task: 없음. TASK-004(Oracle 전환 1단계)는 취소되며 번호는 재사용하지 않는다.
