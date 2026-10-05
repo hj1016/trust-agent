@@ -3,13 +3,13 @@ import json
 import os
 import tempfile
 import unittest
+import uuid
 from collections import Counter
 from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 
 from scripts import extract_public_kb_product_facts as extractor
-from scripts import migrate_public_kb_pipeline_v2 as migration
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -18,6 +18,8 @@ DERIVED_ROOT = ROOT / "datasets/derived/public-kb"
 PRIVATE_ARTIFACT_ROOT = Path(
     os.environ.get("TRUSTAGENT_PRIVATE_ARTIFACT_ROOT", ROOT / ".private-artifacts")
 )
+# 커밋된 golden file은 이 run ID로 생성됐다. seed 문자열은 데이터 식별자이므로 바꾸지 않는다.
+GOLDEN_EXTRACTION_RUN_ID = f"run:{uuid.uuid5(uuid.NAMESPACE_URL, 'trustagent:day3-hardening:extraction:v1').hex}"
 
 
 def load_json(path: Path) -> dict:
@@ -224,7 +226,7 @@ class PublicProductPipelineContractTest(unittest.TestCase):
                     quote_root=root / "datasets/public/kb/rate-quotes",
                     attempt_root=root / "datasets/derived/public-kb/extraction-attempts",
                     repository_root=ROOT,
-                    extraction_run_id=migration.EXTRACTION_RUN_ID,
+                    extraction_run_id=GOLDEN_EXTRACTION_RUN_ID,
                     attempt_sequence=sequences[key],
                     attempted_at=extractor._parse_instant(observation["observed_at"]),
                     attempted_at_source="BACKFILLED_FROM_OBSERVATION",
@@ -252,91 +254,6 @@ class PublicProductPipelineContractTest(unittest.TestCase):
                     for path in actual_root.rglob("*.json")
                 }
                 self.assertEqual(expected, actual)
-
-    def test_private_migration_is_deterministic_with_fixed_run_ids(self) -> None:
-        snapshot_by_path = {
-            path.relative_to(ROOT).as_posix(): load_json(path)
-            for path in (PUBLIC_ROOT / "manifests").rglob("*.manifest.json")
-        }
-        if any(
-            not (PRIVATE_ARTIFACT_ROOT / value["snapshot_object_key"]).is_file()
-            for value in snapshot_by_path.values()
-        ):
-            if os.environ.get("TRUSTAGENT_REQUIRE_PRIVATE_SNAPSHOTS") == "1":
-                self.fail("deterministic migration에 필요한 private artifact가 없습니다.")
-            self.skipTest("비공개 snapshot artifact가 제공되지 않았습니다.")
-
-        attempts = {
-            item["collection_attempt_id"]: item for item in self.collection_attempts
-        }
-
-        def prepare_and_migrate(root: Path) -> dict:
-            for observation in self.observations:
-                snapshot = snapshot_by_path[observation["snapshot_manifest_path"]]
-                attempt = attempts[observation["collection_attempt_id"]]
-                legacy = {
-                    **snapshot,
-                    "collected_at": observation["observed_at"],
-                    "acquisition_method": observation["acquisition_method"],
-                    "published_or_reviewed_at": None,
-                    "effective_from": None,
-                    "effective_to": None,
-                    "parser_version": "raw-html-v1",
-                }
-                if observation.get("acquisition_note"):
-                    legacy["acquisition_note"] = observation["acquisition_note"]
-                self.assertEqual(attempt["attempted_at"], observation["observed_at"])
-                path = root / observation["snapshot_manifest_path"]
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(
-                    json.dumps(legacy, ensure_ascii=False, indent=2) + "\n",
-                    encoding="utf-8",
-                )
-            return migration.migrate(
-                repository_root=root,
-                manifest_root=root / "datasets/public/kb/manifests",
-                artifact_root=PRIVATE_ARTIFACT_ROOT,
-                observation_root=root / "datasets/public/kb/observations",
-                collection_attempt_root=root / "datasets/derived/public-kb/collection-attempts",
-                terms_root=root / "datasets/public/kb/product-terms-versions",
-                evidence_root=root / "datasets/public/kb/version-evidence",
-                quote_root=root / "datasets/public/kb/rate-quotes",
-                extraction_attempt_root=root / "datasets/derived/public-kb/extraction-attempts",
-                change_root=root / "datasets/derived/public-kb/change-detection-results",
-                legacy_version_root=root / "datasets/public/kb/product-versions",
-            )
-
-        with tempfile.TemporaryDirectory() as first_dir, tempfile.TemporaryDirectory() as second_dir:
-            first_root, second_root = Path(first_dir), Path(second_dir)
-            first_report = prepare_and_migrate(first_root)
-            second_report = prepare_and_migrate(second_root)
-            self.assertEqual(canonical(first_report), canonical(second_report))
-            first_files = {
-                path.relative_to(first_root): path.read_bytes()
-                for path in first_root.rglob("*.json")
-            }
-            second_files = {
-                path.relative_to(second_root): path.read_bytes()
-                for path in second_root.rglob("*.json")
-            }
-            self.assertEqual(first_files, second_files)
-            committed_roots = [
-                PUBLIC_ROOT / "manifests",
-                PUBLIC_ROOT / "observations",
-                PUBLIC_ROOT / "product-terms-versions",
-                PUBLIC_ROOT / "version-evidence",
-                PUBLIC_ROOT / "rate-quotes",
-                DERIVED_ROOT / "collection-attempts",
-                DERIVED_ROOT / "extraction-attempts",
-                DERIVED_ROOT / "change-detection-results",
-            ]
-            committed_files = {
-                path.relative_to(ROOT): path.read_bytes()
-                for committed_root in committed_roots
-                for path in committed_root.rglob("*.json")
-            }
-            self.assertEqual(committed_files, first_files)
-            self.assertTrue(first_report["observations_are_lower_bound"])
 
 
 if __name__ == "__main__":

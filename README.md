@@ -46,7 +46,7 @@ python3 -m unittest discover -s tests -v
 TRUSTAGENT_REQUIRE_PRIVATE_SNAPSHOTS=1 python3 -m unittest discover -s tests -v
 ```
 
-검증 결과 Python 58개 테스트가 모두 통과했습니다. 상세 증거는
+검증 결과 Python 57개 테스트가 모두 통과했습니다. 상세 증거는
 `docs/evidence/DAY_03_HARDENING_EVIDENCE.md`와
 `docs/evidence/DAY_04C_EVIDENCE.md`, `docs/evidence/DAY_05A_EVIDENCE.md`,
 `docs/evidence/DAY_05B_EVIDENCE.md`에 기록합니다.
