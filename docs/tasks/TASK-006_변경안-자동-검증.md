@@ -33,7 +33,7 @@
 
 | 번호 | 검사 | 통과 | 주의(WARN) | 실패(FAIL) |
 |---|---|---|---|---|
-| V-01 변경 후 값 일치 | 항목의 변경 후 내용이 대상 공문의 구조화 규칙과 같은가 | 같음 | — | 다름 → `VALUE_MISMATCH`. 사람이 수정한 revision(TASK-007)에서 공문과 어긋난 값을 잡는다 |
+| V-01 변경 후 값 일치 | 항목의 변경 후 내용이 대상 공문의 구조화 규칙과 같은가 | 같음 | — | 다름 → `VALUE_MISMATCH`. 사람이 수정한 revision(TASK-007)에서 공문과 어긋난 값을 잡는다. **이력:** TASK-013에서 V-01a(업무 값 비교, FAIL)와 V-01b(설명 문구 비교, WARN `INSTRUCTION_EDITED`)로 분리(사용자 승인, 구현 PR 참조) |
 | V-02 시행일 일치 | 구조화 변경의 `effective_on`이 대상 공문 `effective_from`과 같은가 | 같음 | — | 다름 또는 없음 → `EFFECTIVE_DATE_MISMATCH` |
 | V-03 변경 전 값 연속성 | 수정 항목에서 공문이 말하는 변경 전 값(`before_value`)이 기준 checklist의 현재 값과 같은가 | 같음 | 공문에 변경 전 값이 없음 → `BEFORE_VALUE_NOT_STATED` | 다름 → `BEFORE_VALUE_MISMATCH` |
 | V-04 숫자 형식과 범위 | PERCENT 또는 KRW 값이 문자열 십진수나 정수이고 범위가 합리적인가(퍼센트 0 이상 100 이하, 원 0 이상) | 맞음 | — | 부동소수점, 빈 값, 범위 밖 → `INVALID_NUMERIC_VALUE` |

@@ -63,7 +63,7 @@ Java 신규 12 = 결정 통합 7(`HumanReviewIntegrationTest`) + 승인 뒤 조�
 ## 한계
 
 - CLI 실행 전용, 합성 검수자 ID. 인증·권한 체계, 화면, 알림, 승인 철회, 정기 재검증은 미구현.
-- TASK-006 V-01이 변경안 항목 전체를 공문 규칙과 비교하므로 검수자가 설명 문구만 고친 revision도 승인할 수 없다. 이번 Task에서 검사 기준을 바꾸지 않았고 별도 Task(TASK-013 계획)로 제안했다.
+- TASK-006 V-01이 변경안 항목 전체를 공문 규칙과 비교하므로 검수자가 설명 문구만 고친 revision도 승인할 수 없다. 이번 Task에서 검사 기준을 바꾸지 않았고 별도 Task(TASK-013 계획)로 제안했다. (후속: TASK-013 구현에서 설명 문구만 다르면 WARN으로 바뀌었다. `VALIDATION_INSTRUCTION_EDIT_EVIDENCE.md` 참조)
 - 공개 근거 확인은 조회 시점의 공개 상품 관측 상태 조회를 그대로 쓰며, 과거 조회에서는 확인 결과를 false로 둔다(과거 조회는 이미 차단).
 - 반려 표시는 새 상태값 없이 `UNAVAILABLE` + `PROPOSAL_REJECTED`다.
 - 인간 검수와 완료 판정은 미기록이다.

@@ -1,6 +1,6 @@
 # TASK-013 변경안 검사 기준 조정: 설명 문구 수정 허용과 구조화 값 고정
 
-- 상태: **계획 검토 대기** (계획 승인: 사용자. 제안 3건 판단 반영. 구현 착수 승인은 아님)
+- 상태: **검증·검수 대기** (완료 조건 7개와 계획 범위로 구현 착수 승인: 사용자. 구현 PR 검수 대기. 완료와 인간 검수는 미기록)
 - 담당자 / 인간 결정자: AI 조사·초안 / 사용자 범위·판정·검수
 - 요구사항 출처: TASK-007 구현 중 확인한 한계(검수자가 설명 문구만 고친 revision도 V-01 `VALUE_MISMATCH` FAIL이라 승인 불가), TASK-006 검사 V-01~V-06, CLAUDE.md "AI는 금리·한도 확정 주체가 아니다"
 - 관련 Issue / PR / ADR / 이전 Task: TASK-006(완료, PR #21), TASK-007(구현 PR #24), ADR-003
@@ -81,4 +81,20 @@ TASK-006 사례 2(수수료율 "0.08")는 V-01a FAIL로 그대로 잡힌다. TAS
 
 ## Implementation Result / AI self-review / 인간 검수 / 결정 기록
 
-미실행 / 미기록.
+### 구현 결과 (AI 작성, 사실)
+
+- 검증 대상: 브랜치 `feat/validation-instruction-edit`(PR 본문에 commit 기재). 상세: [검증 기록](../evidence/VALIDATION_INSTRUCTION_EDIT_EVIDENCE.md).
+- 바뀐 코드: `ProposalValidator`의 V-01을 V-01a(규칙 키, 근거 필요 여부, 구조화 변경 전체 비교 → FAIL `VALUE_MISMATCH`, 세부 `mismatched_fields`)와 V-01b(설명 문구 비교 → WARN `INSTRUCTION_EDITED`, 세부에 원문 문구와 고친 문구)로 나눴다. 업무 값과 문구가 함께 다르면 FAIL만 남는다. 승인 서비스는 바꾸지 않았다(WARN 승인 사유 필수 규칙이 그대로 적용된다).
+- 계약: 검증 결과 schema의 issue 코드가 등록 목록(enum)으로 바뀌었고 `INSTRUCTION_EDITED`가 들어갔다.
+- Java `./gradlew clean test bootJar --offline --no-daemon`: 144건 실행, 통과 144, 실패 0, 건너뜀 0 (기존 142 + 신규 2). Python 로컬(비공개 artifact): 63건 실행, 통과 63, 건너뜀 0 (기존 62 + 신규 1). 공개 CI 조건: 63건, 통과 61, 건너뜀 2.
+- AC-01~07 자동 검증 통과. 인간 검수와 완료 판정은 미실시.
+
+### AI self-review
+
+- 유지 대상(규칙 키, 변경 전후 값, 단위, 시행일, 대상 상품, 조건, 예외, 근거 필요 여부)은 각각 단위 테스트로 FAIL과 필드명 기록을 확인했다. TASK-006 사례 2(0.08)와 정답 파일은 그대로다.
+- 자동 검증은 문구의 의미를 보장하지 않는다. WARN 세부에 두 문구를 저장하고 승인 사유를 강제하는 것까지가 자동화 범위이며, 대조는 사람이 한다(검수 자료 AC-07).
+- 범위 밖 변경 없음: 조건·예외 문구의 부분 수정, 문구 품질 자동 평가, LLM 사용 없음.
+
+### 인간 검수 / 결정
+
+미기록. 사용자 검수 뒤 기록.
