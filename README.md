@@ -14,19 +14,18 @@
 검증하고 raw HTML을 비공개 content-addressed artifact로 저장하며, 같은 내용의 재관측도
 별도 Observation으로 남깁니다. 안정적인 상품 조건은 ProductTermsVersion으로, 시점별
 광고 금리는 ObservedRateQuote로 분리하고 각 관측의 근거와 처리 이력을 append-only
-record로 보존합니다. Day 4a에서는 Java 21과 Spring Boot 기반 Core service 골격,
+record로 보존합니다. Core service는 Java 21과 Spring Boot 기반 골격,
 PostgreSQL Flyway schema, append-only 권한·감사 trigger와 분리된 readiness를
-구현했습니다. Day 4b에서는 커밋된 공개·정제 JSON 39개를 검증한 뒤 PostgreSQL에
-하나의 transaction으로 넣는 baseline importer를 추가했습니다. 같은 baseline은 전체
+갖췄습니다. baseline importer는 커밋된 공개·정제 JSON 39개를 검증한 뒤 PostgreSQL에
+하나의 transaction으로 넣습니다. 같은 baseline은 전체
 record hash와 하위 행을 다시 확인한 뒤 중복 없이 처리하고, 같은 ID의 다른 내용이나
-다른 baseline fingerprint는 덮어쓰지 않고 거부합니다. Day 4c에서는 공개 상품 관측
-상태 조회 endpoint, `asOf`와 `evaluatedAt` 분리, evidence visibility, freshness와
+다른 baseline fingerprint는 덮어쓰지 않고 거부합니다. 공개 상품 관측 상태 조회
+endpoint는 `asOf`와 `evaluatedAt` 분리, evidence visibility, freshness와
 confirmation policy를 구현했습니다. 실제 승인 API와 runtime ingestion은 아직
-구현하지 않았습니다. Day 5a에서는 합성 내부 공문 v1/v2 계약, 별도 bootstrap importer,
+구현하지 않았습니다. 합성 내부 공문은 v1/v2 계약, 별도 bootstrap importer,
 Flyway V4 append-only 저장 구조와 승인 checklist schedule 제약, Asia/Seoul 업무일 변환과
-내부 checklist 사용 차단 정책 기반을 구현했습니다. Day 5b에서는 `businessDate`와
-`knownAt` 두 시간축으로 적용 공문과 승인 checklist schedule을 선택하는 endpoint를
-구현했습니다. 수신 전 공문과 이후 schedule revision은 과거 조회에 노출하지 않고,
+내부 checklist 사용 차단 정책 기반을 갖췄습니다. 적용 공문 조회 endpoint는 `businessDate`와
+`knownAt` 두 시간축으로 적용 공문과 승인 checklist schedule을 선택합니다. 수신 전 공문과 이후 schedule revision은 과거 조회에 노출하지 않고,
 관계없는 중첩이나 끊긴 supersedes chain은 임의 선택하지 않고 `AMBIGUOUS`로 차단합니다.
 변경 후보, 자동 검증과 사람 검토는 아직 구현하지 않았습니다.
 최종 기획서와의 대표 시나리오 차이를 해소하기 위해 중도상환수수료율 1.2퍼센트에서
@@ -47,9 +46,9 @@ TRUSTAGENT_REQUIRE_PRIVATE_SNAPSHOTS=1 python3 -m unittest discover -s tests -v
 ```
 
 검증 결과 Python 57개 테스트가 모두 통과했습니다. 상세 증거는
-`docs/evidence/DAY_03_HARDENING_EVIDENCE.md`와
-`docs/evidence/DAY_04C_EVIDENCE.md`, `docs/evidence/DAY_05A_EVIDENCE.md`,
-`docs/evidence/DAY_05B_EVIDENCE.md`에 기록합니다.
+`docs/evidence/PUBLIC_KB_OBSERVATION_HARDENING_EVIDENCE.md`와
+`docs/evidence/PUBLIC_PRODUCT_OBSERVED_STATE_EVIDENCE.md`, `docs/evidence/SYNTHETIC_NOTICE_SCHEMA_EVIDENCE.md`,
+`docs/evidence/INTERNAL_POLICY_APPLICABLE_QUERY_EVIDENCE.md`에 기록합니다.
 
 Core service의 clean·offline 검증은 다음과 같습니다. Docker daemon이 필요하며 고정된
 PostgreSQL 18.6 image digest를 사용합니다.
@@ -59,9 +58,9 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew clean test bootJar --offline
 ```
 
 최종 기획서 정합화 검증에서는 Java 테스트 82개와 executable jar 생성이 통과했습니다. 상세
-증거는 `docs/evidence/DAY_04A_EVIDENCE.md`와
-`docs/evidence/DAY_04B_EVIDENCE.md`, `docs/evidence/DAY_04C_EVIDENCE.md`,
-`docs/evidence/DAY_05A_EVIDENCE.md`, `docs/evidence/DAY_05B_EVIDENCE.md`에 기록합니다.
+증거는 `docs/evidence/CORE_SERVICE_SCHEMA_AUDIT_EVIDENCE.md`와
+`docs/evidence/PUBLIC_PRODUCT_BASELINE_IMPORTER_EVIDENCE.md`, `docs/evidence/PUBLIC_PRODUCT_OBSERVED_STATE_EVIDENCE.md`,
+`docs/evidence/SYNTHETIC_NOTICE_SCHEMA_EVIDENCE.md`, `docs/evidence/INTERNAL_POLICY_APPLICABLE_QUERY_EVIDENCE.md`에 기록합니다.
 
 공개 상품 3개를 수집하는 명령은 다음과 같습니다.
 
@@ -112,16 +111,18 @@ python3 scripts/extract_public_kb_product_facts.py --all
 
 - 기술 결정: `docs/adr/`
 - 데이터 계약: `contracts/`
-- 첫날 검증 증거: `docs/evidence/DAY_01_EVIDENCE.md`
-- 둘째 날 검증 증거: `docs/evidence/DAY_02_EVIDENCE.md`
-- 셋째 날 검증 증거: `docs/evidence/DAY_03_EVIDENCE.md`
-- 셋째 날 hardening 증거: `docs/evidence/DAY_03_HARDENING_EVIDENCE.md`
-- 넷째 날 A단계 검증 증거: `docs/evidence/DAY_04A_EVIDENCE.md`
-- 넷째 날 B단계 검증 증거: `docs/evidence/DAY_04B_EVIDENCE.md`
-- 넷째 날 C단계 검증 증거: `docs/evidence/DAY_04C_EVIDENCE.md`
-- 다섯째 날 A단계 검증 증거: `docs/evidence/DAY_05A_EVIDENCE.md`
-- 다섯째 날 B단계 검증 증거: `docs/evidence/DAY_05B_EVIDENCE.md`
-- 최종 기획서 정합화 검증 증거: `docs/evidence/FINAL_PROPOSAL_ALIGNMENT_EVIDENCE.md`
+- 공개 KB 스냅샷과 합성 데이터 계약 검증 기록: `docs/evidence/PUBLIC_KB_SNAPSHOT_CONTRACTS_EVIDENCE.md`
+- 공개 KB 스냅샷 수집기 검증 기록: `docs/evidence/PUBLIC_KB_SNAPSHOT_COLLECTOR_EVIDENCE.md`
+- 공개 KB 상품 fact 정규화와 버전 관리 검증 기록: `docs/evidence/PUBLIC_KB_PRODUCT_FACTS_EVIDENCE.md`
+- 공개 KB 관측 파이프라인 hardening 검증 기록: `docs/evidence/PUBLIC_KB_OBSERVATION_HARDENING_EVIDENCE.md`
+- Core service와 공개 상품 조회 종합 검증 기록: `docs/evidence/CORE_SERVICE_PUBLIC_PRODUCT_SUMMARY_EVIDENCE.md`
+- Core service schema와 append-only 감사 검증 기록: `docs/evidence/CORE_SERVICE_SCHEMA_AUDIT_EVIDENCE.md`
+- 공개 상품 baseline importer 검증 기록: `docs/evidence/PUBLIC_PRODUCT_BASELINE_IMPORTER_EVIDENCE.md`
+- 공개 상품 관측 상태 조회 검증 기록: `docs/evidence/PUBLIC_PRODUCT_OBSERVED_STATE_EVIDENCE.md`
+- 합성 내부 공문 계약과 저장 구조 검증 기록: `docs/evidence/SYNTHETIC_NOTICE_SCHEMA_EVIDENCE.md`
+- 적용 공문 기준일 조회 검증 기록: `docs/evidence/INTERNAL_POLICY_APPLICABLE_QUERY_EVIDENCE.md`
+- 최종 기획서 정합화 검증 기록: `docs/evidence/FINAL_PROPOSAL_ALIGNMENT_EVIDENCE.md`
+- Oracle 전환 위험 검증 spike 기록(중단): `docs/evidence/TASK-003_ORACLE_SPIKE_EVIDENCE.md`
 
 ## 구현 상태 기록 원칙
 

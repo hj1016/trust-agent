@@ -113,7 +113,7 @@ TASK-003은 중단됐고 실험은 미완료다. 아래는 실제로 실행되�
 - CLAUDE.md, 개발 규칙, 검수 체크리스트의 Core 업무 DB 표기를 PostgreSQL로 고친다(PR #10).
 - 자산 audit에서 PostgreSQL 결합만을 이유로 한 MODIFY를 KEEP으로 재평가한다(PR #10).
 - PLAN-001에서 TASK-003은 중단, TASK-004는 취소로 기록하고 다음 기능 Task를 PostgreSQL 기반으로 연결한다(PR #10).
-- Day 5 자산 보존(PR #11)의 Oracle 전제 문구를 정정한다. 기능 범위는 바꾸지 않는다.
+- 합성 공문 조회 자산 보존(PR #11)의 Oracle 전제 문구를 정정한다. 기능 범위는 바꾸지 않는다.
 
 ## 판단 기록
 

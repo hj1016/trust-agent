@@ -3,7 +3,7 @@
 - 상태: **계획 검토 대기** (사전 Acceptance Criteria 작성 완료. 구현은 사용자 착수 승인 뒤)
 - 담당자 / 인간 결정자: AI(계획, 구현, 자동 검증, self-review) / 사용자(범위, AC 확정, 제안 판단, 검수, Explainability Gate)
 - 요구사항 출처: [PLAN-001](PLAN-001_중도상환수수료-흐름-Task-분할-초안.md) TASK-005, [ADR-008](../adr/ADR-008-internal-notice-effective-policy-and-review.md) "체크리스트 변경 후보와 revision", [ADR-003](../adr/ADR-003-validation-and-human-approval.md), README MVP 목표 5단계 전반부. 최종 기획서 대표 시나리오(중도상환수수료율 1.2퍼센트 → 0.8퍼센트).
-- 관련 Issue / PR / ADR / 이전 Task: PR #11(기준선), [TASK-001](TASK-001_미커밋-Day-5-자산-보존.md), ADR-009(PostgreSQL 유지), 후속 TASK-006(자동 검증), TASK-007(사람 결정)
+- 관련 Issue / PR / ADR / 이전 Task: PR #11(기준선), [TASK-001](TASK-001_합성-공문-조회-자산-보존.md), ADR-009(PostgreSQL 유지), 후속 TASK-006(자동 검증), TASK-007(사람 결정)
 
 ## Goal / 관련 요구사항
 

@@ -3,9 +3,9 @@
 - 성격: [TASK-000](TASK-000_초기-수집-자산-기준선-점검.md) "다음 자산 audit 범위"의 실행 문서. 조사, 검증, 판정 근거는 AI가 작성했고, 판정은 사용자가 했다.
 - 작성: AI / 결정자: 사용자
 - 상태: **판정 반영 완료.** Core 업무 DB PostgreSQL 유지 결정([ADR-009](../adr/ADR-009-oracle-core-database.md))에 따라 Oracle 전환을 전제했던 판정을 재평가했다. 실행은 TASK-001, TASK-002 승인 범위에서 진행 중이다. 인간 검수와 Explainability Gate는 각 실행 Task에서 기록하며 이 문서로 통과를 선언하지 않는다.
-- 요구사항 출처: 사용자 지시(7개 영역 audit, 미커밋 Day 5 작업 포함, 유지나 PR 전제 금지, 가치/재사용/복잡도/검증 기준, 전부 DROP 가능, 삭제는 사본과 목록 확보 후 승인 뒤). 이후 지시: PostgreSQL 결합만을 이유로 MODIFY했던 항목 재평가, 다른 이유의 수정은 유지.
+- 요구사항 출처: 사용자 지시(7개 영역 audit, 미커밋 합성 공문 조회 작업 포함, 유지나 PR 전제 금지, 가치/재사용/복잡도/검증 기준, 전부 DROP 가능, 삭제는 사본과 목록 확보 후 승인 뒤). 이후 지시: PostgreSQL 결합만을 이유로 MODIFY했던 항목 재평가, 다른 이유의 수정은 유지.
 - 검토 대상 revision: 커밋 `35ef9ad`(origin/main과 동일 내용) + 미커밋 작업 트리(현재 PR #11). 판정 기록은 PR #10 브랜치.
-- 관련: [CLAUDE.md](../../CLAUDE.md), [개발 규칙](../development/DEVELOPMENT_RULES.md), [PLAN-001](PLAN-001_중도상환수수료-흐름-Task-분할-초안.md), [TASK-001](TASK-001_미커밋-Day-5-자산-보존.md), [TASK-002](TASK-002_일회성-migrate-스크립트-DROP-실행.md), [TASK-003](TASK-003_Oracle-위험-검증-spike.md)
+- 관련: [CLAUDE.md](../../CLAUDE.md), [개발 규칙](../development/DEVELOPMENT_RULES.md), [PLAN-001](PLAN-001_중도상환수수료-흐름-Task-분할-초안.md), [TASK-001](TASK-001_합성-공문-조회-자산-보존.md), [TASK-002](TASK-002_일회성-migrate-스크립트-DROP-실행.md), [TASK-003](TASK-003_Oracle-위험-검증-spike.md)
 
 ## 1. 판정 기준과 표기
 
@@ -41,7 +41,7 @@
 3. **공개 상품 KB 파이프라인은 우선 흐름의 critical path에 없다.** 중도상환수수료 공문의 `public_cross_check`는 모두 null. KEEP(동결). 셀러론 공문의 공개 테이블 FK 의존은 PostgreSQL 유지로 문제가 아니다(이전 쟁점 2 소멸).
 4. **DROP 판정은 하나다.** 일회성 `migrate_public_kb_pipeline_v2.py`와 전용 테스트 1개. 삭제 범위에 KEEP 테스트가 쓰는 상수 이동 포함(TASK-002).
 5. **NEW가 필요한 영역:** 로컬 PostgreSQL compose와 `.env.example`, 검색(Elasticsearch), Core Tool API, 대표 E2E. Redis는 보류.
-6. **미커밋 Day 5 작업은 처리안 1로 PR #11에 보존 중이다.**
+6. **미커밋 합성 공문 조회 작업은 처리안 1로 PR #11에 보존됐다.**
 
 ## 4. 영역별 판정
 
@@ -70,7 +70,7 @@
 |---|---|---|
 | `collect_public_kb_snapshots.py` (738 LOC) | kbstar.com 전용 수집기. 11개 테스트 | **KEEP(동결)** |
 | `extract_public_kb_product_facts.py` (837 LOC) | 약관 fact 추출과 변경 감지. 26개 테스트 | **KEEP(동결)** |
-| `migrate_public_kb_pipeline_v2.py` (272 LOC) | Day 3 일회성 도구. 입력 경로 부재. 전용 테스트 1개는 CI에서 항상 skip. 참조: `tests/contract/test_public_product_versions.py` 12행 import, 227행 `migration.EXTRACTION_RUN_ID`(KEEP 테스트 사용), 295행 | **DROP.** 삭제 실행은 TASK-002 |
+| `migrate_public_kb_pipeline_v2.py` (272 LOC) | 공개 pipeline v2 전환용 일회성 도구. 입력 경로 부재. 전용 테스트 1개는 CI에서 항상 skip. 참조: `tests/contract/test_public_product_versions.py` 12행 import, 227행 `migration.EXTRACTION_RUN_ID`(KEEP 테스트 사용), 295행 | **DROP.** 삭제 실행은 TASK-002 |
 | `public_product_freshness.py` (128 LOC) | Java 정책과 같은 fixture를 쓰는 Python 참조 구현 | **KEEP(동결)** |
 | `requirements.txt` 4개 고정 | hash 고정 없음 | **KEEP.** 의존성 보안 개선은 별도 범위 |
 
@@ -118,7 +118,7 @@ Java 4,547 LOC, 43개 클래스.
 | 자산 | 근거 | 인간 판정 |
 |---|---|---|
 | Python 58개 | DB 무사용. `test_private_migration_is_deterministic_with_fixed_run_ids` 1개는 DROP | **KEEP**, 1개 DROP |
-| `tests/contract/test_day_05_contracts.py` (PR #11) | 우선 흐름 계약 테스트 | **KEEP** |
+| `tests/contract/test_synthetic_notice_contracts.py` (PR #11) | 우선 흐름 계약 테스트 | **KEEP** |
 | Java 단위 11개 클래스 23개 | SQL 없음 | **KEEP** |
 | `SyntheticInternalSchemaIntegrationTest` (7), `PublicProductSchemaIntegrationTest` (9) | PostgreSQL 메커니즘과 SQLSTATE 검증. R-ID 불변식 명세 그 자체 | **MODIFY → KEEP(재평가).** 이전 "불변식만 재사용, Oracle 검증 신규"는 대체됨 |
 | `SyntheticInternalImporterIntegrationTest` (8), `InternalPolicyApplicableIntegrationTest` (8, PR #11) | 업무 단언. PostgreSQL fixture SQL | **MODIFY → KEEP(재평가)** |
@@ -137,18 +137,18 @@ Java 4,547 LOC, 43개 클래스.
 | 금지 파일 검사 | `.env.example` 예외 포함 | **KEEP** |
 | CI 공백: e2e, lint, pip hash, 원격 실행 evidence 기록 | evidence는 모두 로컬 실행 결과 | **E2E NEW 인정**, 나머지 별도 범위 |
 
-## 5. 미커밋 Day 5 작업 처리 (처리안 1 채택, PR #11)
+## 5. 미커밋 합성 공문 조회 작업 처리 (처리안 1 채택, PR #11)
 
 대상은 복구용 사본의 `target-list.txt` 25항목(파일 30개)이다.
 
 | 묶음 | 파일 | 성격 |
 |---|---|---|
-| A. 우선 흐름 데이터와 계약 | prepayment-fee 6개, notice schema diff, seller-loan `structured_change: null` diff, `test_day_05_contracts.py` diff | 대표 시나리오 |
+| A. 우선 흐름 데이터와 계약 | prepayment-fee 6개, notice schema diff, seller-loan `structured_change: null` diff, `test_synthetic_notice_contracts.py` diff | 대표 시나리오 |
 | B. 적용 공문 조회 (SQL 없는 부분) | `internalpolicy/query/` 중 Service, Controller, State, Exception, Handler, `AppendOnlyBootstrapChecksTest` | 서비스 로직 |
 | C. PostgreSQL 부분 | `InternalPolicyApplicableRepository`, `SyntheticInternalImporter` diff, `V5` SQL, `application.yml` diff, 통합 테스트 4개 diff, `InternalPolicyApplicableIntegrationTest` | 현재 구현 수단. 재작성 대상 아님(재평가) |
-| D. 문서 | `DAY_05B_EVIDENCE.md`, `FINAL_PROPOSAL_ALIGNMENT_EVIDENCE.md`, README 3종, AGENTS.md diff | evidence와 현황 설명 |
+| D. 문서 | `INTERNAL_POLICY_APPLICABLE_QUERY_EVIDENCE.md`, `FINAL_PROPOSAL_ALIGNMENT_EVIDENCE.md`, README 3종, AGENTS.md diff | evidence와 현황 설명 |
 
-처리안 1(전부 보존)은 [TASK-001](TASK-001_미커밋-Day-5-자산-보존.md)로 실행 중이며 PR #11에 있다. 허용된 변경은 evidence 2건의 Pre-SDLC 표기와 core README의 PostgreSQL 기준 문장이며, PostgreSQL 유지 결정에 맞춰 문구를 정정했다(TASK-001 변경 이력). 기각된 처리안 2, 3의 이유는 이전과 같다.
+처리안 1(전부 보존)은 [TASK-001](TASK-001_합성-공문-조회-자산-보존.md)로 실행 중이며 PR #11에 있다. 허용된 변경은 evidence 2건의 Pre-SDLC 표기와 core README의 PostgreSQL 기준 문장이며, PostgreSQL 유지 결정에 맞춰 문구를 정정했다(TASK-001 변경 이력). 기각된 처리안 2, 3의 이유는 이전과 같다.
 
 이전 쟁점 2(전환 1단계 셀러론 공문 처리, S1-b 채택)는 PostgreSQL 유지로 **소멸**했다. 공문 4개 전부 적재를 유지한다.
 
@@ -163,7 +163,7 @@ KEEP(동결). 신규 확장은 하지 않는다. 이전 "Oracle 이식 후순위
 | 제안 ID | 내용 | 판단 | 이유 / 승인 범위 | 검토 대상 |
 |---|---|---|---|---|
 | 제안 1 | 공개 상품 파이프라인 KEEP(동결) | **채택** | critical path 밖, 검증된 자산 | 초안 revision |
-| 제안 2 | 미커밋 Day 5 작업 처리안 1 | **조건부 채택** | 하나의 Task(TASK-001). 구현과 관련 문서 동반은 정상 범위 | 초안 revision, PR #11 |
+| 제안 2 | 미커밋 합성 공문 조회 작업 처리안 1 | **조건부 채택** | 하나의 Task(TASK-001). 구현과 관련 문서 동반은 정상 범위 | 초안 revision, PR #11 |
 | 제안 3 | `migrate_public_kb_pipeline_v2.py`와 전용 테스트 1개 DROP | **채택** | 삭제 실행은 TASK-002 승인 범위 | 초안 revision |
 | 제안 4 | PostgreSQL 메커니즘 테스트 2개는 불변식 명세만 재사용, Oracle 검증 신규 | **대체됨** | PostgreSQL 유지로 테스트 그대로 KEEP | ADR-009 |
 | 추가 판정 | 대표 합성 데이터, 계약, 정책, canonical hash, 정답표 KEEP | **채택** | — | 초안 revision |
