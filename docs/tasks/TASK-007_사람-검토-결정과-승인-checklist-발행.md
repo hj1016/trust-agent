@@ -1,6 +1,6 @@
 # TASK-007 사람 검토 결정과 승인 checklist 발행
 
-- 상태: **검증·검수 대기** (완료 확인 조건 15개와 승인·수정·반려 흐름 승인, 구현 착수 승인. 구현 PR 검수 대기. 완료와 인간 검수는 미기록)
+- 상태: **완료** (PR #24 병합 commit `1666428`. 인간 검수와 Explainability Gate 통과, 완료 승인: 사용자. 실제 사용자 인증과 화면까지 완료됐다는 뜻이 아니다)
 - 담당자 / 인간 결정자: AI 조사·초안·구현·검증 / 사용자 범위·판정·검수
 - 요구사항 출처: PLAN-001 TASK-007 절(S5 사람 검수, S6 조회), ADR-009 §2.2 R-11(한 공문군의 적용 일정은 revision chain), R-12(기간 중첩 금지), R-05(역할별 최소 권한), CLAUDE.md "AI는 승인 주체가 아니다"
 - 관련 Issue / PR / ADR / 이전 Task: TASK-005(변경안 생성, 완료), TASK-006(자동 검증, 완료 PR #21/#23), ADR-008(공개 근거 확인 정책). 계획 문서 PR #22는 구현 PR #24가 같은 문서를 포함·갱신하여 대체(사용자 지시로 #22 닫음)
@@ -174,7 +174,7 @@
 
 ### 구현 결과 (AI 작성, 사실)
 
-- 검증 대상: 브랜치 `feat/human-review-decision`(PR 본문에 commit 기재). 상세: [검증 기록](../evidence/HUMAN_REVIEW_DECISION_EVIDENCE.md).
+- 검증 대상: 브랜치 `feat/human-review-decision` commit `fe14b01`, 보완 `44c4d2c`, PR #24(병합 commit `1666428`, 공개 CI Gradle/Python 통과). 상세: [검증 기록](../evidence/HUMAN_REVIEW_DECISION_EVIDENCE.md).
 - Java `./gradlew clean test bootJar --offline --no-daemon`: 142건 실행, 통과 142, 실패 0, 건너뜀 0 (기존 130 + 신규 12).
 - Python 로컬(비공개 artifact 제공): 62건 실행, 통과 62, 실패 0, 건너뜀 0. 공개 CI 조건: 62건 실행, 통과 60, 건너뜀 2(비공개 snapshot artifact 없음). 공개 CI 실제 결과는 PR checks.
 - 보호 수치(코드 기준): migration 8, 애플리케이션 테이블 35, 보호 trigger 70.
@@ -187,6 +187,26 @@
 - 범위 밖 변경 없음: 인증, 화면, 승인 철회, 정기 재검증, HTTP 노출 미구현.
 - 기존 테스트 변경은 placeholder 사유 교체, schema 수치, 반려 자료 추가와 그에 따른 기준 시각 이동(19:59:59 → 19:29:59, 의미 동일)에 한정했고 evidence에 적었다.
 
-### 인간 검수 / 결정
+## 인간 검수와 Explainability Gate
 
-미기록. 사용자 검수 뒤 기록.
+- REVIEW_CHECKLIST 적용 / 검수자 / 검수 대상 revision / 결과: [검수 체크리스트](../development/REVIEW_CHECKLIST.md) / 사용자 / PR #24(커밋 `fe14b01`, `44c4d2c`, 병합 `1666428`) / **통과**
+- 인간이 확인한 내용: 승인된 checklist 항목과 값·순서·근거가 실제 조회 응답에 포함되는 것, 기존 사용 차단 조건(과거·미래 조회, 테스트용 출처, 결정 없는 checklist, 공문 철회·선택 변경·모호, 필수 공개 근거 미확인, 반려)이 유지되는 것, 승인·수정·반려별 저장 내용, 설명 문구 수정 후 승인 불가 한계(TASK-013으로 분리)를 확인했고 승인한 범위에 부합한다고 기록했다.
+- Explainability Gate: **통과**(결정자 사용자).
+- 아래 검수 자료는 AI가 작성한 확인용 자료다.
+
+### 인간 검수 자료
+
+**승인 뒤 실제 사용 가능해지는 조회** (`approvedChecklistIsUsableForTheNoticePeriodWithDecisionIdAndOrigin`, 테스트 실행 출력): 평가 시각 2026-10-05T05:00:00Z, 업무일 2026-10-01 → `AVAILABLE`, 사용 허용 true, 차단 사유 없음, `approvedChecklist.origin=HUMAN_REVIEW`, `decisionId=review-decision:ec9cf200…`, 일정 구간 `[2026-10-01, 없음)`. 항목 3개: (0) `CHECK_PREPAYMENT_FEE_RATE` 1.2 → 0.8 PERCENT, 시행일 2026-10-01, 조건 2개, 예외 1개, 근거 규칙 `policy-rule:sha256:0827aed5…`; (1) `CHECK_NOTICE_SOURCE` 구조화 변경 없음, 근거 규칙 `…a72302da…`; (2) `CHECK_CUSTOMER_CONTRACT_DATE` true BOOLEAN, 근거 규칙 `…6a0041a7…`. 각 근거 규칙 version은 같은 응답의 공문 규칙 version과 같다.
+
+**계속 차단되는 조회** (같은 데이터): 승인 1초 전 기준 시각(04:29:59)은 `PENDING_REVIEW`; 2026-09-30은 테스트용 v1(`FIXTURE_CHECKLIST_NOT_APPROVED`); 셀러론은 공개 관측 30일 초과(2026-10-25) 시 `PUBLIC_EVIDENCE_UNCONFIRMED`; 끊긴 chain 수신(10-07)은 `AMBIGUOUS_EFFECTIVE_NOTICE`; v3 시행 구간(11-01)은 v3 선택 + `APPROVED_CHECKLIST_NOTICE_MISMATCH`; 셀러론 철회(10-30) 뒤 `WITHDRAWN`; 반려된 변경안은 `UNAVAILABLE` + `PROPOSAL_REJECTED`(PASS 결과가 있어도 되돌아가지 않음). 모두 사용 허용 false.
+
+**결정별 저장** (`HumanReviewIntegrationTest`): 승인은 결정 1행 + HUMAN_REVIEW checklist(항목 3개) + fixture 일정을 잇는 revision(구간 2개)이 한 트랜잭션. 수정은 새 revision만(승인 checklist 없음, 재검증 필요). 반려는 결정만. 중간 실패 시 아무것도 남지 않고 실패 실행 기록만 남는다.
+
+**직접 확인하는 방법**: `./gradlew :apps:core-service:test --tests '*HumanReview*' --offline --no-daemon`(Docker 필요). 또는 core README의 결정 명령 실행 뒤 적용 공문 조회 API를 호출해 `approvedChecklist.items`, `origin`, `decisionId`, `internalChecklistUseAllowed`를 본다.
+
+## 결정 기록과 완료
+
+- 최종 결정 / 결정자 / 승인 범위 / 검토 대상 revision 또는 PR: **완료** / 사용자 / 승인한 범위(승인·수정·반려 결정 기록, HUMAN_REVIEW checklist와 일정 revision 발행, 적용 공문 조회의 사용 허용 연결과 응답 항목 포함, 기존 차단 조건 유지, production 차단) / PR #24
+- Acceptance Criteria 충족 / evidence / ADR / PR: AC-01~AC-15 전부 통과(AC-02는 보완 commit `44c4d2c`로 실제 응답 검증). evidence `docs/evidence/HUMAN_REVIEW_DECISION_EVIDENCE.md`. ADR-003, ADR-008, ADR-009. PR #24.
+- 이 완료는 **실제 사용자 인증과 화면, 승인 철회, 정기 재검증까지 완료됐다는 뜻이 아니다.** 검수자 ID는 합성 값이다.
+- 잔여 위험 / 후속 Task: 설명 문구만 고친 revision은 승인 불가(TASK-013 계획 PR #25, 구현 미승인). 자동 검증은 문구의 의미를 보장하지 않는다. TASK-008 Core Tool API.
