@@ -8,7 +8,7 @@ Flyway V5부터는 최종 기획서의 대표 사례인 중도상환수수료 �
 자동 검증 결과와 사람의 제공 승인은 아직 구현하지 않았습니다. 일반 서버 기동 중에는
 baseline importer bean을 만들거나 데이터를 자동 적재하지 않습니다.
 
-현재 구현은 PostgreSQL 기준이며 Core 업무 DB의 Oracle 전환(ADR-009)은 완료되지 않았습니다.
+Core 업무 DB는 PostgreSQL이며(ADR-009) 이 README의 구현 설명은 PostgreSQL 18.6 기준입니다.
 
 ## 합성 내부 공문 기준일 조회
 

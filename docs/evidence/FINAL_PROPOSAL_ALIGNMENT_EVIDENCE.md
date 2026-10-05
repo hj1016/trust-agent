@@ -1,6 +1,6 @@
 # 최종 기획서 정합화 검증 기록
 
-> 이 문서는 PostgreSQL 18.6 Testcontainers 기준의 Pre-SDLC 증거이며 Oracle 기준에서는 재검증되지 않았다. Core 업무 DB는 Oracle로 확정됐다(ADR-009). 본문의 Java/Gradle 결과와 PostgreSQL 메커니즘 서술은 역사적 기록이다.
+> 이 문서는 PostgreSQL 18.6 Testcontainers 기준의 Pre-SDLC 증거다. Core 업무 DB는 PostgreSQL 유지로 결정됐다(ADR-009). 본문의 결과는 AI-native SDLC 도입 이전 검증 기록이며 현재 기준의 인간 검수 통과를 뜻하지 않는다.
 
 ## 변경 범위
 
