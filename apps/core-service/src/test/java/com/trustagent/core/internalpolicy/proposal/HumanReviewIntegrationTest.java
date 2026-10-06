@@ -214,21 +214,33 @@ class HumanReviewIntegrationTest {
         assertRefused("PROPOSAL_ALREADY_DECIDED", proposalId, null, HumanReviewService.Decision.APPROVE, null, clock);
         assertRefused("VALIDATION_MISSING", revision, null, HumanReviewService.Decision.APPROVE, null, clock);
 
-        // TASK-006 V-01은 공문 규칙과 다른 문구를 FAIL로 잡으므로 이 revision은 승인할 수 없다(설계 상 한계, Task 문서 참조).
+        // TASK-013 AC-03: 설명 문구만 고친 revision은 WARN INSTRUCTION_EDITED이고, 승인 사유가 있어야 승인된다.
         var revalidated = validation(Duration.ofHours(24)).validate(new ProposalValidationService.Request(revision, null, "proposal-validator-v1"));
-        assertEquals(ProposalValidator.Status.FAIL, revalidated.status());
-        assertRefused("VALIDATION_FAILED", revision, null, HumanReviewService.Decision.APPROVE, null, clock);
+        assertEquals(ProposalValidator.Status.WARN, revalidated.status());
+        assertEquals("WARN | INSTRUCTION_EDITED | CHECK_NOTICE_SOURCE",
+                single("select severity || ' | ' || code || ' | ' || rule_key from automated_validation_issue where validation_result_id = '" + revalidated.validationResultId() + "' and severity = 'WARN'"));
+        assertRefused("REASON_REQUIRED", revision, null, HumanReviewService.Decision.APPROVE, null, clock);
 
-        // 공문 규칙과 같은 내용으로 다시 수정하면 PASS가 나오고 승인할 수 있다.
-        var again = review(clock).decide(new HumanReviewService.Request(
-                revision, null, HumanReviewService.Decision.MODIFY, REVIEWER, "공문 문구로 원복", noticeRules, null));
-        var finalPass = validation(Duration.ofHours(24)).validate(new ProposalValidationService.Request(again.revisionProposalId(), null, "proposal-validator-v1"));
-        assertEquals(ProposalValidator.Status.PASS, finalPass.status());
         var approved = review(clock).decide(new HumanReviewService.Request(
-                again.revisionProposalId(), finalPass.validationResultId(), HumanReviewService.Decision.APPROVE, REVIEWER, null, List.of(), null));
+                revision, revalidated.validationResultId(), HumanReviewService.Decision.APPROVE, REVIEWER,
+                "원문과 대조함: 공문 뜻을 바꾸지 않는 안내 문구 보완", List.of(), null));
         assertNotNull(approved.scheduleRevisionId());
-        assertEquals(3, count("human_review_decision"));
-        assertEquals(3, count("checklist_change_proposal"));
+        // 발행된 항목의 문구는 고친 문구이고 업무 값(구조화 변경)은 공문 값 그대로다.
+        assertEquals(single("select instruction from internal_policy_rule_version where rule_key = 'CHECK_NOTICE_SOURCE' limit 1") + " (검수자 보완 문구)",
+                single("select instruction from approved_checklist_item where approved_checklist_version_id = '" + approved.approvedChecklistVersionId() + "' and rule_key = 'CHECK_NOTICE_SOURCE'"));
+        assertEquals("0.8", single("select structured_change->>'after_value' from approved_checklist_item where approved_checklist_version_id = '" + approved.approvedChecklistVersionId() + "' and rule_key = 'CHECK_PREPAYMENT_FEE_RATE'"));
+        assertEquals("원문과 대조함: 공문 뜻을 바꾸지 않는 안내 문구 보완", single("select reason from human_review_decision where decision_id = '" + approved.decisionId() + "'"));
+        assertEquals(2, count("human_review_decision"));
+        assertEquals(2, count("checklist_change_proposal"));
+
+        // 업무 값을 고친 revision은 여전히 FAIL이라 승인할 수 없다.
+        var second = review(clock).decide(new HumanReviewService.Request(
+                generateSeller(), null, HumanReviewService.Decision.MODIFY, REVIEWER, "값 변경 시도",
+                new ProposalRepository(jdbc, mapper).findRules(single("select extraction_attempt_id from policy_extraction_attempt where notice_id = 'SIN-SELLER-CHECKLIST-V2' and status = 'SUCCEEDED'"))
+                        .stream().map(rule -> new ChecklistItemContent(rule.ruleKey(), rule.instruction(), false, rule.structuredChange())).toList(), null));
+        var failed = validation(Duration.ofDays(30)).validate(new ProposalValidationService.Request(second.revisionProposalId(), null, "proposal-validator-v1"));
+        assertEquals(ProposalValidator.Status.FAIL, failed.status());
+        assertRefused("VALIDATION_FAILED", second.revisionProposalId(), null, HumanReviewService.Decision.APPROVE, "사유", clock);
     }
 
     // ---- AC-08: 반려는 결정만 남기고 이후 승인·수정을 막는다 ----

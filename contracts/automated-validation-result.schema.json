@@ -42,7 +42,11 @@
         "properties": {
           "issue_order": {"type": "integer", "minimum": 0},
           "severity": {"enum": ["FAIL", "WARN", "INFO"]},
-          "code": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"},
+          "code": {"type": "string", "enum": [
+            "VALUE_MISMATCH", "INSTRUCTION_EDITED", "EFFECTIVE_DATE_MISMATCH", "BEFORE_VALUE_MISMATCH", "BEFORE_VALUE_NOT_STATED",
+            "INVALID_NUMERIC_VALUE", "UNKNOWN_PRODUCT_KEY", "MISSING_CONDITIONS", "ITEM_REMOVED",
+            "PUBLIC_FACT_MATCH", "PUBLIC_FACT_MISMATCH", "PUBLIC_EVIDENCE_UNCONFIRMED", "PUBLIC_CROSS_CHECK_NOT_APPLICABLE",
+            "BASE_CHECKLIST_STALE", "TARGET_NOTICE_WITHDRAWN"]},
           "rule_key": {"type": ["string", "null"], "pattern": "^[A-Z][A-Z0-9_]+$"},
           "message": {"type": "string", "minLength": 1},
           "details": {"type": "object"}

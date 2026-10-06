@@ -114,6 +114,19 @@ class ChecklistProposalContractTest(unittest.TestCase):
         with self.assertRaises(ValidationError):
             validate(pass_with_fail_issue, "automated-validation-result.schema.json")
 
+    def test_instruction_edited_warning_is_a_known_code_and_unknown_codes_are_rejected(self):
+        # TASK-013 AC-05: 설명 문구 수정 WARN 코드가 계약에 등록돼 있고 미등록 코드는 거부
+        expected = load(ROOT / "contracts" / "fixtures" / "prepayment-fee-v2-validation.expected.json")
+        edited = dict(expected, status="WARN", issues=expected["issues"] + [{
+            "issue_order": 2, "severity": "WARN", "code": "INSTRUCTION_EDITED", "rule_key": "CHECK_NOTICE_SOURCE",
+            "message": "설명 문구가 공문 규칙과 다릅니다.",
+            "details": {"notice_instruction": "원문 문구", "proposal_instruction": "고친 문구"},
+        }])
+        validate(edited, "automated-validation-result.schema.json")
+        unknown = dict(edited, issues=[dict(edited["issues"][2], code="SOMETHING_ELSE")])
+        with self.assertRaises(ValidationError):
+            validate(unknown, "automated-validation-result.schema.json")
+
     def test_expected_proposal_matches_schema_and_recomputes_from_notices(self):
         expected = load(EXPECTED_PROPOSAL)
         validate(expected, "checklist-change-proposal.schema.json")

@@ -44,6 +44,56 @@ class ProposalValidatorTest {
         Outcome outcome = validator.validate(input(List.of(modify(TARGET_CHANGE.replace("\"0.8\"", "\"0.08\""))), List.of()));
         assertEquals(Status.FAIL, outcome.status());
         assertTrue(codes(outcome, Severity.FAIL).contains("VALUE_MISMATCH"));
+        Issue mismatch = outcome.issues().stream().filter(issue -> issue.code().equals("VALUE_MISMATCH")).findFirst().orElseThrow();
+        assertEquals("[\"structured_change.after_value\"]", mismatch.details().get("mismatched_fields").toString());
+    }
+
+    @Test
+    void editedInstructionIsWarnNotFailAndKeepsBothTexts() {
+        // TASK-013 AC-01: 설명 문구만 다르면 WARN INSTRUCTION_EDITED
+        ProposalItem edited = new ProposalItem("CHECK_PREPAYMENT_FEE_RATE", "MODIFY",
+                content("CHECK_PREPAYMENT_FEE_RATE", BASE_CHANGE).toJson(mapper),
+                new ChecklistItemContent("CHECK_PREPAYMENT_FEE_RATE", "지시 CHECK_PREPAYMENT_FEE_RATE (검수자 보완)", true, mapper.readTree(TARGET_CHANGE)).toJson(mapper));
+        Outcome outcome = validator.validate(input(List.of(edited), List.of()));
+        assertEquals(Status.WARN, outcome.status());
+        assertTrue(codes(outcome, Severity.FAIL).isEmpty());
+        Issue warn = outcome.issues().stream().filter(issue -> issue.code().equals("INSTRUCTION_EDITED")).findFirst().orElseThrow();
+        assertEquals(Severity.WARN, warn.severity());
+        assertEquals("지시 CHECK_PREPAYMENT_FEE_RATE", warn.details().get("notice_instruction").stringValue());
+        assertEquals("지시 CHECK_PREPAYMENT_FEE_RATE (검수자 보완)", warn.details().get("proposal_instruction").stringValue());
+    }
+
+    @Test
+    void businessValuesOtherThanInstructionStayFailWithMismatchedFieldNames() {
+        // TASK-013 AC-02: 근거 필요 여부, 조건, 예외, 단위, 시행일, 대상 상품, 변경 전 값은 유지 대상
+        ProposalItem evidenceOff = new ProposalItem("CHECK_PREPAYMENT_FEE_RATE", "MODIFY", null,
+                new ChecklistItemContent("CHECK_PREPAYMENT_FEE_RATE", "지시 CHECK_PREPAYMENT_FEE_RATE", false, mapper.readTree(TARGET_CHANGE)).toJson(mapper));
+        assertEquals("[\"evidence_required\"]", mismatched(validator.validate(input(List.of(evidenceOff), List.of()))));
+
+        String[][] edits = {
+                {"[\"기업 고객\"]", "[\"기업 고객\",\"추가 조건\"]", "structured_change.conditions"},
+                {"\"exceptions\":[]", "\"exceptions\":[\"예외 추가\"]", "structured_change.exceptions"},
+                {"\"PERCENT\"", "\"KRW\"", "structured_change.unit"},
+                {"\"effective_on\":\"2026-10-01\"", "\"effective_on\":\"2026-10-02\"", "structured_change.effective_on"},
+                {"[\"kb-seller-loan\"]", "[\"kb-other\"]", "structured_change.applicable_product_keys"},
+                {"\"before_value\":\"1.2\"", "\"before_value\":\"1.0\"", "structured_change.before_value"},
+        };
+        for (String[] edit : edits) {
+            Outcome outcome = validator.validate(input(List.of(modify(TARGET_CHANGE.replace(edit[0], edit[1]))), List.of()));
+            assertEquals(Status.FAIL, outcome.status(), edit[2]);
+            assertTrue(mismatched(outcome).contains(edit[2]), edit[2] + " -> " + mismatched(outcome));
+        }
+        // 설명 문구와 업무 값이 함께 다르면 FAIL만 남고 문구 WARN은 붙지 않는다(먼저 업무 값을 맞춰야 한다)
+        ProposalItem both = new ProposalItem("CHECK_PREPAYMENT_FEE_RATE", "MODIFY", null,
+                new ChecklistItemContent("CHECK_PREPAYMENT_FEE_RATE", "다른 문구", true, mapper.readTree(TARGET_CHANGE.replace("\"0.8\"", "\"0.9\""))).toJson(mapper));
+        Outcome bothOutcome = validator.validate(input(List.of(both), List.of()));
+        assertEquals(Status.FAIL, bothOutcome.status());
+        assertTrue(codes(bothOutcome, Severity.WARN).isEmpty());
+    }
+
+    private static String mismatched(Outcome outcome) {
+        return outcome.issues().stream().filter(issue -> issue.code().equals("VALUE_MISMATCH"))
+                .map(issue -> issue.details().get("mismatched_fields").toString()).findFirst().orElse("[]");
     }
 
     @Test

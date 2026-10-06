@@ -103,15 +103,29 @@ public class ProposalValidator {
             return;
         }
 
-        // V-01 변경 후 값 일치
+        // V-01a 구조화 값 일치: rule_key, evidence_required, structured_change 전체가 공문 규칙과 같아야 한다 (FAIL).
+        // V-01b 설명 문구 일치: instruction만 다르면 WARN. 자동 검증은 문구의 의미를 보장하지 않으므로 사람이 원문과 대조한다 (TASK-013).
         if (targetRule == null) {
             issues.add(issue(Severity.FAIL, "VALUE_MISMATCH", key,
                     "공문에 없는 규칙이 변경안에 있습니다.", details("proposal_after", item.after())));
-        } else if (item.after() == null
-                || !hasher.canonicalize(item.after()).json().equals(hasher.canonicalize(targetRule.toJson(mapper)).json())) {
+        } else if (item.after() == null) {
             issues.add(issue(Severity.FAIL, "VALUE_MISMATCH", key,
-                    "변경안의 변경 후 내용이 공문의 구조화 규칙과 다릅니다.",
-                    details("proposal_after", item.after(), "notice_rule", targetRule.toJson(mapper))));
+                    "변경안에 변경 후 내용이 없습니다.", details("notice_rule", targetRule.toJson(mapper))));
+        } else {
+            ObjectNode noticeJson = targetRule.toJson(mapper);
+            List<String> mismatched = mismatchedFields(item.after(), noticeJson);
+            if (!mismatched.isEmpty()) {
+                ObjectNode details = details("proposal_after", item.after(), "notice_rule", noticeJson);
+                details.set("mismatched_fields", mapper.valueToTree(mismatched));
+                issues.add(issue(Severity.FAIL, "VALUE_MISMATCH", key,
+                        "변경안의 업무 값(규칙 키, 근거 필요 여부, 구조화 변경)이 공문의 구조화 규칙과 다릅니다: " + String.join(", ", mismatched),
+                        details));
+            } else if (!text(item.after(), "instruction").equals(targetRule.instruction())) {
+                issues.add(issue(Severity.WARN, "INSTRUCTION_EDITED", key,
+                        "설명 문구가 공문 규칙과 다릅니다. 자동 검증은 문구의 의미를 보장하지 않으므로 검수자가 원문과 대조하고 승인 사유를 남겨야 합니다.",
+                        details("notice_instruction", textNode(targetRule.instruction()),
+                                "proposal_instruction", textNode(text(item.after(), "instruction")))));
+            }
         }
 
         JsonNode change = item.after() == null ? null : item.after().get("structured_change");
@@ -262,6 +276,37 @@ public class ProposalValidator {
             return "퍼센트 값이 100을 넘습니다.";
         }
         return null;
+    }
+
+    /** 설명 문구(instruction)를 뺀 나머지 필드 중 다른 것. structured_change는 하위 필드 단위로 적는다. */
+    private List<String> mismatchedFields(JsonNode proposalAfter, ObjectNode noticeRule) {
+        List<String> mismatched = new ArrayList<>();
+        for (String field : List.of("rule_key", "evidence_required")) {
+            if (!canonical(proposalAfter.get(field)).equals(canonical(noticeRule.get(field)))) {
+                mismatched.add(field);
+            }
+        }
+        JsonNode proposalChange = proposalAfter.get("structured_change");
+        JsonNode noticeChange = noticeRule.get("structured_change");
+        boolean proposalNull = proposalChange == null || proposalChange.isNull();
+        boolean noticeNull = noticeChange == null || noticeChange.isNull();
+        if (proposalNull != noticeNull) {
+            mismatched.add("structured_change");
+        } else if (!proposalNull) {
+            java.util.TreeSet<String> keys = new java.util.TreeSet<>();
+            proposalChange.propertyNames().forEach(keys::add);
+            noticeChange.propertyNames().forEach(keys::add);
+            for (String subField : keys) {
+                if (!canonical(proposalChange.get(subField)).equals(canonical(noticeChange.get(subField)))) {
+                    mismatched.add("structured_change." + subField);
+                }
+            }
+        }
+        return mismatched;
+    }
+
+    private String canonical(JsonNode node) {
+        return node == null ? "<absent>" : hasher.canonicalize(node).json();
     }
 
     private static Map<String, ChecklistItemContent> index(List<ChecklistItemContent> contents) {

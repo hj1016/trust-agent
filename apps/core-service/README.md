@@ -47,6 +47,8 @@ GET /api/v1/internal-policy/checklists/{familyId}/applicable
 3. 변경안 자동 검증. 변경안을 공문 원문 규칙, 기준 checklist, 공개 상품 근거와 대조해 PASS/WARN/FAIL과 세부 오류(issue)를
    한 트랜잭션으로 저장합니다. FAIL 결과에 FAIL issue가 없거나 WARN 결과에 WARN issue가 없으면 DB가 저장을 거부합니다.
    공개 근거 교차 검증은 공개 상품 관측 상태 조회와 같은 freshness 정책(`trust-agent.public-evidence.max-confirmation-age`)을 씁니다.
+   검수자가 설명 문구만 고친 revision은 WARN `INSTRUCTION_EDITED`(원문 문구와 고친 문구 저장)이고, 규칙 키·변경 전후 값·단위·시행일·대상 상품·조건·예외·근거 필요 여부가
+   다르면 FAIL `VALUE_MISMATCH`(세부 `mismatched_fields`)입니다. 자동 검증은 문구의 의미를 보장하지 않으므로 검수자가 원문과 대조하고 승인 사유를 남깁니다.
 
 ```bash
 ./gradlew :apps:core-service:bootRun --offline --no-daemon \
