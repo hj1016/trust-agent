@@ -1,6 +1,6 @@
 # TASK-008 Core Tool API: AI 서비스용 읽기 전용 조회 경계
 
-- 상태: **검증·검수 대기** (구현 PR #31 검수 대기. 완료와 인간 검수는 미기록)
+- 상태: **완료** (PR #31 병합 commit `5fe5ccf`. 인간 검수와 Explainability Gate 통과, 완료 승인: 사용자. demo 서비스 인증과 읽기 API의 완료이며 사용자별 권한, FastAPI 연결, 성능 검증 완료가 아니다)
 - 담당자 / 인간 결정자: AI 조사·초안 / 사용자 범위·판정·검수
 - 요구사항 출처: PLAN-001 TASK-008 절(S7의 Core 쪽, 제안 D "검색보다 먼저" 채택), CLAUDE.md "AI Service는 업무 DB 직접 접근과 자격증명 보유 금지, Core Tool API로 필요한 업무 데이터만 조회", DEVELOPMENT_RULES "Tool allowlist, 입력/출력 schema, 최소 데이터, 민감정보 마스킹, 감사 추적, 미승인/철회/구버전/권한 밖 근거 제외, fail-closed"
 - 관련 Issue / PR / ADR / 이전 Task: TASK-007(완료, PR #24), ADR-001(제품 경계), ADR-007(Core 서비스와 조회), ADR-008(공개 근거 확인). [ADR-011 초안](../adr/ADR-011-core-tool-api-boundary.md)(접근 범위와 인증 결정)을 이 계획과 함께 제시한다.
@@ -111,10 +111,10 @@
 
 ### 구현 결과 (AI 작성, 사실)
 
-- 검증 대상: 브랜치 `feat/core-tool-api`, PR #31(본문에 commit 기재). 상세: [검증 기록](../evidence/CORE_TOOL_API_EVIDENCE.md).
+- 검증 대상: 브랜치 `feat/core-tool-api` commit `8179089`, 보완 `2cb204a`, PR #31(병합 commit `5fe5ccf`, 공개 CI Gradle/Python 통과). 상세: [검증 기록](../evidence/CORE_TOOL_API_EVIDENCE.md).
 - 구현: `POST /api/v1/tools/{toolName}` 하나와 allowlist 2개, `applicable_checklist`(사용 불가면 사유만, 항목·근거 ID 없음), `rule_evidence`(서버가 소속과 사용 가능 여부 재확인, 아니면 403), Bearer 토큰 서비스 인증(test/demo, 환경변수, 비어 있으면 모든 호출 401, production 필수), V9 `tool_call_audit`(append-only, 보호 테이블 36·trigger 72·migration 9), 계약 schema 2개와 정답 파일, README.
 - Java `./gradlew clean test bootJar --offline --no-daemon`: 153건 실행, 통과 153, 실패 0, 건너뜀 0 (기존 144 + 신규 9). Python 로컬(비공개 artifact): 65건 실행, 통과 65, 건너뜀 0 (기존 63 + 신규 2). 공개 CI 조건: 65건, 통과 63, 건너뜀 2. 공개 CI 실제 결과는 PR #31 checks.
-- AC-01~12 자동 검증 통과. 인간 검수와 완료 판정은 미실시.
+- AC-01~12 자동 검증 통과.
 
 ### AI self-review
 
@@ -125,6 +125,21 @@
 - 실제 자격증명은 저장소에 없다. 테스트는 실행 중 생성한 UUID를 쓴다.
 - 범위 밖 변경 없음: 사용자별 인증·권한, FastAPI AI 서비스, 쓰기 Tool 없음.
 
-### 인간 검수 / 결정
+## 인간 검수와 Explainability Gate
 
-미기록. 사용자 검수 뒤 기록.
+- REVIEW_CHECKLIST 적용 / 검수자 / 검수 대상 revision / 결과: [검수 체크리스트](../development/REVIEW_CHECKLIST.md) / 사용자 / PR #31(커밋 `8179089`, `2cb204a`, 병합 `5fe5ccf`) / **통과**
+- 인간이 확인한 내용: 검수 사례 7건(승인 checklist 조회와 Core 조회 일치, 미승인·반려·FIXTURE에서 항목과 근거 ID 미제공, 허용 항목 근거는 원문 문장과 위치만, 다른 공문군·미승인 규칙 ID 403, 조회 뒤 철회·반려 시 재차단, 토큰 없음·불일치·knownAt·쓰기 Tool 거부, 감사 저장 실패 시 오류만), 토큰·원문 없는 감사 기록 예시, 직접 검증하지 않은 부분을 확인했고 동작과 한계를 이해했으며 승인한 범위에 부합한다고 기록했다.
+- Explainability Gate: **통과**(결정자 사용자).
+- 검수 자료: [검증 기록](../evidence/CORE_TOOL_API_EVIDENCE.md)의 "실제 응답 사례"와 테스트 표.
+
+## 결정 기록과 완료
+
+- 최종 결정 / 결정자 / 승인 범위 / 검토 대상 revision 또는 PR: **완료** / 사용자 / 승인한 범위(읽기 전용 Tool 2개와 allowlist, Core가 결정한 사용 허용 여부 전달, 사용 불가 시 사유만, 근거 Tool의 서버 재확인, test/demo 서비스 토큰 인증, 감사 기록과 fail-closed, 계약과 문서) / PR #31
+- Acceptance Criteria 충족 / evidence / ADR / PR: AC-01~AC-12 전부 통과. evidence `docs/evidence/CORE_TOOL_API_EVIDENCE.md`. ADR-011. PR #31.
+- 이 완료는 **demo 서비스 인증과 읽기 API의 완료**이며, 사용자별 권한, FastAPI 연결, 성능 검증까지 완료됐다는 뜻이 아니다.
+- 잔여 위험 / 후속 항목:
+  - 실제 DB 장애(연결 끊김, 권한 상실)에서의 감사 fail-closed 검증(테스트는 예외를 던지는 recorder로 대체).
+  - 동시 호출과 응답 시간·성능 검증 없음.
+  - FastAPI AI 서비스의 실제 호출 검증 없음(PLAN-002 TASK-015).
+  - 상담 ID 64자 제한은 계약에 있다(`ToolService` 입력 검사 64자, `tool_call_audit.consultation_id` CHECK 64자). **경계 테스트(64자 허용, 65자 400)는 누락**이며 후속 보완 대상.
+  - 토큰 비교의 타이밍 안전성은 코드로만 적용, 측정 없음. 사용자별 인증·권한과 조직 인증 연동은 후속 ADR.
