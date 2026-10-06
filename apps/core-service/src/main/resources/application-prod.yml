@@ -21,6 +21,9 @@ trust-agent:
       url: ${TRUST_AGENT_IMPORT_DB_URL}
       username: ${TRUST_AGENT_IMPORT_DB_USERNAME}
       password: ${TRUST_AGENT_IMPORT_DB_PASSWORD}
+  tool-api:
+    service-token: ${TRUST_AGENT_TOOL_SERVICE_TOKEN}
+    service-id: ${TRUST_AGENT_TOOL_SERVICE_ID:ai-service}
   validation-policy:
     max-validation-age: ${TRUST_AGENT_VALIDATION_MAX_AGE}
     policy-version: ${TRUST_AGENT_VALIDATION_POLICY_VERSION}

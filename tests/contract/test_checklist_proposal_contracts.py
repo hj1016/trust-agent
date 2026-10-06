@@ -127,6 +127,35 @@ class ChecklistProposalContractTest(unittest.TestCase):
         with self.assertRaises(ValidationError):
             validate(unknown, "automated-validation-result.schema.json")
 
+    def test_tool_applicable_checklist_fixture_matches_schema_and_hides_unusable_content(self):
+        # TASK-008 AC-03, AC-05: Tool 응답 정답 파일이 schema를 통과하고, usable=false면 항목이 없어야 한다
+        expected = load(ROOT / "contracts" / "fixtures" / "tool-applicable-checklist.expected.json")
+        validate(expected, "tool-applicable-checklist.schema.json")
+        self.assertTrue(expected["usable"])
+        self.assertEqual([], expected["blockingReasons"])
+        self.assertEqual("HUMAN_REVIEW", expected["approvedChecklist"]["origin"])
+        self.assertEqual(3, len(expected["approvedChecklist"]["items"]))
+        for forbidden in ("evidenceText", "jsonPointer", "reviewerId", "validatedProposalId", "validationResultId", "knownAt", "rules"):
+            self.assertNotIn(forbidden, json.dumps(expected, ensure_ascii=False))
+        unusable_with_items = dict(expected, usable=False, blockingReasons=["HUMAN_REVIEW_PENDING"])
+        with self.assertRaises(ValidationError):
+            validate(unusable_with_items, "tool-applicable-checklist.schema.json")
+        unusable = dict(expected, usable=False, blockingReasons=["HUMAN_REVIEW_PENDING"], approvedChecklist=None)
+        validate(unusable, "tool-applicable-checklist.schema.json")
+        with_known_at = dict(expected, knownAt="2026-10-01T00:00:00Z")
+        with self.assertRaises(ValidationError):
+            validate(with_known_at, "tool-applicable-checklist.schema.json")
+
+    def test_tool_rule_evidence_schema_requires_single_rule_without_notice_body(self):
+        record = {
+            "familyId": "SIN-PREPAYMENT-FEE", "noticeId": "SIN-PREPAYMENT-FEE-V2", "effectiveFrom": "2026-10-01",
+            "ruleVersionId": "policy-rule:sha256:" + "0" * 64, "ruleKey": "CHECK_PREPAYMENT_FEE_RATE",
+            "evidenceText": "원문 문장", "jsonPointer": "/rules/0", "evidenceHash": "sha256:" + "0" * 64, "disclaimer": "합성",
+        }
+        validate(record, "tool-rule-evidence.schema.json")
+        with self.assertRaises(ValidationError):
+            validate(dict(record, noticeBody="전체 본문"), "tool-rule-evidence.schema.json")
+
     def test_expected_proposal_matches_schema_and_recomputes_from_notices(self):
         expected = load(EXPECTED_PROPOSAL)
         validate(expected, "checklist-change-proposal.schema.json")
