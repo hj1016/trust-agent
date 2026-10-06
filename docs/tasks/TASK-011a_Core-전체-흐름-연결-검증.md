@@ -1,0 +1,75 @@
+# TASK-011a Core 전체 흐름 연결 검증 (화면 전)
+
+- 상태: **계획 검토 대기** (상세 계획 작성 승인: 사용자, PLAN-002 PR #32. 구현 착수는 미승인)
+- 담당자 / 인간 결정자: AI 조사·초안·구현·검증 / 사용자 범위·판정·검수
+- 요구사항 출처: PLAN-002 TASK-011a 절, 사용자 판단 "Core의 변경안 생성 → 검증 → 승인 → 조회 전체 흐름 검증을 화면 뒤로만 미루지 않는다. 기존 자동 검증으로 이미 충족한 범위를 확인하고 부족한 연결 검증을 먼저 계획", README MVP 4~6단계와 9단계의 Core 범위
+- 관련 Task: TASK-005~008, 013(완료). TASK-011b(AI·화면 연결 뒤 전체 흐름 검증)는 별도
+
+## Goal / 관련 요구사항
+
+- Goal: 합성 공문 수신부터 AI용 Tool 조회까지(S1~S7)를 **사람이 실제로 쓰는 진입점**(demo 명령 설정과 HTTP)으로 한 번에 재현하는 테스트와 evidence를 만든다. 업무 로직을 바꾸지 않는다.
+- 사용자: 검수자(사용자)와 후속 Task 구현자. "Core 승인과 조회 흐름 완료"의 근거 자료가 된다(전체 MVP 완료가 아니다).
+- Out of Scope: 업무 로직 변경, 새 기능, 화면, AI 서비스, 성능·동시성, 사용자별 권한.
+
+## 이미 충족한 범위 (기존 자동 검증, 사실)
+
+| 연결 | 보장하는 테스트 | 진입점 |
+|---|---|---|
+| 적재 → 예시 checklist → 변경안 생성 → 자동 검증 → 승인·수정·반려 → checklist·일정 발행 | `HumanReviewIntegrationTest`(격리 DB, 7건) | 서비스 객체를 테스트가 직접 생성해 호출 |
+| 같은 흐름 뒤 HTTP 적용 공문 조회: 사용 허용 true, FIXTURE·결정 없음·공개 근거·선택 변경·철회·반려 차단 | `HumanReviewApplicableIntegrationTest`(3건), `InternalPolicyApplicableIntegrationTest`(20건) | 서비스 객체 직접 호출 + HTTP |
+| 같은 흐름 뒤 Tool 조회·근거, 인증·허용 목록·감사, 조회 뒤 반려·철회 재차단 | `ToolApiIntegrationTest`(7건), `ToolApiMissingTokenIntegrationTest`(1건) | 서비스 객체 직접 호출 + HTTP |
+| 변경안 생성, 검증, 결정 각각의 규칙·거부·원자성·DB 제약 | `ChecklistProposalIntegrationTest`, `ProposalValidationIntegrationTest`, `HumanReviewIntegrationTest`, 단위 테스트 | 서비스 객체 직접 호출 |
+| production 설정 거부, schema 보호 수치 | `DemoFeatureProductionGuardTest`, `RuntimeDatasourcePropertiesTest`, `PublicProductSchemaIntegrationTest` | 컨텍스트 |
+
+이 범위는 다시 쓰지 않는다.
+
+## 부족한 연결 (사실)
+
+1. **demo 명령 진입점을 타는 테스트가 없다.** core README의 명령 4개(예시 적재 `trust-agent.fixture-approved-checklist.*`, 변경안 생성 `trust-agent.proposal-generation.*`, 검증 `trust-agent.proposal-validation.*`, 사람 결정 `trust-agent.human-review.*`)는 `ProposalDemoConfiguration`의 ApplicationRunner로 실행되는데, 설정 키 이름, 필수 인자 검사(`required(...)`), 결정 종류 문자열 변환, 수정 결정의 `revised-rules-json` 해석을 검증하는 테스트가 없다. README 설명과 코드가 어긋나도 잡히지 않는다.
+2. **수정 → 재검증 → 승인 뒤 조회·Tool 응답**이 없다. `HumanReviewIntegrationTest`는 수정 revision 승인까지만 확인하고, 고친 설명 문구가 적용 공문 조회와 Tool 응답의 항목에 실제로 나오는지는 확인하지 않는다.
+3. **한 흐름을 끝까지 재현한 evidence가 없다.** 각 Task evidence는 자기 범위만 다룬다. 입력 명령, 단계별 DB 상태, 실제 HTTP 응답을 한 문서에 순서대로 적은 자료가 없다.
+
+## 계획 (추가만, 재작성 없음)
+
+- 새 테스트 1클래스 `CoreEndToEndFlowIntegrationTest`(격리 DB 1개, 순서 고정):
+  1. 적재: `BaselineImporter`, `SyntheticInternalImporter`(기존 방식 유지. 적재는 demo 명령이 아니라 importer 명령이므로 기존 진입점 그대로).
+  2. 예시 checklist 적재 → 변경안 생성 → 검증 → 승인을 **각각 non-web Spring 컨텍스트**(`SpringApplicationBuilder`, `web-application-type=none`, 해당 설정 키만 켬)로 띄워 ApplicationRunner가 실행되게 한다. 컨텍스트마다 종료 뒤 DB 상태(실행 기록 1건, 결과 ID)를 확인한다. 시계는 테스트 고정값(기존 테스트와 같은 2026-10-05 계열).
+  3. 잘못된 순서 거부: 검증 전 승인(`VALIDATION_MISSING`), 없는 변경안 검증(`PROPOSAL_NOT_FOUND`), 필수 인자 누락(runner의 `IllegalStateException`)이 각 단계에서 거부되고 실패 실행 기록만 남는다.
+  4. 수정 경로: 설명 문구만 고친 `revised-rules-json`으로 수정 결정 → 재검증(WARN `INSTRUCTION_EDITED`) → 사유 승인을 runner로 실행.
+  5. 조회: web 컨텍스트에서 적용 공문 조회와 Tool 조회(임시 토큰)가 같은 version ID·결정 ID를 돌려주고, 항목에 고친 문구가 보이며, 사용 허용 true. 미승인 공문군은 둘 다 사용 불가.
+- evidence `docs/evidence/CORE_END_TO_END_FLOW_EVIDENCE.md`: 단계별 명령(설정 키 그대로), 입력, 실제 출력(실행 기록 행, 결과 ID, HTTP 응답 핵심 필드), 거부 사례. README의 명령 예시와 설정 키가 일치하는지 대조한 결과.
+- README: "Core 승인과 조회 흐름 연결 검증 완료(화면 전)" 한 줄과 evidence 링크. MVP 완료 표현 금지.
+
+## Acceptance Criteria (초안)
+
+| AC | 내용 | 검증 |
+|---|---|---|
+| AC-01 | 예시 적재 → 변경안 생성 → 검증 → 승인이 **demo 설정 키와 ApplicationRunner**로 순서대로 실행되고 단계마다 실행 기록(SUCCEEDED)과 결과 ID가 남는다 | 통합 테스트 |
+| AC-02 | 승인 뒤 적용 공문 조회와 Tool `applicable_checklist`가 같은 version ID·결정 ID·항목 3개를 돌려주고 사용 허용 true. Tool `rule_evidence`가 그 항목 근거를 제공 | 통합 테스트(HTTP) |
+| AC-03 | 설명 문구만 고친 수정 결정(`revised-rules-json`) → 재검증 WARN → 사유 승인이 runner로 실행되고, 조회와 Tool 항목에 고친 문구가 보인다 | 통합 테스트 |
+| AC-04 | 잘못된 순서와 누락 인자가 각 단계에서 거부된다: 검증 전 승인 `VALIDATION_MISSING`, 없는 변경안 `PROPOSAL_NOT_FOUND`, 필수 설정 누락 기동 실패, 미승인 공문군 조회 사용 불가. 거부 시 결과·checklist가 생기지 않는다 | 통합 테스트 |
+| AC-05 | README의 명령 예시 설정 키가 코드의 키와 전부 일치(테스트가 README를 읽어 대조하거나 evidence에 대조표) | 테스트 또는 evidence |
+| AC-06 | 기존 테스트 수와 결과 유지(현재 Java 153, Python 65), 업무 로직 파일 변경 없음(diff가 테스트·문서·README뿐) | 로컬/CI + diff 검토 |
+| AC-07 | evidence에 단계별 실제 출력과 거부 사례, "전체 MVP 완료가 아니다" 명시 | diff 검토 |
+
+## Implementation Plan (초안)
+
+1. `CoreEndToEndFlowIntegrationTest`(Testcontainers, 격리 DB, non-web 컨텍스트 4~6개 순차 + web 컨텍스트 1개).
+2. README 설정 키 대조(테스트에서 README 텍스트의 `--trust-agent.*` 키 추출 → 코드 상수와 비교).
+3. evidence 문서, README 한 줄.
+
+예상 크기: 테스트 1클래스(~8건), 문서. 업무 코드 0행.
+
+## AI 제안 및 인간 판단 기록
+
+### 제안 1: 적재 단계는 importer 명령 그대로, demo runner는 4개만
+- 내용: 공문 적재는 TASK-001 범위의 importer 진입점이라 기존 방식으로 두고, 이 Task는 TASK-005~007의 demo runner 4개 연결만 검증한다.
+**판단** - [ ] 채택 [ ] 수정 [ ] 거절 / 사용자 / 판단 대기
+
+### 제안 2: README 설정 키를 테스트가 직접 대조
+- 내용: README에서 `--trust-agent.*` 키를 읽어 코드 상수와 비교해 문서와 코드의 어긋남을 자동으로 잡는다. 대안: evidence의 대조표(수동).
+**판단** - [ ] 채택 [ ] 수정 [ ] 거절 / 사용자 / 판단 대기
+
+## Implementation Result / AI self-review / 인간 검수 / 결정 기록
+
+미실행 / 미기록. 구현은 사용자 착수 승인 뒤.
