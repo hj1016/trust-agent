@@ -1,6 +1,6 @@
 # TASK-008 Core Tool API: AI 서비스용 읽기 전용 조회 경계
 
-- 상태: **구현 중** (완료 확인 조건 12개와 ADR-011 접근 범위·demo 인증 방향 승인, 구현 착수 승인: 사용자. 완료와 인간 검수는 미기록)
+- 상태: **검증·검수 대기** (구현 PR #31 검수 대기. 완료와 인간 검수는 미기록)
 - 담당자 / 인간 결정자: AI 조사·초안 / 사용자 범위·판정·검수
 - 요구사항 출처: PLAN-001 TASK-008 절(S7의 Core 쪽, 제안 D "검색보다 먼저" 채택), CLAUDE.md "AI Service는 업무 DB 직접 접근과 자격증명 보유 금지, Core Tool API로 필요한 업무 데이터만 조회", DEVELOPMENT_RULES "Tool allowlist, 입력/출력 schema, 최소 데이터, 민감정보 마스킹, 감사 추적, 미승인/철회/구버전/권한 밖 근거 제외, fail-closed"
 - 관련 Issue / PR / ADR / 이전 Task: TASK-007(완료, PR #24), ADR-001(제품 경계), ADR-007(Core 서비스와 조회), ADR-008(공개 근거 확인). [ADR-011 초안](../adr/ADR-011-core-tool-api-boundary.md)(접근 범위와 인증 결정)을 이 계획과 함께 제시한다.
@@ -109,4 +109,22 @@
 
 ## Implementation Result / AI self-review / 인간 검수 / 결정 기록
 
-미실행 / 미기록. 구현은 사용자 착수 승인 뒤.
+### 구현 결과 (AI 작성, 사실)
+
+- 검증 대상: 브랜치 `feat/core-tool-api`, PR #31(본문에 commit 기재). 상세: [검증 기록](../evidence/CORE_TOOL_API_EVIDENCE.md).
+- 구현: `POST /api/v1/tools/{toolName}` 하나와 allowlist 2개, `applicable_checklist`(사용 불가면 사유만, 항목·근거 ID 없음), `rule_evidence`(서버가 소속과 사용 가능 여부 재확인, 아니면 403), Bearer 토큰 서비스 인증(test/demo, 환경변수, 비어 있으면 모든 호출 401, production 필수), V9 `tool_call_audit`(append-only, 보호 테이블 36·trigger 72·migration 9), 계약 schema 2개와 정답 파일, README.
+- Java `./gradlew clean test bootJar --offline --no-daemon`: 153건 실행, 통과 153, 실패 0, 건너뜀 0 (기존 144 + 신규 9). Python 로컬(비공개 artifact): 65건 실행, 통과 65, 건너뜀 0 (기존 63 + 신규 2). 공개 CI 조건: 65건, 통과 63, 건너뜀 2. 공개 CI 실제 결과는 PR #31 checks.
+- AC-01~12 자동 검증 통과. 인간 검수와 완료 판정은 미실시.
+
+### AI self-review
+
+- 사용 허용 여부를 바꿀 수 있는 입력이 없다: 요청 본문은 공문군·업무일·상담 ID·규칙 ID뿐이고 `knownAt`과 모르는 필드는 400이다. `usable`은 Core 조회 API 값과 같다(테스트로 대조).
+- 사용 불가 상태에서는 내용 자체가 나가지 않는다: 검토 대기, 반려, 테스트용 출처, 미래 업무일, 철회에서 `approvedChecklist=null`이고 규칙 ID 문자열이 응답에 없다.
+- 근거는 서버가 다시 확인한다: 다른 공문군 규칙 ID, 미승인 공문군 규칙 ID, 없는 규칙 ID, 그리고 조회 뒤 철회로 사용 불가가 된 규칙 ID는 모두 403.
+- 감사는 fail-closed: 인증 거부도 기록하고, 저장 실패 시 500에 데이터 없음. 감사 행에 토큰·원문·규칙 ID 없음.
+- 실제 자격증명은 저장소에 없다. 테스트는 실행 중 생성한 UUID를 쓴다.
+- 범위 밖 변경 없음: 사용자별 인증·권한, FastAPI AI 서비스, 쓰기 Tool 없음.
+
+### 인간 검수 / 결정
+
+미기록. 사용자 검수 뒤 기록.

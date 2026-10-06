@@ -19,7 +19,7 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 
 @Service
-class InternalPolicyApplicableService {
+public class InternalPolicyApplicableService {
 
     private static final String DATASET_CLASS = "SYNTHETIC_INTERNAL";
     private static final String DISCLAIMER =
@@ -47,7 +47,8 @@ class InternalPolicyApplicableService {
         this.clock = clock;
     }
 
-    InternalPolicyApplicableState get(String familyId, String requestedBusinessDate, String requestedKnownAt) {
+    /** TASK-008 Tool API가 같은 판단을 재사용한다. 사용 허용 여부는 여기서 결정되고 Tool은 줄여 전달한다. */
+    public InternalPolicyApplicableState get(String familyId, String requestedBusinessDate, String requestedKnownAt) {
         Instant evaluatedAt = clock.instant();
         LocalDate businessDate = parseBusinessDate(requestedBusinessDate);
         Instant knownAt = parseKnownAt(requestedKnownAt, evaluatedAt);
