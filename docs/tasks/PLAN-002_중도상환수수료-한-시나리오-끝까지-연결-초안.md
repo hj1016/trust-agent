@@ -13,7 +13,7 @@
 | 공문 수신·구조화·적용 공문 선택 | 합성 공문 v1/v2 적재, 업무일·인지 시각 기준 적용 공문 선택, 모호·철회·미래 차단 | `SyntheticInternalImporter`, `GET /api/v1/internal-policy/checklists/{familyId}/applicable` |
 | 변경안 생성 → 자동 검증 → 사람 결정 → 승인 checklist 발행 | 변경안(1.2 → 0.8) 생성, PASS/WARN/FAIL 판정, 승인·수정·반려, 승인 시 checklist와 일정 revision 발행 | core README의 demo 명령 4개(`proposal-generation`, `proposal-validation`, `human-review`, 예시 적재) |
 | 행원용 적용 checklist 조회 | 승인 뒤 `AVAILABLE`과 사용 허용 true, 항목 3개, 사용 불가 사유 | 같은 applicable 조회 |
-| AI 서비스용 Tool(PR #31, 검수 대기) | `applicable_checklist`, `rule_evidence`, 토큰 인증, 감사 | `POST /api/v1/tools/{toolName}` |
+| AI 서비스용 Tool(TASK-008 완료) | `applicable_checklist`, `rule_evidence`, 토큰 인증, 감사 | `POST /api/v1/tools/{toolName}` |
 | 공개 상품 근거 | KB 공개 상품 관측·확인 상태 조회, 셀러론 법인 한도 교차 검증 | `GET /api/v1/public-products/{productKey}/observed-state` |
 
 **아직 없는 것**
@@ -41,7 +41,7 @@
 
 | Task | 업무 결과 | 이 Task가 끝나면 실행되는 흐름 | 의존 |
 |---|---|---|---|
-| TASK-008 (진행 중, PR #31) | Core Tool API | AI 서비스 없이도 HTTP로 Tool 호출 가능 | TASK-007 |
+| TASK-008 (완료, PR #31) | Core Tool API | AI 서비스 없이도 HTTP로 Tool 호출 가능 | TASK-007 |
 | **TASK-014 검색 골든셋과 평가 기준** | 골든셋 파일, 지표 정의, 평가 스크립트 명세, 통과 기준. 코드 변경 없음 | (문서·데이터) 검색 구현 전 심사 기준 확정 | TASK-008 |
 | **TASK-015 AI 서비스 최소 흐름: 상담 준비안과 보류** | FastAPI 서비스가 Tool 1만으로 준비안을 만들거나 보류한다. LLM 없음(규칙 기반 조립). Core에 준비안 기록 | 명령 한 번으로 "신청 건 → 준비안 또는 보류 사유" 끝까지 실행 | TASK-008 |
 | **TASK-016 근거 검색 기준선(BM25 + metadata filter) + Core 최종 확인** | ES 색인(승인 checklist 항목과 규칙 원문, dataset_class·승인 상태 metadata), BM25 + filter 검색 API, 결과마다 Tool 2 재확인 | 행원 질문 → 후보 검색 → Core 확인 → 사용 가능한 근거만 반환. 골든셋 평가 결과 기록 | TASK-014, TASK-015 |
@@ -88,7 +88,7 @@
 ## 3. 의존 순서
 
 ```text
-TASK-008 Core Tool API (PR #31)
+TASK-008 Core Tool API (완료)
    ├─► TASK-014 골든셋·평가 기준 (문서) ─┐
    └─► TASK-015 AI 준비안·보류 (실행 가능 흐름 1) ─┴─► TASK-016 BM25 검색 + Core 확인 (흐름 2)
                                                          └─► TASK-017 화면 + 최종 확인 (흐름 3) ─► TASK-011 E2E
