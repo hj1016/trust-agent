@@ -17,7 +17,7 @@ FastAPI AI 서비스가 업무 DB를 건드리지 않고 Core의 읽기 전용 T
 
 ```text
 ./gradlew clean test bootJar --offline --no-daemon
-152 tests completed (기존 144 + 신규 8), failures 0, errors 0, skipped 0
+153 tests completed (기존 144 + 신규 9), failures 0, errors 0, skipped 0
 
 # 비공개 artifact를 제공한 로컬
 TRUSTAGENT_PRIVATE_ARTIFACT_ROOT=<경로> TRUSTAGENT_REQUIRE_PRIVATE_SNAPSHOTS=1 python3 -m unittest discover -s tests -t .
@@ -28,13 +28,14 @@ python3 -m unittest discover -s tests -t .
 Ran 65 tests, 통과 63, 실패 0, 건너뜀 2 (사유: "비공개 snapshot artifact가 제공되지 않았습니다.")
 ```
 
-Java 신규 8 = Tool 통합 6(`ToolApiIntegrationTest`) + 토큰 미설정 1(`ToolApiMissingTokenIntegrationTest`) + 운영 기동 거부 1(`DemoFeatureProductionGuardTest` 7 → 8).
+Java 신규 9 = Tool 통합 7(`ToolApiIntegrationTest`) + 토큰 미설정 1(`ToolApiMissingTokenIntegrationTest`) + 운영 기동 거부 1(`DemoFeatureProductionGuardTest` 7 → 8).
 
 | 테스트 | 보장 | AC |
 |---|---|---|
 | `usableChecklistIsReturnedWithItemsAndMatchesCoreDecision` | 승인된 중도상환수수료 공문군 2026-10-01 조회 `usable=true`, 차단 사유 없음, 항목 3개, 출처 HUMAN_REVIEW, 결정 ID. 응답이 정답 파일 `contracts/fixtures/tool-applicable-checklist.expected.json`과 일치. 본문·원문·검수자·변경안·검증·정책 플래그·knownAt·rules 없음. `usable`이 Core 조회 API의 `internalChecklistUseAllowed`와 같고 상담 ID 유무에 따라 응답이 같음 | AC-03, 04, 08 |
 | `ruleEvidenceIsServedOnlyForRulesOfTheUsableApprovedChecklist` | 승인 항목의 규칙 ID로는 원문 문장과 위치(`/rules/0`) 제공. 다른 공문군(셀러론) 규칙 ID를 끼워 넣기, 미승인 공문군의 자기 규칙, 없는 규칙 ID는 모두 403이고 감사에 `EVIDENCE_NOT_AVAILABLE` 3건 | AC-04, 06 |
 | `unusableStatesReturnReasonsOnlyWithoutItemsOrRuleIds` | 셀러론(검토 대기) `usable=false` + `HUMAN_REVIEW_PENDING`, 테스트용 기간 `FIXTURE_CHECKLIST_NOT_APPROVED`, 미래 업무일 `FUTURE_BUSINESS_DATE`. 모두 `approvedChecklist=null`이고 응답에 규칙 ID 문자열 없음 | AC-05, 07 |
+| `rejectionAndWithdrawalAfterAQueryBlockItemsAndEvidenceAgain` | 조회 뒤 셀러론 변경안이 반려되면(2026-10-06) `usable=false` + `PROPOSAL_REJECTED`, 항목·근거 ID 없음. 중도상환수수료 v2가 철회되면(2026-10-07) `usable=false` + `EFFECTIVE_NOTICE_WITHDRAWN`이고 조금 전까지 유효했던 규칙 ID로 근거를 요청해도 403. 철회를 알기 전 평가 시각으로 돌아오면 같은 ID의 근거가 다시 제공됨(항상 현재 시각 기준) | AC-05, 06 |
 | `unauthenticatedAndUnknownToolCallsAreRefusedAndAudited` | 토큰 없음·불일치 401과 감사 2행(`UNAUTHENTICATED`), `approve_checklist` 404와 감사, allowlist 상수 2개, `/api/v1/tools` 아래 라우트는 POST `{toolName}` 하나 | AC-01, 02, 09 |
 | `pastKnownAtUnknownFieldsAndInstructionLikeValuesAreHandledAsSchemaAndData` | `knownAt`, 모르는 필드, 필수 필드 누락은 400. 없는 공문군 404. 지시문처럼 보이는 상담 ID는 데이터로만 취급되어 응답이 같고 감사에만 남음 | AC-07, 08 |
 | `auditRowsNeverContainBodyEvidenceOrTokenAndAuditFailureFailsTheCall` | 감사 행에 서비스 ID와 결과 코드만 있고 토큰·원문·규칙 ID 없음. 감사 저장 실패 유도 시 500 `AUDIT_WRITE_FAILED`, 응답에 checklist 없음 | AC-09 |
@@ -54,6 +55,12 @@ Java 신규 8 = Tool 통합 6(`ToolApiIntegrationTest`) + 토큰 미설정 1(`To
 **다른 공문군의 근거 접근 차단** (`rule_evidence`, 공문군 중도상환수수료에 셀러론 규칙 `CHECK_CORPORATE_LIMIT_SOURCE`의 version ID): 403, `code=EVIDENCE_NOT_AVAILABLE`, 응답에 원문 없음. 같은 규칙 ID를 셀러론 공문군으로 요청해도 승인 전이라 403.
 
 **인증 없음**: 401, `code=UNAUTHENTICATED`, 감사에 `service_id=UNAUTHENTICATED`.
+
+**조회 뒤 철회**: 2026-10-07 평가 시각에 중도상환수수료 조회 → `usable=false`, `blockingReasons=["EFFECTIVE_NOTICE_WITHDRAWN"]`, `selectedNotice=null`, `approvedChecklist=null`. 직전에 200으로 받았던 규칙 `…0827aed5…`로 근거 요청 → 403 `EVIDENCE_NOT_AVAILABLE`.
+
+**조회 뒤 반려**: 2026-10-06 평가 시각에 셀러론 조회 → `usable=false`, `blockingReasons=["APPROVED_CHECKLIST_NOTICE_MISMATCH","PROPOSAL_REJECTED"]`, `approvedChecklist=null`.
+
+**감사 기록 예시**(토큰·원문 없음): `{"service_id":"ai-service","tool_name":"rule_evidence","family_id":"SIN-SELLER-CHECKLIST","business_date":"2026-10-05","consultation_id":null,"outcome":"EVIDENCE_NOT_AVAILABLE","usable":false,"blocking_reasons":["APPROVED_CHECKLIST_NOTICE_MISMATCH","HUMAN_REVIEW_PENDING"],"trace_id":"aaef39cd…","called_at":"2026-10-05T14:00:00+09:00"}`. 인증 거부는 `service_id=UNAUTHENTICATED`, `outcome=UNAUTHENTICATED`.
 
 ## 한계
 

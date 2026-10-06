@@ -117,6 +117,16 @@ class ToolApiIntegrationTest {
                         "SYN-REVIEWER-01", null, List.of(), "review-run:" + "3".repeat(32)));
         prepaymentVersionId = approval.approvedChecklistVersionId();
         prepaymentDecisionId = approval.decisionId();
+        // 조회 뒤 일어나는 사건: 셀러론 변경안 반려(2026-10-06 00:00), 중도상환수수료 v2 철회(2026-10-07 00:00).
+        // 평가 시각이 그 뒤로 옮겨진 테스트에서만 보인다.
+        CLOCK.set(Instant.parse("2026-10-06T00:00:00Z"));
+        new HumanReviewService(jdbc, objectMapper, manager, CLOCK, Duration.ofHours(24)).decide(
+                new HumanReviewService.Request(seller, null, HumanReviewService.Decision.REJECT, "SYN-REVIEWER-01",
+                        "공문 원문 재확인 필요", List.of(), "review-run:" + "4".repeat(32)));
+        jdbc.sql("""
+                insert into internal_notice_lifecycle_event values
+                ('notice-event:%s','SYNTHETIC_INTERNAL','SIN-PREPAYMENT-FEE-V2','WITHDRAWN','2026-10-07T00:00:00Z','합성 철회 사건','sha256:%s')
+                """.formatted("4".repeat(32), "4".repeat(64))).update();
         sellerRuleVersionId = jdbc.sql("select rule_version_id from internal_policy_rule_version where rule_key = 'CHECK_CORPORATE_LIMIT_SOURCE' limit 1").query(String.class).single();
         CLOCK.reset();
     }
@@ -176,7 +186,7 @@ class ToolApiIntegrationTest {
         assertProblem(tool("rule_evidence", Map.of("familyId", "SIN-SELLER-CHECKLIST", "ruleVersionId", sellerRuleVersionId), TEMPORARY_TOKEN), 403, "EVIDENCE_NOT_AVAILABLE");
         // 존재하지 않는 규칙 ID
         assertProblem(tool("rule_evidence", Map.of("familyId", "SIN-PREPAYMENT-FEE", "ruleVersionId", "policy-rule:sha256:" + "0".repeat(64)), TEMPORARY_TOKEN), 403, "EVIDENCE_NOT_AVAILABLE");
-        assertEquals(3, count("tool_call_audit where tool_name = 'rule_evidence' and outcome = 'EVIDENCE_NOT_AVAILABLE'"));
+        assertEquals(3, count("tool_call_audit where tool_name = 'rule_evidence' and outcome = 'EVIDENCE_NOT_AVAILABLE' and business_date = '2026-10-05'"));
     }
 
     // ---- AC-05: 미승인 자료 차단 (사례 E, F) ----
@@ -200,6 +210,38 @@ class ToolApiIntegrationTest {
         assertFalse(future.get("usable").booleanValue());
         assertTrue(strings(future.get("blockingReasons")).contains("FUTURE_BUSINESS_DATE"));
         assertTrue(future.get("approvedChecklist").isNull());
+    }
+
+    // ---- AC-05, 06: 조회 뒤 반려·철회로 사용 불가가 되면 항목과 근거가 다시 차단된다 ----
+
+    @Test
+    void rejectionAndWithdrawalAfterAQueryBlockItemsAndEvidenceAgain() throws Exception {
+        JsonNode before = objectMapper.readTree(tool("applicable_checklist", Map.of("familyId", "SIN-PREPAYMENT-FEE"), TEMPORARY_TOKEN).body());
+        assertTrue(before.get("usable").booleanValue());
+        String ruleVersionId = before.get("approvedChecklist").get("items").get(0).get("sourceRuleVersionId").stringValue();
+        try {
+            // 2026-10-06: 셀러론 변경안이 반려됐다 → 사유만, 항목·근거 ID 없음
+            CLOCK.set(Instant.parse("2026-10-06T03:00:00Z"));
+            JsonNode rejected = objectMapper.readTree(tool("applicable_checklist", Map.of("familyId", "SIN-SELLER-CHECKLIST"), TEMPORARY_TOKEN).body());
+            assertFalse(rejected.get("usable").booleanValue());
+            assertTrue(strings(rejected.get("blockingReasons")).contains("PROPOSAL_REJECTED"));
+            assertTrue(rejected.get("approvedChecklist").isNull());
+            assertFalse(rejected.toString().contains("policy-rule:"));
+            // 같은 날 중도상환수수료는 아직 사용 가능
+            assertTrue(objectMapper.readTree(tool("applicable_checklist", Map.of("familyId", "SIN-PREPAYMENT-FEE"), TEMPORARY_TOKEN).body()).get("usable").booleanValue());
+
+            // 2026-10-07: v2가 철회됐다 → checklist 사용 불가, 조금 전까지 유효했던 규칙 ID로 근거를 요청해도 403
+            CLOCK.set(Instant.parse("2026-10-07T03:00:00Z"));
+            JsonNode withdrawn = objectMapper.readTree(tool("applicable_checklist", Map.of("familyId", "SIN-PREPAYMENT-FEE"), TEMPORARY_TOKEN).body());
+            assertFalse(withdrawn.get("usable").booleanValue());
+            assertTrue(strings(withdrawn.get("blockingReasons")).contains("EFFECTIVE_NOTICE_WITHDRAWN"));
+            assertTrue(withdrawn.get("approvedChecklist").isNull());
+            assertProblem(tool("rule_evidence", Map.of("familyId", "SIN-PREPAYMENT-FEE", "ruleVersionId", ruleVersionId), TEMPORARY_TOKEN), 403, "EVIDENCE_NOT_AVAILABLE");
+        } finally {
+            CLOCK.reset();
+        }
+        // 철회를 알기 전 시각으로 돌아오면 같은 규칙 ID의 근거가 다시 제공된다(조회는 항상 현재 시각 기준)
+        assertEquals(200, tool("rule_evidence", Map.of("familyId", "SIN-PREPAYMENT-FEE", "ruleVersionId", ruleVersionId), TEMPORARY_TOKEN).statusCode());
     }
 
     // ---- AC-01, 02, 07, 08, 09: 인증, 허용 목록, 입력 검사, 상담 ID, 감사 ----
