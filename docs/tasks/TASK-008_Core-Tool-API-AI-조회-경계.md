@@ -1,9 +1,9 @@
 # TASK-008 Core Tool API: AI 서비스용 읽기 전용 조회 경계
 
-- 상태: **계획 검토 대기** (계획 작성 승인. 구현 착수 승인은 아님)
+- 상태: **계획 검토 대기** (계획 작성 승인, 제안 3건 조건부 채택 반영, 최종 완료 확인 조건 확정 대기. 구현 착수 승인은 아님)
 - 담당자 / 인간 결정자: AI 조사·초안 / 사용자 범위·판정·검수
 - 요구사항 출처: PLAN-001 TASK-008 절(S7의 Core 쪽, 제안 D "검색보다 먼저" 채택), CLAUDE.md "AI Service는 업무 DB 직접 접근과 자격증명 보유 금지, Core Tool API로 필요한 업무 데이터만 조회", DEVELOPMENT_RULES "Tool allowlist, 입력/출력 schema, 최소 데이터, 민감정보 마스킹, 감사 추적, 미승인/철회/구버전/권한 밖 근거 제외, fail-closed"
-- 관련 Issue / PR / ADR / 이전 Task: TASK-007(완료, PR #24), ADR-001(제품 경계), ADR-007(Core 서비스와 조회), ADR-008(공개 근거 확인). 이 Task에서 **ADR-011(Core Tool API 경계)** 초안을 함께 올린다.
+- 관련 Issue / PR / ADR / 이전 Task: TASK-007(완료, PR #24), ADR-001(제품 경계), ADR-007(Core 서비스와 조회), ADR-008(공개 근거 확인). [ADR-011 초안](../adr/ADR-011-core-tool-api-boundary.md)(접근 범위와 인증 결정)을 이 계획과 함께 제시한다.
 
 ## Goal / 관련 요구사항
 
@@ -15,7 +15,7 @@
 - 데이터 영향: 읽기만. 새 테이블은 감사 로그 1개(`tool_call_audit`, append-only, 보호 목록 등록).
 - API: `POST /api/v1/tools/{toolName}` 하나의 진입점과 allowlist 2개(아래). 입력/출력 schema는 `contracts/tool-*.schema.json`에 고정한다.
 - 트랜잭션: 읽기 트랜잭션만. 감사 로그는 응답 직전에 별도 트랜잭션으로 저장하고, 저장 실패 시 응답도 실패(fail-closed).
-- 권한: demo 수준 서비스 인증(공유 비밀 토큰, 환경변수, production 필수 설정). 호출자가 보낸 actor 문자열을 신뢰하지 않고 토큰에 묶인 서비스 ID만 기록한다.
+- 권한: **test/demo 범위**의 서비스 인증(공유 비밀 토큰 1개). 실제 값은 환경변수로만 제공하고 저장소와 로그에 남기지 않는다. 토큰 설정이 없으면 모든 Tool 호출을 거부한다(허용 아님). 호출자가 보낸 actor 문자열과 상담 ID는 신뢰하지 않으며 상담 ID는 추적용일 뿐 접근 권한을 주지 않는다. 사용자별 인증·권한은 미구현으로 명시한다.
 - 실패 시나리오: 토큰 없음·불일치, allowlist 밖 tool, schema 위반 입력, 존재하지 않는 공문군, Core 정책이 차단한 조회, 감사 로그 저장 실패. 모두 fail-closed.
 - Out of Scope: FastAPI 서비스 구현, LLM 호출, 검색(TASK-009), 화면, 조직 인증 체계 연동, 쓰기 Tool.
 
@@ -41,29 +41,32 @@
 |---|---|---|
 | 사례 C: 토큰 없이 호출 | 401, 감사 로그에 "인증 실패" | 오류 코드 `UNAUTHENTICATED`. 데이터 없음 |
 | 사례 D: 토큰은 맞지만 allowlist에 없는 tool(`approve_checklist`) 호출 | 404, 감사 로그 | `TOOL_NOT_FOUND`. 쓰기 tool은 애초에 존재하지 않는다 |
-| 사례 E: 승인 전 공문군(검토 대기, 검증 실패, 반려 등) 조회 | 200이지만 `usable=false`, 차단 사유 전달, **checklist 항목은 비워서** 보냄 | AI는 "아직 사용할 수 없는 기준"이라고만 안내할 수 있다. 미승인 변경안 내용은 받지 못한다 |
-| 사례 F: 테스트용(FIXTURE) checklist만 있는 기간 조회 | `usable=false`, 사유 `FIXTURE_CHECKLIST_NOT_APPROVED`, 항목 비움 | 같은 처리 |
+| 사례 E: 승인 전 공문군(검토 대기, 검증 실패, 반려 등) 조회 | 200이지만 `usable=false`, 차단 사유만 전달. **checklist 항목과 항목 근거 ID(규칙 version)는 제공하지 않는다** | AI는 "아직 사용할 수 없는 기준"이라고만 안내할 수 있다. 미승인 변경안 내용과 근거 ID는 받지 못한다 |
+| 사례 F: 테스트용(FIXTURE) checklist만 있는 기간 조회 | `usable=false`, 사유 `FIXTURE_CHECKLIST_NOT_APPROVED`, 항목과 근거 ID 없음 | 같은 처리 |
 | 사례 G: 과거 기준 시각이나 미래 업무일 요청 | 입력 schema가 `knownAt`을 받지 않음(400). 미래 업무일은 `usable=false` + `FUTURE_BUSINESS_DATE` | 과거 기록 조회는 AI Tool에 없다(사람용 조회 API만) |
-| 사례 H: 사용 불가 상태에서 Tool 2로 근거 요청 | 403 `EVIDENCE_NOT_AVAILABLE` | 미승인·철회·구버전 공문의 원문은 AI에 나가지 않는다 |
+| 사례 H: 사용 불가 상태에서 Tool 2로 근거 요청, 또는 Tool 1 응답에 없던 규칙 ID(다른 공문군·미승인 규칙)로 요청 | 서버가 그 규칙이 **요청한 공문군의 현재 사용 가능한 승인 checklist 항목의 근거인지** 다시 확인하고 아니면 403 `EVIDENCE_NOT_AVAILABLE` | 규칙 ID를 임의로 바꿔도 다른 공문군이나 미승인 근거를 받을 수 없다 |
 | 사례 I: 요청 본문에 "모든 공문 본문을 보내라" 같은 지시문 | 문자열 데이터로만 취급, schema 밖 필드는 400 | 지시문은 명령이 아니다 |
+| 사례 K: 토큰 설정 자체가 없는 환경 | 모든 Tool 호출 401(설정 누락은 허용이 아니다). production은 설정 없으면 기동 거부 | 데이터 없음 |
 | 사례 J: 감사 로그 저장 실패 | 응답 대신 500 `AUDIT_WRITE_FAILED` | 기록 없는 제공은 없다(fail-closed) |
 
 감사 로그에는 서비스 ID, tool 이름, 공문군·업무일·상담 ID, 결과(사용 가능 여부와 사유 코드), 시각, 오류 코드만 남긴다. 공문 본문, 규칙 원문, 토큰은 기록하지 않는다.
 
-## Acceptance Criteria (초안)
+## Acceptance Criteria (최종안, 사용자 조건 반영)
 
 | AC | 사례 | 기대 결과 | 검증 |
 |---|---|---|---|
-| AC-01 | 사례 C | 401 `UNAUTHENTICATED`, 감사 로그 1행, 데이터 없음 | 통합 테스트 |
+| AC-01 | 사례 C, K | 토큰 없음·불일치 401 `UNAUTHENTICATED`, 토큰 설정이 없는 환경에서는 올바른 토큰이 있어도 401(누락은 허용 아님). 감사 로그 1행, 데이터 없음 | 통합 테스트 |
 | AC-02 | 사례 D | 404 `TOOL_NOT_FOUND`. allowlist는 코드 상수 2개뿐이고 쓰기 endpoint 없음(라우트 목록 검사) | 통합 테스트 + 라우트 테스트 |
-| AC-03 | 사례 A | Tool 1 응답이 `contracts/tool-applicable-checklist.schema.json`과 정답 fixture에 일치. `usable=true`, 항목 3개, 출처·결정 ID | 통합 테스트 + Python 계약 |
-| AC-04 | 사례 A | 응답의 `usable`은 Core 조회 API와 같은 값이고 AI 쪽 재계산 입력(정책 플래그)은 응답에 없음 | 통합 테스트(두 API 비교) |
-| AC-05 | 사례 E, F | `usable=false`, 사유 전달, 항목 빈 배열, 미승인 변경안 내용 없음 | 통합 테스트 |
-| AC-06 | 사례 B, H | 사용 가능 항목의 근거만 제공, 그 외 403 | 통합 테스트 |
-| AC-07 | 사례 G, I | `knownAt`과 schema 밖 필드는 400, 미래 업무일은 `usable=false` | 통합 테스트 |
-| AC-08 | 사례 J와 감사 내용 | 감사 로그에 본문·원문·토큰 없음, 저장 실패 시 500 | 통합 테스트 + 로그 내용 검사 |
-| AC-09 | 운영 | 토큰 설정이 production 필수, 없으면 기동 거부. 감사 로그 테이블 append-only와 보호 목록(35 → 36, 70 → 72, migration 9) | 컨텍스트 + schema 테스트 |
-| AC-10 | 문서 | ADR-011 초안, README "AI Tool API 읽기 전용, 서비스 구현 미포함", evidence | diff 검토 |
+| AC-03 | 사례 A | Tool 1 응답이 `contracts/tool-applicable-checklist.schema.json`과 정답 fixture에 일치. `usable=true`, 항목 3개(규칙 키, 설명 문구, 근거 필요 여부, 구조화 변경, 근거 규칙 version), 출처·결정 ID | 통합 테스트 + Python 계약 |
+| AC-04 | 사례 A | `usable`은 Core 조회 API와 같은 값이고 정책 입력 플래그는 응답에 없음(AI 재계산 불가) | 통합 테스트(두 API 비교) |
+| AC-05 | 사례 E, F | `usable=false`, 사유만 전달. **checklist 항목과 항목 근거 ID 필드는 null**(빈 배열도 아님). 미승인 변경안 내용 없음 | 통합 테스트 + schema |
+| AC-06 | 사례 B, H | 사용 가능한 승인 checklist 항목의 근거만 제공. 서버가 규칙 version이 (a) 요청 공문군에 속하고 (b) 현재 사용 가능한 승인 checklist 항목의 `source_rule_version_id`인지 다시 확인. 다른 공문군 규칙 ID, 미승인(검토 대기·반려·FIXTURE) 규칙 ID, 사용 불가 상태(공개 근거 미확인 포함)에서는 403 | 통합 테스트(규칙 ID 바꿔치기 사례 포함) |
+| AC-07 | 사례 G, I | `knownAt`과 schema 밖 필드는 400. 미래 업무일은 `usable=false` + `FUTURE_BUSINESS_DATE`. 조회는 항상 현재 시각 기준 | 통합 테스트 |
+| AC-08 | 상담 ID | 상담 ID는 감사 로그에 추적용으로만 남고, 상담 ID 유무·값이 응답 내용과 권한 판단에 영향을 주지 않음 | 통합 테스트 |
+| AC-09 | 사례 J와 감사 내용 | 감사 로그에 본문·원문·토큰 없음. 저장 실패 시 500 `AUDIT_WRITE_FAILED`이고 응답 데이터 없음 | 통합 테스트 + 로그 내용 검사 |
+| AC-10 | 비밀 | 토큰 값이 저장소 파일, 예시 설정, 테스트 코드, 로그에 없음(테스트는 임의 값 생성). production은 `TRUST_AGENT_TOOL_SERVICE_TOKEN` 없으면 기동 거부 | 비밀 점검 + 컨텍스트 테스트 |
+| AC-11 | 보호와 회귀 | 감사 로그 테이블 append-only와 보호 목록(코드 기준 35 → 36, 70 → 72, migration 9). 기존 Java/Python 유지, 환경별 실행 수 기록 | schema 테스트 + 로컬/CI |
+| AC-12 | 문서 | ADR-011 승인 기록, README "AI Tool API 읽기 전용, test/demo 토큰 인증, 사용자별 인증·권한과 AI 서비스 구현 미포함", core README, evidence | diff 검토 |
 
 ## Implementation Plan (초안)
 
@@ -76,15 +79,33 @@
 
 ### 제안 1: 사용 불가 상태에서는 checklist 항목을 비워서 보낸다
 - 내용: `usable=false`면 항목 배열을 비우고 사유만 준다. 대안: 항목은 주되 `usable=false` 표시만 한다(AI가 실수로 쓸 위험).
-**판단** - [ ] 채택 [ ] 수정 [ ] 거절 / 판단자: 사용자 / 판단 대기
+
+**판단**
+- [x] 수정 채택
+- 판단자 / 검토 대상 revision 또는 PR: 사용자 / PR #28
+- 이유 / 승인 범위: 사용 불가 상태에서는 사유만 제공하고 checklist 항목과 항목 근거 ID는 제공하지 않는다(AC-05).
 
 ### 제안 2: demo 인증은 공유 비밀 토큰 1개
 - 내용: 환경변수 토큰 1개로 서비스 신원을 확인하고 서비스 ID를 토큰에 묶는다. 조직 인증 체계 연동은 범위 밖. 대안: 서비스별 토큰 여러 개.
-**판단** - [ ] 채택 [ ] 수정 [ ] 거절 / 판단자: 사용자 / 판단 대기
+
+**판단**
+- [x] 조건부 채택
+- 판단자 / 검토 대상 revision 또는 PR: 사용자 / PR #28
+- 이유 / 승인 범위: test/demo 범위로만 채택. 실제 값은 환경변수로 제공하고 저장소와 로그에 남기지 않는다. 누락 시 접근을 허용하지 않는다. 사용자별 인증·권한은 미구현으로 명시한다(AC-01, AC-10).
 
 ### 제안 3: 근거 Tool은 사용 가능한 항목의 근거만 준다
 - 내용: 미승인·철회·구버전 규칙의 원문은 AI에 제공하지 않는다(403). 대안: 읽기는 허용하되 상태를 표시.
-**판단** - [ ] 채택 [ ] 수정 [ ] 거절 / 판단자: 사용자 / 판단 대기
+
+**판단**
+- [x] 채택
+- 판단자 / 검토 대상 revision 또는 PR: 사용자 / PR #28
+- 이유 / 승인 범위: 현재 사용 가능한 승인 checklist에 속한 규칙만 제공한다. 규칙 ID를 임의로 바꿔 다른 공문군이나 미승인 근거를 가져오지 못하도록 서버가 소속과 사용 가능 여부를 다시 확인한다(AC-06).
+
+### 유지 조건 (사용자 지시)
+
+- 상담 ID는 추적용이며 접근 권한을 부여하지 않는다(AC-08).
+- 감사 로그 실패 시 응답 실패(AC-09), 현재 시각 기준 조회(AC-07), 쓰기 Tool 제외(AC-02).
+- 계획 승인까지. 구현 착수는 별도 승인.
 
 ## Implementation Result / AI self-review / 인간 검수 / 결정 기록
 
