@@ -3,7 +3,7 @@
 ## AI-native SDLC 기준
 
 현재 개발 기준과 Source of Truth는 [CLAUDE.md](CLAUDE.md) 및 [개발 규칙](docs/development/DEVELOPMENT_RULES.md)을 따릅니다. [Task 템플릿](docs/development/TASK_TEMPLATE.md)과 [인간 검수/설명 가능성 체크리스트](docs/development/REVIEW_CHECKLIST.md)를 사용하며 [TASK-000 Baseline Audit](docs/tasks/TASK-000_초기-수집-자산-기준선-점검.md)에서 기존 자산을 점검합니다.
-최신 명시적 결정은 Core 업무 DB PostgreSQL 유지(ADR-009), Elasticsearch(BM25 + dense vector k-NN + metadata filter + reranker) 검색, Redis 단기 상태/중복 방지/캐시, FastAPI AI의 Core Tool API 조회입니다. AI의 업무 DB 직접 접근은 금지하며 LangGraph는 상태/분기/재시도가 필요한 workflow에만 사용합니다. 아래 PostgreSQL 설명과 테스트 결과는 실제 구현 상태입니다. Elasticsearch 검색, Core Tool API, AI 서비스는 아직 구현되지 않았습니다.
+최신 명시적 결정은 Core 업무 DB PostgreSQL 유지(ADR-009), Elasticsearch(BM25 + dense vector k-NN + metadata filter + reranker) 검색, Redis 단기 상태/중복 방지/캐시, FastAPI AI의 Core Tool API 조회입니다. AI의 업무 DB 직접 접근은 금지하며 LangGraph는 상태/분기/재시도가 필요한 workflow에만 사용합니다. 아래 PostgreSQL 설명과 테스트 결과는 실제 구현 상태입니다. Core Tool API는 AI 서비스용 읽기 전용 Tool 2개(`applicable_checklist`, `rule_evidence`)와 test/demo 수준의 서비스 토큰 인증, 감사 기록 범위로 구현됐습니다(TASK-008, ADR-011). Elasticsearch 검색과 FastAPI AI 서비스, 사용자별 인증·권한은 아직 구현되지 않았습니다. 검색 골든셋과 평가 기준은 TASK-014로 작성됐으며 검색 품질 검증은 아직 없습니다.
 도입 이전 자산은 Pre-SDLC Asset으로 현재 기준에서 KEEP / MODIFY / DROP / NEW를 판단합니다. Audit 초안은 인간 검수 전 제안이며 과거 작업을 소급해 AI-native로 기록하지 않습니다.
 
 행원이 확인한 공문 변경사항을 검수된 업무 기준과 원문 근거로 연결하는 은행 기업여신 상담 업무지원 플랫폼
