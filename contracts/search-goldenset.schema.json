@@ -43,8 +43,21 @@
         "kind": {"const": "safety"},
         "goldenset_id": {"$ref": "#/$defs/header/goldenset_id"},
         "goldenset_version": {"$ref": "#/$defs/header/goldenset_version"},
+        "supersedes_goldenset": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*-v[1-9][0-9]*$"},
+        "change_note": {"type": "string", "minLength": 10},
         "purpose": {"type": "string", "minLength": 10},
-        "pass_criteria_owner": {"const": "TASK-015"},
+        "pass_criteria_owner": {
+          "description": "v1(문자열 TASK-015, 역사 기록 보존)과 v2 이후(객체: 구조 검증 TASK-015, 질문 기반·LLM 출력 검증 TASK-019)를 모두 허용한다.",
+          "oneOf": [
+            {"const": "TASK-015"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["structural", "question_based"],
+              "properties": {"structural": {"const": "TASK-015"}, "question_based": {"const": "TASK-019"}}
+            }
+          ]
+        },
         "llm_output_verification_owner": {"const": "TASK-019"},
         "scope_note": {"type": "string", "pattern": "LLM"},
         "cases": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/safetyCase"}}

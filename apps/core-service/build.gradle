@@ -36,9 +36,37 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+// TASK-015 연결 검증: Core(Java)와 AI 서비스(Python CLI)를 함께 실행하는 테스트의 Python 환경 준비.
+// 로컬 기본은 명시적 skip이며, -PaiServiceIntegration=true 또는 TRUST_AGENT_REQUIRE_AI_INTEGRATION=1(필수 CI)일 때만 venv를 만든다.
+def aiServiceIntegrationRequested = project.hasProperty('aiServiceIntegration')
+        ? project.property('aiServiceIntegration').toString() == 'true'
+        : (System.getenv('TRUST_AGENT_REQUIRE_AI_INTEGRATION') ?: '') == '1'
+def aiServiceVenv = layout.buildDirectory.dir('ai-venv')
+def aiServiceDir = rootProject.layout.projectDirectory.dir('apps/ai-service')
+
+tasks.register('prepareAiServiceEnv', Exec) {
+    description = 'AI 서비스 연결 검증용 Python venv를 만들고 requirements-ai.txt를 설치한다.'
+    group = 'verification'
+    onlyIf { aiServiceIntegrationRequested }
+    inputs.file(aiServiceDir.file('requirements-ai.txt'))
+    inputs.file(rootProject.layout.projectDirectory.file('requirements.txt'))
+    outputs.dir(aiServiceVenv)
+    workingDir = rootProject.projectDir
+    def venvPath = aiServiceVenv.get().asFile.absolutePath
+    def requirements = aiServiceDir.file('requirements-ai.txt').asFile.absolutePath
+    commandLine 'sh', '-c',
+            "python3 -m venv '${venvPath}' && '${venvPath}/bin/python' -m pip install --quiet --disable-pip-version-check --requirement '${requirements}'"
+}
+
 tasks.named('test') {
     useJUnitPlatform()
     systemProperty 'trustAgent.repositoryRoot', rootProject.projectDir.absolutePath
+    systemProperty 'trustAgent.aiServiceIntegration', aiServiceIntegrationRequested.toString()
+    systemProperty 'trustAgent.aiServicePython', aiServiceVenv.get().file('bin/python').asFile.absolutePath
+    environment 'TRUST_AGENT_REQUIRE_AI_INTEGRATION', System.getenv('TRUST_AGENT_REQUIRE_AI_INTEGRATION') ?: ''
+    if (aiServiceIntegrationRequested) {
+        dependsOn 'prepareAiServiceEnv'
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {

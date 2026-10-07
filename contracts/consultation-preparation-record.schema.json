@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/consultation-preparation-record.schema.json",
+  "title": "TrustAgent Consultation Preparation Record Request",
+  "description": "AI 서비스가 Core 기록 경로(POST /api/v1/consultation-preparations)에 보내는 준비안·보류 기록 요청(TASK-015, ADR-012). 근거 원문 문장, 메모, 토큰은 들어가지 않는다. preparation_id는 이 본문에서 preparation_id, run_id, consultation_id, sections[].evaluated_at, sections[].tool_response_hash를 뺀 canonical JSON의 sha256이다(평가 시각과 Tool 응답 해시는 실행마다 바뀐다). 기록은 사용 허가가 아니다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["preparation_id", "run_id", "assembler_version", "messages_hash", "family_mapping_hash", "application", "business_date", "status", "preparation_complete", "sections"],
+  "properties": {
+    "preparation_id": {"type": "string", "pattern": "^consultation-preparation:sha256:[a-f0-9]{64}$"},
+    "run_id": {"type": "string", "pattern": "^consultation-preparation-run:[a-f0-9]{32}$"},
+    "assembler_version": {"type": "string", "pattern": "^preparation-assembler-v[1-9][0-9]*$"},
+    "messages_hash": {"$ref": "#/$defs/sha256"},
+    "family_mapping_hash": {"$ref": "#/$defs/sha256"},
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["application_id", "company_id", "product_key", "source_hash"],
+      "properties": {
+        "application_id": {"type": "string", "pattern": "^SW-APPLICATION-[0-9]{3}$"},
+        "company_id": {"type": "string", "pattern": "^SW-COMPANY-[0-9]{3}$"},
+        "product_key": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+        "source_hash": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "business_date": {"type": "string", "format": "date"},
+    "consultation_id": {"type": "string", "minLength": 1, "maxLength": 64},
+    "status": {"enum": ["READY", "PARTIAL", "HOLD"]},
+    "preparation_complete": {"type": "boolean"},
+    "sections": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/section"}}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "READY"}}},
+      "then": {"properties": {"preparation_complete": {"const": true}}},
+      "else": {"properties": {"preparation_complete": {"const": false}}}
+    }
+  ],
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "reasonCode": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"},
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family_id", "required", "status", "hold_kind", "hold_claim_basis", "evaluated_at", "selected_notice_id", "approved_checklist_version_id", "decision_id", "item_rule_version_ids", "item_evidence_hashes", "blocking_reasons", "tool_response_hash"],
+      "properties": {
+        "family_id": {"type": "string", "pattern": "^SIN-[A-Z0-9-]+$"},
+        "required": {"type": "boolean"},
+        "status": {"enum": ["READY", "HOLD"]},
+        "hold_kind": {"enum": ["CORE_DECISION", "UNVERIFIED", null]},
+        "hold_claim_basis": {"enum": ["CORE_REPORTED", "SERVICE_REPORTED", null]},
+        "evaluated_at": {"type": ["string", "null"], "format": "date-time"},
+        "selected_notice_id": {"type": ["string", "null"], "pattern": "^SIN-[A-Z0-9-]+-V[1-9][0-9]*$"},
+        "approved_checklist_version_id": {"type": ["string", "null"], "pattern": "^approved-checklist:[a-f0-9]{32}$"},
+        "decision_id": {"type": ["string", "null"], "pattern": "^review-decision:[a-f0-9]{32}$"},
+        "item_rule_version_ids": {"type": "array", "items": {"type": "string", "pattern": "^policy-rule:sha256:[a-f0-9]{64}$"}},
+        "item_evidence_hashes": {"type": "array", "items": {"$ref": "#/$defs/sha256"}},
+        "blocking_reasons": {"type": "array", "items": {"$ref": "#/$defs/reasonCode"}},
+        "tool_response_hash": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}
+      },
+      "allOf": [
+        {
+          "description": "READY 섹션은 version·결정 ID와 항목이 있고 보류 표시가 없다. HOLD 섹션은 둘 다 없고 보류 종류·근거와 사유가 있다.",
+          "if": {"properties": {"status": {"const": "READY"}}},
+          "then": {
+            "properties": {
+              "hold_kind": {"const": null},
+              "hold_claim_basis": {"const": null},
+              "approved_checklist_version_id": {"type": "string"},
+              "decision_id": {"type": "string"},
+              "selected_notice_id": {"type": "string"},
+              "item_rule_version_ids": {"minItems": 1},
+              "item_evidence_hashes": {"minItems": 1},
+              "blocking_reasons": {"maxItems": 0}
+            }
+          },
+          "else": {
+            "properties": {
+              "hold_kind": {"type": "string"},
+              "hold_claim_basis": {"type": "string"},
+              "approved_checklist_version_id": {"const": null},
+              "decision_id": {"const": null},
+              "item_rule_version_ids": {"maxItems": 0},
+              "item_evidence_hashes": {"maxItems": 0},
+              "blocking_reasons": {"minItems": 1}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"hold_kind": {"const": "CORE_DECISION"}}},
+          "then": {"properties": {"hold_claim_basis": {"const": "CORE_REPORTED"}}}
+        },
+        {
+          "if": {"properties": {"hold_kind": {"const": "UNVERIFIED"}}},
+          "then": {"properties": {"hold_claim_basis": {"const": "SERVICE_REPORTED"}, "blocking_reasons": {"items": {"enum": ["TOOL_AUTH_FAILED", "CORE_UNAVAILABLE", "CORE_TIMEOUT", "EVIDENCE_UNAVAILABLE", "TOOL_RESPONSE_INVALID"]}}}}
+        }
+      ]
+    }
+  }
+}

@@ -22,6 +22,7 @@ NOTICE_ROOT = ROOT / "datasets/synthetic/internal/notices"
 SMOKE = GOLDENSET_ROOT / "prepayment-fee-smoke-v1.json"
 EVAL = GOLDENSET_ROOT / "prepayment-fee-eval-v1.json"
 SAFETY = GOLDENSET_ROOT / "prepayment-fee-safety-v1.json"
+SAFETY_V2 = GOLDENSET_ROOT / "prepayment-fee-safety-v2.json"
 SCHEMA = "search-goldenset.schema.json"
 
 PREPAYMENT = "SIN-PREPAYMENT-FEE"
@@ -120,6 +121,7 @@ class SearchGoldensetContractTest(unittest.TestCase):
         cls.smoke = load(SMOKE)
         cls.eval = load(EVAL)
         cls.safety = load(SAFETY)
+        cls.safety_v2 = load(SAFETY_V2)
         cls.rules_by_id, cls.rules_by_key = rule_index()
 
     # ---- AC-01 ----
@@ -336,6 +338,25 @@ class SearchGoldensetContractTest(unittest.TestCase):
         self.assertEqual("TASK-015", self.safety["pass_criteria_owner"])
         self.assertEqual("TASK-019", self.safety["llm_output_verification_owner"])
         self.assertNotIn("evaluation_context", self.safety)
+
+    # ---- 후속 변경(TASK-015 제안 7 (b)): 안전성 자료 v2는 책임을 객체로 구분하고 v1·질문·참조 ID를 보존한다 ----
+    def test_safety_v2_splits_criteria_owners_and_preserves_v1_cases(self):
+        validate(self.safety_v2)
+        self.assertEqual("v2", self.safety_v2["goldenset_version"])
+        self.assertEqual(self.safety["goldenset_id"], self.safety_v2["goldenset_id"])
+        self.assertEqual(self.safety["goldenset_id"] + "-" + self.safety["goldenset_version"], self.safety_v2["supersedes_goldenset"])
+        self.assertEqual({"structural": "TASK-015", "question_based": "TASK-019"}, self.safety_v2["pass_criteria_owner"])
+        self.assertEqual("TASK-019", self.safety_v2["llm_output_verification_owner"])
+        self.assertIn("LLM 안전성 검증 완료가 아니다", self.safety_v2["scope_note"])
+        v1_cases = {(c["case_id"], c["source_goldenset"], c["source_query_id"]) for c in self.safety["cases"]}
+        v2_cases = {(c["case_id"], c["source_goldenset"], c["source_query_id"]) for c in self.safety_v2["cases"]}
+        self.assertEqual(v1_cases, v2_cases)
+        for v1, v2 in zip(sorted(self.safety["cases"], key=lambda c: c["case_id"]), sorted(self.safety_v2["cases"], key=lambda c: c["case_id"])):
+            self.assertEqual(v1["forbidden_outputs"], v2["forbidden_outputs"])
+            self.assertEqual(v1["required_outputs"], v2["required_outputs"])
+        # 검색 골든셋(초기·최종)은 그대로 v1이다.
+        self.assertEqual("v1", self.smoke["goldenset_version"])
+        self.assertEqual("v1", self.eval["goldenset_version"])
 
     # ---- 거부 사례: 계약이 잘못된 골든셋을 막는다 ----
     def test_schema_rejects_hold_query_with_relevant_and_old_value_query_without_human_decision(self):
