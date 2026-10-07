@@ -15,7 +15,7 @@ FastAPI AI 서비스의 첫 연결 단계. 합성 신청 건 하나에 대해 AI
 
 ## 테스트 evidence
 
-검증 대상 revision: 구현·자료·테스트 커밋 `87b553b`(브랜치 `feat/task-015-consultation-preparation`, base `006c880`). 문서 커밋과 CI 수정 커밋 `63fee24`(워크플로·Gradle 로그 설정만)는 그 뒤에 따로 올렸고 검증 대상 코드는 바꾸지 않았다. 4·5차 보완(승인 전 HOLD 테스트, 토큰 동일값 기동 거부, HTTP 기록 실패 상태 구분)의 검증 대상 커밋은 `2e330d2`이며 이 문서의 수치와 표본은 그 커밋으로 다시 실행한 것이다. CI 결과는 아래 "CI 결과" 절과 PR #40 본문에 있다. 환경: 로컬 macOS arm64, Java 21, Docker, PostgreSQL 18.6 Testcontainers(digest 고정), Python 3.11.
+검증 대상 revision: 구현·자료·테스트 커밋 `87b553b`(브랜치 `feat/task-015-consultation-preparation`, base `006c880`). 문서 커밋과 CI 수정 커밋 `63fee24`(워크플로·Gradle 로그 설정만)는 그 뒤에 따로 올렸고 검증 대상 코드는 바꾸지 않았다. 4·5차 보완(승인 전 HOLD 테스트, 토큰 동일값 기동 거부, HTTP 기록 실패 상태 구분)의 검증 대상 커밋은 `2e330d2`이며 이 문서의 수치와 표본은 그 커밋으로 다시 실행한 것이다. 6차 보완(READY '기준 자료 준비 완료' 표현과 직원 확인 안내)의 검증 대상 커밋은 `f6ca899`이며 수치와 표본은 그 커밋으로 다시 실행한 것이다. 고정 문구 표가 바뀌어 준비안 ID와 `messages_hash`가 이전 표본과 다르다. CI 결과는 아래 "CI 결과" 절과 PR #40 본문에 있다. 환경: 로컬 macOS arm64, Java 21, Docker, PostgreSQL 18.6 Testcontainers(digest 고정), Python 3.11.
 
 ```text
 JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew clean test bootJar --offline --no-daemon -PaiServiceIntegration=true
@@ -59,7 +59,7 @@ Ran 106 tests (기존 75 + 신규 31: tests/ai_service 30 + 골든셋 계약 1),
 |---|---|---|
 | fullyReadyPreparationIsRecorded | 두 필수 공문군 모두 READY인 기록 201, status READY·complete true·필수 보류 0·섹션 2행 READY·셀러론 결정 ID 일치·재확인 usable 2건 | 06 |
 | readyClaimMustMatchComputedStatus | 같은 내용을 PARTIAL로 낮춰 주장하면 422 PREPARATION_STATUS_INVALID | 16 |
-| prepareCommandProducesFullyReadyPreparation (연결 검증 조건에서만) | CLI가 READY·complete true·"모두 준비됐습니다"·"결정의 완료가 아닙니다"·remaining_checks 0·record RECORDED/recorded true를 내고 DB에 READY 행 | 01, 06, 13 |
+| prepareCommandProducesFullyReadyPreparation (연결 검증 조건에서만) | CLI가 READY·complete true·"기준 자료 준비 완료"·"상담·대출 결정이 끝났다는 뜻이 아닙니다"·`staff_check_notice`에 직원 확인 안내·remaining_checks 0·record RECORDED/recorded true를 내고 DB에 READY 행 | 01, 06, 13 |
 
 ### 토큰 분리 `ServiceTokenSeparationTest` (4건, DB 없음, AC-20)
 
@@ -89,7 +89,7 @@ Gradle 결과 파일은 실행마다 덮어써지므로 실행별로 로그와 J
 
 | 실행 | 로그 | 결과 요약 | 비고 |
 |---|---|---|---|
-| 연결 검증 포함 전체(`-PaiServiceIntegration=true`) | `gradle-full-with-ai-integration.log`(로컬 보관) | `test-results-full-with-ai-integration.md` | CLI 출력 표본 `cli-output-partial-sample.json`(PARTIAL), `cli-output-ready-sample.json`(READY), `cli-output-hold-before-approval-sample.json`(HOLD: 평가 시각 2026-10-05T04:00Z·업무일 2026-10-05, 두 섹션 사유 `APPROVED_CHECKLIST_NOTICE_MISMATCH`·`HUMAN_REVIEW_PENDING`, `FUTURE_BUSINESS_DATE` 없음), `cli-output-hold-after-withdrawal-sample.json`(HOLD: 철회 뒤 재실행, `EFFECTIVE_NOTICE_WITHDRAWN`), `cli-output-rejected-sample.json`·`cli-stderr-rejected-sample.txt`(기록 거부, 종료 3). 합성 자료이며 토큰 값은 없다. HOLD 표본의 조건 구분은 TASK-015 문서 3차 보완 1절 |
+| 연결 검증 포함 전체(`-PaiServiceIntegration=true`) | `gradle-full-with-ai-integration.log`(로컬 보관) | `test-results-full-with-ai-integration.md` | CLI 출력 표본 `cli-output-partial-sample.json`(PARTIAL), `cli-output-ready-sample.json`(READY: 기준 자료 준비 완료, 직원 확인 안내), `cli-output-hold-before-approval-sample.json`(HOLD: 평가 시각 2026-10-05T04:00Z·업무일 2026-10-05, 두 섹션 사유 `APPROVED_CHECKLIST_NOTICE_MISMATCH`·`HUMAN_REVIEW_PENDING`, `FUTURE_BUSINESS_DATE` 없음), `cli-output-hold-after-withdrawal-sample.json`(HOLD: 철회 뒤 재실행, `EFFECTIVE_NOTICE_WITHDRAWN`), `cli-output-rejected-sample.json`·`cli-stderr-rejected-sample.txt`(기록 거부, 종료 3). 합성 자료이며 토큰 값은 없다. HOLD 표본의 조건 구분은 TASK-015 문서 3차 보완 1절 |
 | 로컬 기본(속성 없음) | `gradle-local-default.log`(로컬 보관) | `test-results-local-default.md` | CLI 실행 테스트 6건이 명시적 skip으로 나열됨 |
 | 의도적 환경 누락 | `gradle-env-missing-failure.log`(로컬 보관) | `test-results-env-missing.md` | `AI_INTEGRATION_ENV_MISSING` 실패 1건 |
 | Python | `python-unittest.log`(로컬 보관) | `RUN_SUMMARY.txt` 4절 | 건너뜀 2건은 기존 비공개 snapshot 사유 |

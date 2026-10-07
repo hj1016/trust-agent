@@ -266,7 +266,7 @@ Core 기록은 트랜잭션 하나(SERIALIZABLE, 직렬화 실패 1회 재시도
 | AC-12 | AI 서비스 설정·의존성 | 업무 DB 자격증명 항목 없음, DB 드라이버 의존성 없음 | Python 단위 + 검토 | **통과**(로컬). `test_no_database_credential_settings_or_drivers`, `requirements-ai.txt` 검토(fastapi·uvicorn·httpx만 추가) |
 | AC-13 | 재실행 | 기존 기록이 있어도 Tool 1·2를 다시 호출함(가짜 Core 호출 횟수), 상태 불변 시 ALREADY_RECORDED, 철회 뒤 새 ID HOLD | Python 단위 + 연결 검증 | **통과**(로컬). Python `test_rerun_calls_core_tools_again_even_when_already_recorded`, 연결 검증 `rerunRechecksCoreAndRecordsOnlyOnce`·`stateChangeProducesNewHoldPreparation`·`withdrawalAfterRecordingProducesNewHoldPreparation` |
 | AC-14 | 연결 검증 자동 테스트 | 필수 CI(Gradle tests 체크)에서 실제 실행되고 통과. 로컬 기본은 명시적 skip으로 보고서에 남고, CI에서는 환경 누락이 실패(`AI_INTEGRATION_ENV_MISSING`)로 드러남. 시간 제한, 출력 파일 수집, 실패 시 프로세스 종료 | Java 통합 + CI 로그 + 의도적 환경 누락 실패 1회 확인 | **통과**. 필수 CI(PR #40 2차 실행) 로그에서 연결 검증 5건과 전체 READY CLI 1건 `TEST SUCCESS`, skip 0건, 합계 181/181 확인. 로컬 기본 실행은 skip 6건이 보고서에 남음, 의도적 환경 누락 1회 `AI_INTEGRATION_ENV_MISSING` 실패 확인, 60초 제한·출력 파일·강제 종료 구현 |
-| AC-15 | 기존 테스트 수·결과 유지, 기존 승인·일정·변경안·검증 코드 diff 없음, README·AI 서비스 README·ADR-012가 실제 상태 기술, "AI 생성 완료"·"LLM 안전성 검증 완료" 표현 없음, "기록은 사용 허가가 아님"과 "READY는 상담·대출 결정의 완료가 아님" 명시 | 로컬·CI + diff 검토 | **통과**(로컬, diff 검토). 기존 테스트는 기대값 갱신(version 10, 표 40·trigger 80, 기록 토큰 필수)만 변경. README 3곳·ADR-012 상태 기술, "기록은 사용 허가가 아님"·"READY는 상담·대출 결정의 완료가 아님" 명시. "AI 생성 완료"·"LLM 안전성 검증 완료"는 부정문(아니다)으로만 등장 |
+| AC-15 | 기존 테스트 수·결과 유지, 기존 승인·일정·변경안·검증 코드 diff 없음, README·AI 서비스 README·ADR-012가 실제 상태 기술, "AI 생성 완료"·"LLM 안전성 검증 완료" 표현 없음, "기록은 사용 허가가 아님"과 "READY는 상담·대출 결정의 완료가 아님" 명시 | 로컬·CI + diff 검토 | **통과**(로컬, diff 검토). 기존 테스트는 기대값 갱신(version 10, 표 40·trigger 80, 기록 토큰 필수)만 변경. README 3곳·ADR-012 상태 기술, "기록은 사용 허가가 아님"·"READY는 기준 자료 준비 완료이며 고객별 적용 조건·제출서류 확인이나 상담·대출 결정의 완료가 아님" 명시. "AI 생성 완료"·"LLM 안전성 검증 완료"는 부정문(아니다)으로만 등장 |
 | AC-16 | 매핑 불일치 요청: 필수 섹션 누락, `required` 값 변경, 섹션 상태와 다른 전체 READY 주장, 다른 `family_mapping_hash` | 409 `MAPPING_MISMATCH` / 422 `REQUIRED_SECTION_MISSING`·`REQUIRED_FLAG_MISMATCH`·`PREPARATION_STATUS_INVALID`, 준비안 행 없음, 실행 기록 REJECTED | Core 통합 | **통과**(로컬). `mappingAndStatusClaimsAreRejected` |
 | AC-17 | 필수 공문군이 없는 매핑 | AI 서비스는 HOLD·`preparation_complete=false`·`NO_REQUIRED_FAMILY_CONFIGURED`, Core는 READY 요청을 422 `NO_REQUIRED_FAMILY`로 거부 | Python 단위 + Core 통합 | **통과**(로컬). Python `test_mapping_without_required_family_never_becomes_ready`, Core `mappingWithoutRequiredFamilyNeverAllowsReady` |
 | AC-18 | HOLD 섹션 기록의 공통 검사와 보증 범위 | 항목·근거가 있는 HOLD 섹션은 400 `HOLD_SECTION_INVALID`. 저장된 HOLD 행에 `hold_claim_basis`와 `recheck_*`가 있고, AI가 보낸 사유와 재조회 사유가 달라도 둘 다 저장됨 | Core 통합 | **통과**(로컬). `holdSectionsAreCheckedAndStoredWithClaimBasis`(항목 있는 HOLD 400, SERVICE_REPORTED 보류에 `recheck_usable=true`가 함께 저장됨), `partialPreparationIsRecordedWithRecheckValuesAndRunRecord` |
@@ -276,7 +276,7 @@ Core 기록은 트랜잭션 하나(SERIALIZABLE, 직렬화 실패 1회 재시도
 
 ### 완료 기준 변경 이력
 
-기준을 낮춘 변경은 없다. 추가 2건: 4차 보완에서 사용자 요청으로 **AC-20(읽기·기록 토큰 같은 값이면 기동 거부)**을, 5차 보완에서 제안 9 수정 채택으로 **AC-21(HTTP 진입점의 기록 실패 상태 구분: 200/422/409/503/500/502/504와 본문·헤더·CLI 종료 코드 일관)**을 추가했다. 또 AC-02·13의 "승인 전" HOLD 사례는 업무일을 평가 당일로 맞춰 미래 업무일 차단이 섞이지 않게 하고 `FUTURE_BUSINESS_DATE` 없음·`HUMAN_REVIEW_PENDING` 있음 단언을 더했다(조건이 더 엄격해짐). 구현 중 세부 설계 확정 2건을 기록한다: (1) 준비안 ID 해시 대상에서 `sections[].evaluated_at`에 더해 `sections[].tool_response_hash`도 제외(제안 8, 사용자 채택. 실행별 값은 실행 기록 `section_evaluations`로 추적). (2) AC-05의 "기록 실패 시 `recorded=false`"는 출력 계약의 `record.recorded`(boolean, 필수. RECORDED·ALREADY_RECORDED일 때만 true)와 `record.status`(REJECTED/FAILED/NOT_ATTEMPTED)·`usage_notice`·CLI 종료 코드 3·HTTP 헤더 `X-Preparation-Recorded`로 구현했다. 사용자 확인 요청(보완 3절) 뒤 `recorded` 필드를 계약에 추가해 계획 표현과 맞췄다.
+기준을 낮춘 변경은 없다. 추가 2건: 4차 보완에서 사용자 요청으로 **AC-20(읽기·기록 토큰 같은 값이면 기동 거부)**을, 5차 보완에서 제안 9 수정 채택으로 **AC-21(HTTP 진입점의 기록 실패 상태 구분: 200/422/409/503/500/502/504와 본문·헤더·CLI 종료 코드 일관)**을 추가했다. 6차 보완(업무 인터뷰 반영)에서 READY의 뜻을 "기준 자료 준비 완료"로 고정하고 READY 출력에 직원 확인 안내(`notices.staff_check_notice`: 고객별 적용 조건과 제출서류는 직원 확인 필요)를 필수로 더했다. PARTIAL·HOLD는 같은 자리에 준비 미완료 안내가 온다. AC-01·02·06·15의 READY 표현이 이에 맞게 더 엄격해졌고 계약(`consultation-preparation.schema.json`)이 READY 머리 문구에 "기준 자료 준비 완료", 직원 확인 안내에 "직원 확인이 필요합니다"를 요구한다. 또 AC-02·13의 "승인 전" HOLD 사례는 업무일을 평가 당일로 맞춰 미래 업무일 차단이 섞이지 않게 하고 `FUTURE_BUSINESS_DATE` 없음·`HUMAN_REVIEW_PENDING` 있음 단언을 더했다(조건이 더 엄격해짐). 구현 중 세부 설계 확정 2건을 기록한다: (1) 준비안 ID 해시 대상에서 `sections[].evaluated_at`에 더해 `sections[].tool_response_hash`도 제외(제안 8, 사용자 채택. 실행별 값은 실행 기록 `section_evaluations`로 추적). (2) AC-05의 "기록 실패 시 `recorded=false`"는 출력 계약의 `record.recorded`(boolean, 필수. RECORDED·ALREADY_RECORDED일 때만 true)와 `record.status`(REJECTED/FAILED/NOT_ATTEMPTED)·`usage_notice`·CLI 종료 코드 3·HTTP 헤더 `X-Preparation-Recorded`로 구현했다. 사용자 확인 요청(보완 3절) 뒤 `recorded` 필드를 계약에 추가해 계획 표현과 맞췄다.
 
 ## Implementation Plan (초안)
 
@@ -493,7 +493,7 @@ Gradle은 `build/test-results`를 실행마다 덮어쓰므로 실행별 로그�
 
 #### 3. 사용자 검수용 설명 (쉬운 말)
 
-- **READY**: 모든 필수 공문군에 "지금 사용 가능한 승인 checklist"가 있어 항목과 근거(공문 원문 문장과 위치)가 모두 보입니다. 머리 문구는 "모두 준비됐습니다"이지만 **상담이 끝났다거나 대출이 결정됐다는 뜻이 아닙니다.** 승인·거절·한도·금리는 담당자가 판단합니다. 기록됐다고 해서 사용 허가가 난 것은 아니므로, 실제 상담에서 쓰기 전에는 Core 조회로 지금도 사용 가능한지 다시 확인해야 합니다.
+- **READY(기준 자료 준비 완료)**: 모든 필수 공문군에 "지금 사용 가능한 승인 checklist"가 있어 항목과 근거(공문 원문 문장과 위치)가 모두 보입니다. 머리 문구는 "기준 자료 준비 완료"이고 직원 확인 안내가 함께 나옵니다. **고객별 적용 조건과 제출서류 확인은 직원 몫이며, 상담이 끝났다거나 대출이 결정됐다는 뜻이 아닙니다.** 고객 니즈 확인과 상품 선택은 이 준비안의 앞 단계입니다. 승인·거절·한도·금리는 담당자가 판단합니다. 기록됐다고 해서 사용 허가가 난 것은 아니므로, 실제 상담에서 쓰기 전에는 Core 조회로 지금도 사용 가능한지 다시 확인해야 합니다.
 - **PARTIAL**: 일부 필수 공문군만 준비됐습니다. 준비된 섹션의 항목·근거는 보이고, 보류된 섹션은 사유와 수기 확인 안내만 보입니다. 머리 문구에 "끝나지 않았습니다"와 남은 공문군이 적힙니다. 보류된 공문군을 추측으로 채우거나 준비 완료로 보면 안 됩니다. 남은 공문군은 Core 조회나 수기 checklist로 확인합니다.
 - **HOLD**: 준비된 필수 공문군이 하나도 없습니다. 항목과 근거는 전혀 없고 사유(예: 검토 대기, 공문 철회, 미래 업무일)와 안내만 있습니다. HOLD도 기록되지만 이 기록은 "이 시점에 준비할 수 없었다"는 사실의 기록일 뿐입니다. 이 출력으로 상담 준비를 했다고 하면 안 됩니다.
 - **기록 실패(거부·실패·미시도)**: 준비안 본문은 보여도 `record.recorded=false`, 사용 금지 안내, 종료 코드 3이 함께 나옵니다. **이 준비안은 사용하지 말고** 설정(토큰 등)을 점검한 뒤 다시 실행합니다. Core에는 준비안이 없고 실행 기록만 거부·실패로 남습니다.
@@ -544,9 +544,51 @@ Gradle은 `build/test-results`를 실행마다 덮어쓰므로 실행별 로그�
 - 일관성: `recorded=true` ⇔ HTTP 200 ⇔ 헤더 `true` ⇔ CLI 종료 0. `recorded=false` ⇔ HTTP 422/409/503/500/502/504 ⇔ 헤더 `false` ⇔ CLI 종료 3. `app.py`가 이 대응을 단언한다.
 - 결과: 연결 검증 포함 전체 185건 통과·실패 0·skip 0, 로컬 기본 185건 중 통과 179·실패 0·skip 6, 의도적 환경 누락 1건 실패(`AI_INTEGRATION_ENV_MISSING`), Python 106건 중 통과 104·실패 0·skip 2(기존 비공개 snapshot 사유). 표본(`docs/evidence/task-015/cli-output-*.json`)은 고정 문구 표 변경 뒤 다시 생성했다. 합계는 `RUN_SUMMARY.txt`.
 
+### 6차 보완: 업무 인터뷰 반영 (2026-10-08, 미커밋)
+
+#### 인터뷰 요약 (익명, 개인 식별 정보 없음)
+
+다른 은행 영업점 행원 1명의 개인 경험 요약이다. KB국민은행이나 모든 영업점의 공통 절차로 일반화하지 않으며, 이 프로젝트의 업무 가설을 검토하는 참고 자료로만 쓴다. 인터뷰만으로 구체적인 금융 규칙이나 문서 우선순위를 확정하지 않는다.
+
+1. 기본적으로 업무 매뉴얼을 먼저 참고한다. 수신은 상품설명서, 여신은 내부문서를 많이 보며 정책에 따라 달라지는 상품이 많다.
+2. 고객확인·FATCA 등 추가 확인 사항이 생기고, 사전에 확인하면 고객 재방문을 줄일 수 있지만 매번 확인하기 어렵다. 고객이 필요한 기재 내용을 가리거나 발급일 조건에 맞지 않는 서류를 가져오는 경우도 있다.
+3. 상품 상담은 고객 니즈 확인부터 시작하고 소득정보 등을 본다. 행원이 상품을 먼저 숙지해야 하며 KPI도 영업 추진에 영향을 준다.
+4. 담당자의 확인 책임이 일차적이고, 놓친 부분은 감사에서 확인하는 편이다(심사부서의 보완 절차와 같은 뜻으로 해석하지 않는다).
+5. 대부분 팀장 수준에서 해결하고, 특이 사례는 내부문서를 먼저 확인한 뒤 애매하면 사내전화로 본부에 문의한다.
+6. 변경사항이 많아 헷갈리며, 지점 내 공유와 올라오는 문서의 잦은 확인이 필요하다.
+7. 신입은 시스템 조작과 문서 찾는 방법에 익숙하지 않아 어려움을 겪는다.
+8. 외국인·세금·외화송금 등 특이 사례에서 정보를 찾는 데 시간이 걸리고 고객별 사례가 다양하다. 기업여신에 한정된 답변은 아니다.
+
+#### 업무 가설에 대한 쓰임 (근거와 기대효과 구분)
+
+- 근거로 쓰는 업무 가설: **변경 기준 혼동**(6), **문서 탐색의 어려움**(1·5·7·8), **서류 보완의 어려움**(2). 이 프로젝트가 "변경된 기준을 근거와 함께 보여 주고 보류를 분명히 한다"는 방향을 지지하는 개인 경험 1건이다.
+- 아직 검증하지 않은 기대효과(근거 아님): 상담 준비 시간 단축, 고객 재방문 감소. 측정 방법과 수치는 후속 Task에서 정한다.
+
+#### 기존 설계 유지
+
+사람 승인은 원문에서 정리한 checklist가 원문과 맞는지 검수하는 통제이며, 실제 은행의 여신 승인 절차나 매 상담마다 별도 승인을 받는 과정이 아니다(인터뷰 4의 "담당자 일차 책임"과도 다른 층위). 기존 승인·재확인·기록 경계는 그대로다.
+
+#### 이번 TASK-015 보완 내용
+
+- READY의 뜻을 **"기준 자료 준비 완료"**로 고정했다. 머리 문구: "기준 자료 준비 완료: 공문군 N개 가운데 필수 M개의 기준 자료가 모두 준비됐습니다. 현재 승인된 매핑에 따른 필수 자료이며, 고객별 적용 조건·제출서류 확인이나 상담·대출 결정이 끝났다는 뜻이 아닙니다."
+- 출력에 `notices.staff_check_notice`를 필수로 더했다. READY: "기준 자료 준비 완료입니다. 고객별 적용 조건과 제출서류는 직원 확인이 필요합니다. 고객 니즈 확인과 상품 선택은 이 준비안의 앞 단계이며 이 준비안이 대신하지 않습니다." PARTIAL·HOLD: "상담 준비가 끝나지 않았습니다. 보류된 필수 공문군을 먼저 확인하세요. 그 뒤에도 고객별 적용 조건과 제출서류는 직원 확인이 필요합니다." 두 안내는 문구로 구분된다.
+- 계약: READY면 머리 문구에 "기준 자료 준비 완료", `staff_check_notice`에 "직원 확인이 필요합니다"를 요구한다. 고정 문구 표가 바뀌어 `messages_hash`와 준비안 ID가 바뀌므로 표본을 다시 생성했다.
+- 테스트: Python `test_all_required_ready_gives_ready_with_completion_notice`(READY 문구·직원 확인 안내·"끝나지 않았습니다" 없음), `test_partial_preparation_…`(PARTIAL은 미완료 안내), 고정 문구 표 검사, Java `prepareCommandProducesFullyReadyPreparation`(READY 문구·직원 확인 안내), `prepareCommandAssemblesPartialPreparationAndRecordsIt`(PARTIAL 미완료 안내). README 3곳 갱신.
+- 한계(문서화): 고객 니즈 확인과 상품 선택은 현재 신청 건 기반 준비안 기능의 앞 단계이며 이 기능이 대신하지 않는다. 고객별 적용 조건·제출서류(필요서류, 발급일·기재 조건) 확인은 직원 몫이고 이 기능은 아직 돕지 않는다.
+
+#### 후속 검토 항목 (기록만, 구현하지 않음)
+
+- TASK-016: 업무 매뉴얼·내부 규정까지 포함한 근거 검색과 자료 간 우선순위·충돌 처리(인터뷰 1·5·8). 우선순위 규칙은 인터뷰만으로 정하지 않는다.
+- TASK-017: 원문으로 이동, 필요서류와 발급일·기재 조건 확인, 보류 시 다음 확인 행동과 문의할 내용 표시(인터뷰 2·5·7).
+- 범위 밖으로 유지: KPI 기반 상품 유도(인터뷰 3)는 이번 범위에 넣지 않는다.
+
+#### 검증 결과 (검증 대상 커밋 `f6ca899`: 안내·계약·테스트 변경. 문서는 후속 커밋)
+
+연결 검증 포함 전체 185건 통과·실패 0·skip 0, 로컬 기본 185건 중 통과 179·실패 0·skip 6, 의도적 환경 누락 1건 실패(`AI_INTEGRATION_ENV_MISSING`), Python 106건 중 통과 104·실패 0·skip 2(기존 비공개 snapshot 사유). 고정 문구 표가 바뀌어 준비안 ID·`messages_hash`가 달라졌고 표본(`docs/evidence/task-015/cli-output-*.json`)을 다시 생성했다. 합계는 `RUN_SUMMARY.txt`(미커밋).
+
 ### AI self-review
 
-- [x] 승인 범위 안에서만 구현(검색·LLM 생성 없음). [x] 기존 승인·일정·변경안·검증 코드 변경 없음(diff 확인). [x] 토큰 값은 환경변수만, 테스트는 실행 중 생성한 임시 값. [x] 합성 자료 표시(SYNTHETIC_WORK·disclaimer). [x] "기록은 사용 허가가 아님", "READY는 상담·대출 결정의 완료가 아님", "AI 생성 완료 아님" 명시. [x] 완료 기준을 낮추지 않았고 미검증·부분 검증 항목(AC-06, 08 일부, 14 CI)을 표에 그대로 적음. [x] 커밋·push·검토용 PR은 사용자 지시 뒤 수행(병합은 사용자).
+- [x] 승인 범위 안에서만 구현(검색·LLM 생성 없음). [x] 기존 승인·일정·변경안·검증 코드 변경 없음(diff 확인). [x] 토큰 값은 환경변수만, 테스트는 실행 중 생성한 임시 값. [x] 합성 자료 표시(SYNTHETIC_WORK·disclaimer). [x] "기록은 사용 허가가 아님", "READY는 기준 자료 준비 완료이며 고객별 확인·상담·대출 결정의 완료가 아님", "AI 생성 완료 아님" 명시. [x] 완료 기준을 낮추지 않았고 미검증·부분 검증 항목(AC-06, 08 일부, 14 CI)을 표에 그대로 적음. [x] 커밋·push·검토용 PR은 사용자 지시 뒤 수행(병합은 사용자).
 
 ### 인간 검수 / Explainability Gate / 결정 기록
 

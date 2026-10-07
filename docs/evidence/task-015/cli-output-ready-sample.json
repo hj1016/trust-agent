@@ -1,8 +1,8 @@
 {
-  "preparation_id": "consultation-preparation:sha256:19dfd72540eb8006ccdaccf476df9f7ccd0092e1e98d218ffadcb036b47b8c5d",
-  "run_id": "consultation-preparation-run:2c574e85e119493383600682dbce4542",
+  "preparation_id": "consultation-preparation:sha256:20860b0891c1a8f9c21e7198db2214de13e2eb04159480f5a6f3e2cd4ad962bf",
+  "run_id": "consultation-preparation-run:89e239693f44438cbc335829775dfa15",
   "assembler_version": "preparation-assembler-v1",
-  "messages_hash": "sha256:166c900b6b00167509b67eb67df69a4921332f37687190fe1e53d3fa9d53337e",
+  "messages_hash": "sha256:f5bd56371de17ea5815fadd771c9d4b10bebeeac657b43d29f8ae96d14922e7c",
   "family_mapping_hash": "sha256:326b488b063f5197c636fcf53a15162c5647b231aceaa2c63593cc136cf3bdd7",
   "dataset_class": "SYNTHETIC_WORK",
   "synthetic": true,
@@ -17,10 +17,10 @@
     "source_hash": "sha256:26a33656fe31638be9271fee0a600c6100b7ee03f0dacb93f966942d84d7e270"
   },
   "business_date": "2026-10-06",
-  "generated_at": "2026-10-07T18:02:56Z",
+  "generated_at": "2026-10-07T18:22:57Z",
   "status": "READY",
   "preparation_complete": true,
-  "headline": "공문군 2개 가운데 필수 2개가 모두 준비됐습니다. 승인된 매핑에 따른 필수 준비 자료를 갖췄습니다. 상담이나 대출 결정의 완료가 아닙니다.",
+  "headline": "기준 자료 준비 완료: 공문군 2개 가운데 필수 2개의 기준 자료가 모두 준비됐습니다. 현재 승인된 매핑에 따른 필수 자료이며, 고객별 적용 조건·제출서류 확인이나 상담·대출 결정이 끝났다는 뜻이 아닙니다.",
   "remaining_checks": [],
   "optional_holds": [],
   "sections": [
@@ -199,12 +199,13 @@
   "notices": {
     "human_decision_notice": "이 준비안은 확인할 항목과 근거만 담습니다. 승인·거절·한도·금리·신용등급은 이 준비안이 정하지 않으며 담당자가 판단합니다.",
     "source_notice": "항목은 Core의 승인 checklist이고 근거는 공문 원문의 규칙 문장과 위치입니다. 시행일·조건·예외 같은 값은 항목의 구조화 값이며 원문 직접 인용이 아닙니다.",
-    "usage_notice": "Core에 기록됐습니다. 기록은 사용 허가가 아니므로 사용 전 Core 조회로 사용 가능 여부를 다시 확인하세요."
+    "usage_notice": "Core에 기록됐습니다. 기록은 사용 허가가 아니므로 사용 전 Core 조회로 사용 가능 여부를 다시 확인하세요.",
+    "staff_check_notice": "기준 자료 준비 완료입니다. 고객별 적용 조건과 제출서류는 직원 확인이 필요합니다. 고객 니즈 확인과 상품 선택은 이 준비안의 앞 단계이며 이 준비안이 대신하지 않습니다."
   },
   "record": {
     "recorded": true,
     "status": "RECORDED",
-    "core_preparation_id": "consultation-preparation:sha256:19dfd72540eb8006ccdaccf476df9f7ccd0092e1e98d218ffadcb036b47b8c5d",
+    "core_preparation_id": "consultation-preparation:sha256:20860b0891c1a8f9c21e7198db2214de13e2eb04159480f5a6f3e2cd4ad962bf",
     "recorded_at": "2026-10-06T03:00:00Z"
   },
   "consultation_id": "e2e-ready"

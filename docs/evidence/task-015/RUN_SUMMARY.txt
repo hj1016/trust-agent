@@ -5,5 +5,5 @@
 ## 3. 의도적 환경 누락
 의도적 환경 누락 실행 결과 (TRUST_AGENT_REQUIRE_AI_INTEGRATION=1, -PaiServiceIntegration=false: 건너뜀이 아니라 실패): total=1 passed=0 failed=1 errors=0 skipped=0
 ## 4. Python
-Ran 106 tests in 0.652s
+Ran 106 tests in 0.582s
 OK (skipped=2)
