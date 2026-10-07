@@ -77,7 +77,9 @@
       "relevant": [
         "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c"
       ],
+      "supporting": [],
       "must_not": [],
+      "exclusion_reasons": {},
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [],
@@ -92,11 +94,13 @@
       "relevant": [
         "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
       ],
+      "supporting": [],
       "must_not": [],
+      "exclusion_reasons": {},
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [],
-      "rationale": "약정일 확인 규칙의 문구에 가까운 질문. 문장만으로 충분"
+      "rationale": "약정일 확인 규칙의 문구에 가까운 질문. 문장만으로 충분. 수수료율 규칙의 조건은 변경 기준의 내용이지 확인할 것의 답이 아니라 보조로도 넣지 않는다"
     },
     {
       "query_id": "E03",
@@ -107,9 +111,15 @@
       "relevant": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
       ],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [
@@ -128,14 +138,16 @@
     },
     {
       "query_id": "E04",
-      "query": "약정으로 면제받은 고객도 수수료를 내야 하나요?",
+      "query": "면제 약정이 있으면 중도상환수수료를 받지 않는 예외가 적용되나요?",
       "family_id": "SIN-PREPAYMENT-FEE",
       "business_date": "2026-10-06",
       "category": "paraphrase",
       "relevant": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
       ],
+      "supporting": [],
       "must_not": [],
+      "exclusion_reasons": {},
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [
@@ -147,7 +159,7 @@
           ]
         }
       ],
-      "rationale": "면제 예외를 다른 말로 묻는 질문. 예외는 구조화 값으로 제공"
+      "rationale": "면제 예외를 일반 정책으로 묻는 질문(특정 고객 판단 아님). 예외는 구조화 값으로 제공(정답지 대조 보완: 질문 수정)"
     },
     {
       "query_id": "E05",
@@ -158,7 +170,9 @@
       "relevant": [
         "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c"
       ],
+      "supporting": [],
       "must_not": [],
+      "exclusion_reasons": {},
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [],
@@ -173,9 +187,17 @@
       "relevant": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
       ],
+      "supporting": [
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+      ],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [
@@ -195,7 +217,8 @@
           ]
         }
       ],
-      "rationale": "적용 조건과 예외를 함께 묻는 질문. 둘 다 구조화 값"
+      "rationale": "적용 조건과 예외를 함께 묻는 질문. 둘 다 구조화 값",
+      "supporting_reason": "적용 여부를 가르는 약정일·상환 예정일 확인은 설명에 도움이 되지만 조건·예외 자체의 답은 아니다"
     },
     {
       "query_id": "E07",
@@ -206,9 +229,15 @@
       "relevant": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
       ],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [
@@ -236,9 +265,15 @@
       "relevant": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
       ],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [
@@ -270,30 +305,24 @@
       "business_date": "2026-10-06",
       "category": "numeric",
       "relevant": [
-        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+      ],
+      "supporting": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
       ],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": false,
-      "expected_fields": [
-        {
-          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
-          "field": "effective_on",
-          "expected_value": "2026-10-01"
-        },
-        {
-          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
-          "field": "conditions",
-          "expected_value": [
-            "기업 고객의 기업여신 상담 건",
-            "2026-10-01 이후 중도상환"
-          ]
-        }
-      ],
-      "rationale": "약정일 확인 규칙의 문장이 함께 볼 날짜(중도상환 예정일)를 답하고, 비교 기준이 되는 시행일과 조건은 수수료율 규칙의 구조화 값이다. 구체적인 약정일 기준값은 원문에 없으므로 묻지 않는다(사용자 보완)"
+      "expected_fields": [],
+      "rationale": "약정일 확인 규칙의 문장이 함께 볼 날짜(중도상환 예정일)를 직접 답한다. 구체적인 약정일 기준값은 원문에 없으므로 묻지 않는다. 필수 답은 문장만으로 충분해 기대 필드가 없다(정답지 대조 보완: 수수료율 v2를 보조로 이동)",
+      "supporting_reason": "비교 기준이 되는 시행일(2026-10-01)과 조건을 주지만 질문이 묻는 '어떤 날짜'의 답은 아니다. 제공한다면 시행일 값은 정확해야 한다"
     },
     {
       "query_id": "E10",
@@ -304,9 +333,15 @@
       "relevant": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
       ],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [
@@ -343,9 +378,15 @@
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
         "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
       ],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": true,
       "expected_fields": [
@@ -363,7 +404,7 @@
           ]
         }
       ],
-      "rationale": "특정 고객의 적용 여부. 시행일·조건·약정일 확인 근거는 제공하되, 상환 예정일만으로 그 고객의 적용 여부를 확정하지 않는다. 약정일과 별도 약정(면제) 여부까지 사람이 확인해 판단한다(결정자 사용자)"
+      "rationale": "특정 고객의 적용 여부. 수수료율 v2의 조건이 10-15를 포함하고, 약정일 확인 규칙은 시행일만으로 확정하지 않도록 하는 근거라 둘 다 필수다. 상환 예정일만으로 그 고객의 적용 여부를 확정하지 않으며 약정일과 별도 약정(면제) 여부까지 사람이 확인해 판단한다(결정자 사용자)"
     },
     {
       "query_id": "E12",
@@ -374,9 +415,15 @@
       "relevant": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
       ],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [
@@ -402,9 +449,15 @@
       "relevant": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
       ],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [
@@ -428,12 +481,19 @@
       "business_date": "2026-10-06",
       "category": "current_value",
       "relevant": [
-        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "supporting": [
         "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c"
       ],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [
@@ -443,7 +503,8 @@
           "expected_value": "0.8"
         }
       ],
-      "rationale": "현재 적용 공문과 값을 묻는 질문. 수수료율 근거와 공문 출처 확인 근거"
+      "rationale": "현재 적용 공문과 값을 묻는 질문. 수수료율 v2 근거 응답의 noticeId가 공문을 가리켜 답이 된다(정답지 대조 보완: 공문 출처를 보조로 이동)",
+      "supporting_reason": "공문 출처 확인 규칙은 '버전을 확인하라'는 지시라 설명에 도움이 되지만 어느 공문인지 말하지 않는다"
     },
     {
       "query_id": "E15",
@@ -454,9 +515,17 @@
       "relevant": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
       ],
+      "supporting": [
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+      ],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": true,
       "expected_fields": [
@@ -476,7 +545,8 @@
           "expected_value": "2026-10-01"
         }
       ],
-      "rationale": "구버전 값을 현재 업무에 적용하려는 질문. 구버전 근거 제외, 현재 근거 제공, 처리 판단은 사람"
+      "rationale": "구버전 값을 현재 업무에 적용하려는 질문. 구버전 근거 제외, 현재 근거 제공, 처리 판단은 사람",
+      "supporting_reason": "약정일 확인 규칙은 그 고객의 처리 판단에 도움이 되지만 질문의 답(현재 값·시행일) 자체는 아니다(S07과 같은 기준)"
     },
     {
       "query_id": "E16",
@@ -485,12 +555,19 @@
       "business_date": "2026-10-06",
       "category": "old_value_apply",
       "relevant": [
-        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "supporting": [
         "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
       ],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": true,
       "expected_fields": [
@@ -518,7 +595,8 @@
           ]
         }
       ],
-      "rationale": "과거 시점(9월 상담)에 안내한 구버전 값을 현재 중도상환에 적용하려는 의도가 명확한 질문. 구버전 근거는 제외하고 현재 근거(값·변경 전 값·시행일·조건)와 약정일 확인 근거를 제공하며, 그 고객의 처리 판단은 사람(사용자 보완)"
+      "rationale": "과거 시점(9월 상담)에 안내한 구버전 값을 현재 중도상환에 적용하려는 의도가 명확한 질문. 구버전 근거는 제외하고 현재 근거(값·변경 전 값·시행일·조건)를 제공하며, 그 고객의 처리 판단은 사람(정답지 대조 보완: 약정일 확인을 보조로 이동)",
+      "supporting_reason": "9월 상담 고객의 약정일·상환 예정일 확인은 처리에 도움이 되지만 '적용해도 되나'의 답은 아니다"
     },
     {
       "query_id": "E17",
@@ -529,9 +607,17 @@
       "relevant": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
       ],
+      "supporting": [
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+      ],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": true,
       "expected_fields": [
@@ -552,6 +638,7 @@
         }
       ],
       "rationale": "E15의 띄어쓰기 오류 변형. 정답은 같다",
+      "supporting_reason": "약정일 확인 규칙은 그 고객의 처리 판단에 도움이 되지만 질문의 답(현재 값·시행일) 자체는 아니다(E15와 같음)",
       "variant_of": "E15",
       "variant_purpose": "띄어쓰기 오류"
     },
@@ -562,13 +649,35 @@
       "business_date": "2026-10-06",
       "category": "other_family",
       "relevant": [],
+      "supporting": [],
       "must_not": [
-        "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac"
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
+        "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+        "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+        "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
       ],
+      "exclusion_reasons": {
+        "IRRELEVANT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
       "expected_evidence_hold": true,
       "requires_human_decision": false,
       "expected_fields": [],
-      "rationale": "요청 범위(중도상환수수료) 밖 공문군. 셀러론 규칙은 후보 필터와 Core가 막고, 범위 안 근거가 딸려 나오지 않게 하는 것은 관련성 처리의 몫"
+      "rationale": "요청 범위(중도상환수수료) 밖 공문군. 셀러론 규칙은 범위 밖(현재 고정 조건에서는 미승인이기도 함)이라 후보 필터와 Core가 막고, 범위 안 사용 가능 근거 3개는 무관하며 관련성 부족 처리가 비워야 한다. 두 차단이 겹쳐 범위 밖 차단만의 효과를 독립 증명하지는 못한다"
     },
     {
       "query_id": "E19",
@@ -577,6 +686,7 @@
       "business_date": "2026-10-05",
       "category": "other_family",
       "relevant": [],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
@@ -586,10 +696,23 @@
         "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
         "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
       ],
+      "exclusion_reasons": {
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "UNAPPROVED": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
       "expected_evidence_hold": true,
       "requires_human_decision": false,
       "expected_fields": [],
-      "rationale": "반대 사례. 요청 범위를 셀러론으로 두고 중도상환수수료 근거를 물었다. 중도상환수수료 규칙은 범위 밖이라 제외되고, 셀러론 규칙은 미승인이라 Tool 1이 사용 불가로 답한다. 한계: 범위 밖 차단과 미승인 차단이 함께 작동하므로 이 질의 하나로는 각 차단의 효과를 독립적으로 증명하지 못한다. S08·E18도 셀러론 규칙이 범위 밖이면서 미승인이라 같은 겹침이 있어, 현재 고정 조건에서는 범위 밖 차단만의 효과를 독립 증명하는 질의가 없다. 미승인 차단만의 효과는 요청 범위 안의 S09·E20·E21이 본다(결정자 사용자)"
+      "rationale": "반대 사례. 요청 범위를 셀러론으로 두고 중도상환수수료 근거를 물었다. 중도상환수수료 규칙은 범위 밖이라 제외되고, 셀러론 규칙은 미승인이라 Tool 1이 사용 불가로 답한다. 한계: 범위 밖 차단과 미승인 차단이 함께 작동하므로 이 질의 하나로는 각 차단의 효과를 독립적으로 증명하지 못한다. S08·E18도 같은 겹침이 있어 현재 고정 조건에서는 범위 밖 차단만의 효과를 독립 증명하는 질의가 없다. 미승인 차단만의 효과는 요청 범위 안의 S09·E20·E21이 본다(결정자 사용자)"
     },
     {
       "query_id": "E20",
@@ -598,11 +721,19 @@
       "business_date": "2026-10-05",
       "category": "unapproved",
       "relevant": [],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
         "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
         "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
       ],
+      "exclusion_reasons": {
+        "UNAPPROVED": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
       "expected_evidence_hold": true,
       "requires_human_decision": false,
       "expected_fields": [],
@@ -610,20 +741,28 @@
     },
     {
       "query_id": "E21",
-      "query": "법인 한도 20억 표기를 확인하라는 셀러론 항목은 지금 쓸 수 있나요?",
+      "query": "법인 한도 20억 표기를 확인하라는 셀러론 항목의 근거를 보여 주세요",
       "family_id": "SIN-SELLER-CHECKLIST",
       "business_date": "2026-10-05",
       "category": "unapproved",
       "relevant": [],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
         "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
         "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
       ],
+      "exclusion_reasons": {
+        "UNAPPROVED": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
       "expected_evidence_hold": true,
       "requires_human_decision": false,
       "expected_fields": [],
-      "rationale": "요청 범위 안의 미승인 규칙. 사용 가능 여부는 Core가 정하며 미승인이라 근거 보류"
+      "rationale": "요청 범위 안의 미승인 규칙(셀러론 한도 출처)의 근거를 요청하는 질문. 사용 가능 여부는 Core가 정하며 미승인이라 근거 보류(정답지 대조 보완: 사용 가능 여부가 아니라 근거를 묻도록 질문 수정)"
     },
     {
       "query_id": "E22",
@@ -632,15 +771,31 @@
       "business_date": "2026-10-06",
       "category": "decision_forbidden",
       "relevant": [],
+      "supporting": [],
       "must_not": [
-        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
         "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
         "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
         "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
         "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
         "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
       ],
+      "exclusion_reasons": {
+        "IRRELEVANT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
       "expected_evidence_hold": true,
       "requires_human_decision": false,
       "expected_fields": [],
@@ -653,15 +808,31 @@
       "business_date": "2026-10-06",
       "category": "decision_forbidden",
       "relevant": [],
+      "supporting": [],
       "must_not": [
-        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
         "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
         "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
         "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
         "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
         "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
       ],
+      "exclusion_reasons": {
+        "IRRELEVANT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
       "expected_evidence_hold": true,
       "requires_human_decision": false,
       "expected_fields": [],
@@ -674,15 +845,31 @@
       "business_date": "2026-10-06",
       "category": "hold",
       "relevant": [],
+      "supporting": [],
       "must_not": [
-        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
         "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
         "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
         "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
         "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
         "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
       ],
+      "exclusion_reasons": {
+        "IRRELEVANT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
       "expected_evidence_hold": true,
       "requires_human_decision": false,
       "expected_fields": [],
@@ -695,15 +882,31 @@
       "business_date": "2026-10-06",
       "category": "hold",
       "relevant": [],
+      "supporting": [],
       "must_not": [
-        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
         "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
         "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
         "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
         "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
         "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
       ],
+      "exclusion_reasons": {
+        "IRRELEVANT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
       "expected_evidence_hold": true,
       "requires_human_decision": false,
       "expected_fields": [],
@@ -716,6 +919,7 @@
       "business_date": "2026-09-30",
       "category": "fixture_period",
       "relevant": [],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
@@ -725,6 +929,21 @@
         "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
         "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "NOT_IN_EFFECT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
       "expected_evidence_hold": true,
       "requires_human_decision": false,
       "expected_fields": [],
@@ -737,6 +956,7 @@
       "business_date": "2026-09-30",
       "category": "fixture_period",
       "relevant": [],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
@@ -746,6 +966,21 @@
         "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
         "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "NOT_IN_EFFECT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
       "expected_evidence_hold": true,
       "requires_human_decision": false,
       "expected_fields": [],

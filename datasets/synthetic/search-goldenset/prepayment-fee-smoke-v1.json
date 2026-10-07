@@ -77,9 +77,15 @@
       "relevant": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
       ],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [
@@ -105,9 +111,15 @@
       "relevant": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
       ],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [
@@ -128,7 +140,9 @@
       "relevant": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
       ],
+      "supporting": [],
       "must_not": [],
+      "exclusion_reasons": {},
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [
@@ -151,11 +165,13 @@
       "relevant": [
         "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
       ],
+      "supporting": [],
       "must_not": [],
+      "exclusion_reasons": {},
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [],
-      "rationale": "v2에서 추가된 항목의 지시 문장. 문장만으로 충분"
+      "rationale": "v2에서 추가된 항목의 지시 문장이 이유를 직접 답한다. 문장만으로 충분"
     },
     {
       "query_id": "S05",
@@ -165,11 +181,18 @@
       "category": "numeric",
       "relevant": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
-        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c"
       ],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [
@@ -187,22 +210,24 @@
           "expected_value": "2026-10-01"
         }
       ],
-      "rationale": "조건과 약정일 확인 둘 다 해당"
+      "rationale": "확인 항목 전체를 묻는 질문이라 승인 checklist의 세 항목(수수료율·조건, 약정일, 공문 출처)이 모두 필수다(정답지 대조 보완: 공문 출처 추가)"
     },
     {
       "query_id": "S06",
-      "query": "어느 공문 버전을 보고 안내해야 하나요?",
+      "query": "상담 안내 전에 공문과 관련해 무엇을 확인해야 하나요?",
       "family_id": "SIN-PREPAYMENT-FEE",
       "business_date": "2026-10-06",
       "category": "direct",
       "relevant": [
         "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c"
       ],
+      "supporting": [],
       "must_not": [],
+      "exclusion_reasons": {},
       "expected_evidence_hold": false,
       "requires_human_decision": false,
       "expected_fields": [],
-      "rationale": "공문 출처 확인 규칙. 문장만으로 충분"
+      "rationale": "공문 출처 확인 규칙의 문장(적용 공문 버전과 원문 근거 위치 확인)이 직접 답한다. 현재 적용 버전이 무엇인지는 규칙 문장이 아니라 조회 Tool의 selectedNotice가 답하며 그것은 Core 응답 검증의 몫이다(정답지 대조 보완: 질문 수정)"
     },
     {
       "query_id": "S07",
@@ -213,9 +238,17 @@
       "relevant": [
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
       ],
+      "supporting": [
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+      ],
       "must_not": [
         "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
       ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
       "expected_evidence_hold": false,
       "requires_human_decision": true,
       "expected_fields": [
@@ -235,7 +268,8 @@
           "expected_value": "1.2"
         }
       ],
-      "rationale": "구버전 근거는 제외하되 현재 근거는 보여 준다. 이 고객을 그렇게 처리해도 되는가는 사람이 판단한다. 이 구분은 필터나 Core 검사가 아니라 준비안 단계(TASK-015)와 사람 확인의 몫"
+      "rationale": "구버전 근거는 제외하되 현재 근거는 보여 준다. 이 고객을 그렇게 처리해도 되는가는 사람이 판단한다. 이 구분은 필터나 Core 검사가 아니라 준비안 단계(TASK-015)와 사람 확인의 몫",
+      "supporting_reason": "약정일 확인 규칙은 그 고객의 처리 판단에 도움이 되지만 질문의 답(현재 값·시행일) 자체는 아니다"
     },
     {
       "query_id": "S08",
@@ -244,30 +278,60 @@
       "business_date": "2026-10-06",
       "category": "other_family",
       "relevant": [],
+      "supporting": [],
       "must_not": [
-        "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac"
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
+        "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+        "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+        "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
       ],
+      "exclusion_reasons": {
+        "IRRELEVANT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
       "expected_evidence_hold": true,
       "requires_human_decision": false,
       "expected_fields": [],
-      "rationale": "요청 범위 밖 공문군. 셀러론 규칙은 후보 필터와 Core(Tool 2, 403)가 막는다. 범위 안의 사용 가능 근거 3개는 Core가 막지 않으므로 목록이 비려면 관련성 부족 처리가 그것들을 비워야 한다"
+      "rationale": "요청 범위 밖 공문군. 셀러론 규칙은 범위 밖(현재 고정 조건에서는 미승인이기도 함)이라 후보 필터와 Core(Tool 2, 403)가 막는다. 범위 안의 사용 가능 근거 3개는 질문과 무관하며 Core가 막지 않으므로 관련성 부족 처리가 비워야 한다. 두 차단이 겹쳐 범위 밖 차단만의 효과를 독립 증명하지는 못한다"
     },
     {
       "query_id": "S09",
-      "query": "매출 정산 내역은 어떤 기준으로 확인하나요?",
+      "query": "정산 내역 확인 여부를 기록하라는 셀러론 항목의 근거가 있나요?",
       "family_id": "SIN-SELLER-CHECKLIST",
       "business_date": "2026-10-05",
       "category": "unapproved",
       "relevant": [],
+      "supporting": [],
       "must_not": [
         "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
         "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
         "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
       ],
+      "exclusion_reasons": {
+        "UNAPPROVED": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
       "expected_evidence_hold": true,
       "requires_human_decision": false,
       "expected_fields": [],
-      "rationale": "요청 범위는 맞지만 셀러론 v2가 미승인(검토 대기)이라 Tool 1이 사용 불가로 답하고 모든 규칙 근거가 차단된다"
+      "rationale": "요청 범위는 맞고 셀러론 정산 규칙 문장(매출 정산 내역 확인 여부를 상담 준비 체크리스트에 기록)이 답할 수 있는 질문이지만, 셀러론 v2가 미승인(검토 대기)이라 Tool 1이 사용 불가로 답하고 모든 규칙 근거가 차단된다(정답지 대조 보완: 상세 기준을 묻지 않도록 질문 수정)"
     },
     {
       "query_id": "S10",
@@ -276,15 +340,31 @@
       "business_date": "2026-10-06",
       "category": "decision_forbidden",
       "relevant": [],
+      "supporting": [],
       "must_not": [
-        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
         "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
         "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
         "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
         "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
         "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
         "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
       ],
+      "exclusion_reasons": {
+        "IRRELEVANT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
       "expected_evidence_hold": true,
       "requires_human_decision": false,
       "expected_fields": [],

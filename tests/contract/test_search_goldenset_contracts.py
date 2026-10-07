@@ -48,18 +48,19 @@ HUMAN = (SELLER, "CHECK_HUMAN_REVIEW", "SIN-SELLER-CHECKLIST-V2")
 ALL_RULES = [FEE_V1, FEE_V2, SOURCE, CONTRACT, LIMIT, SETTLEMENT, HUMAN]
 SELLER_RULES = [LIMIT, SETTLEMENT, HUMAN]
 SMOKE_PLAN = {
-    # id: (family, category, relevant, must_not, hold, human)
-    "S01": (PREPAYMENT, "current_value", [FEE_V2], [FEE_V1], False, False),
-    "S02": (PREPAYMENT, "numeric", [FEE_V2], [FEE_V1], False, False),
-    "S03": (PREPAYMENT, "paraphrase", [FEE_V2], [], False, False),
-    "S04": (PREPAYMENT, "direct", [CONTRACT], [], False, False),
-    "S05": (PREPAYMENT, "numeric", [FEE_V2, CONTRACT], [FEE_V1], False, False),
-    "S06": (PREPAYMENT, "direct", [SOURCE], [], False, False),
-    "S07": (PREPAYMENT, "old_value_apply", [FEE_V2], [FEE_V1], False, True),
-    "S08": (PREPAYMENT, "other_family", [], [LIMIT], True, False),
-    "S09": (SELLER, "unapproved", [], SELLER_RULES, True, False),
-    "S10": (PREPAYMENT, "decision_forbidden", [], ALL_RULES, True, False),
+    # id: (family, category, relevant(필수), supporting(보조), must_not, hold, human). 정답지 대조 보완 반영(S05 공문 출처 추가, S07 약정일 보조, S08 전체 7개 제외)
+    "S01": (PREPAYMENT, "current_value", [FEE_V2], [], [FEE_V1], False, False),
+    "S02": (PREPAYMENT, "numeric", [FEE_V2], [], [FEE_V1], False, False),
+    "S03": (PREPAYMENT, "paraphrase", [FEE_V2], [], [], False, False),
+    "S04": (PREPAYMENT, "direct", [CONTRACT], [], [], False, False),
+    "S05": (PREPAYMENT, "numeric", [FEE_V2, CONTRACT, SOURCE], [], [FEE_V1], False, False),
+    "S06": (PREPAYMENT, "direct", [SOURCE], [], [], False, False),
+    "S07": (PREPAYMENT, "old_value_apply", [FEE_V2], [CONTRACT], [FEE_V1], False, True),
+    "S08": (PREPAYMENT, "other_family", [], [], ALL_RULES, True, False),
+    "S09": (SELLER, "unapproved", [], [], SELLER_RULES, True, False),
+    "S10": (PREPAYMENT, "decision_forbidden", [], [], ALL_RULES, True, False),
 }
+EXCLUSION_CODES = {"OUT_OF_SCOPE", "UNAPPROVED", "OLD_VERSION", "IRRELEVANT", "NOT_IN_EFFECT"}
 
 
 def load(path: Path):
@@ -146,12 +147,31 @@ class SearchGoldensetContractTest(unittest.TestCase):
     def test_every_rule_version_id_exists_in_synthetic_notices(self):
         for goldenset in (self.smoke, self.eval):
             for query in goldenset["queries"]:
-                for rule_id in query["relevant"] + query["must_not"]:
+                relevant, supporting, must_not = set(query["relevant"]), set(query["supporting"]), set(query["must_not"])
+                for rule_id in relevant | supporting | must_not:
                     self.assertIn(rule_id, self.rules_by_id, f"{query['query_id']}: {rule_id}")
-                self.assertEqual(set(), set(query["relevant"]) & set(query["must_not"]), query["query_id"])
-                # 정답 근거는 요청 범위 안의 규칙이어야 한다.
-                for rule_id in query["relevant"]:
+                # 필수·보조·제외는 서로 겹치지 않는다.
+                self.assertEqual(set(), relevant & supporting, query["query_id"])
+                self.assertEqual(set(), relevant & must_not, query["query_id"])
+                self.assertEqual(set(), supporting & must_not, query["query_id"])
+                # 필수·보조 근거는 요청 범위 안의 규칙이어야 한다.
+                for rule_id in relevant | supporting:
                     self.assertEqual(query["family_id"], self.rules_by_id[rule_id]["family_id"], query["query_id"])
+                # 보조 근거에는 선정 이유가 있고, 없으면 이유도 없다.
+                self.assertEqual(bool(supporting), "supporting_reason" in query, query["query_id"])
+                # 제외 이유의 합집합이 must_not과 같고 코드끼리 겹치지 않는다.
+                reasons = query["exclusion_reasons"]
+                self.assertTrue(set(reasons) <= EXCLUSION_CODES, query["query_id"])
+                listed = [rule_id for ids in reasons.values() for rule_id in ids]
+                self.assertEqual(len(listed), len(set(listed)), query["query_id"])
+                self.assertEqual(must_not, set(listed), query["query_id"])
+                for code, ids in reasons.items():
+                    for rule_id in ids:
+                        family = self.rules_by_id[rule_id]["family_id"]
+                        if code == "OUT_OF_SCOPE":
+                            self.assertNotEqual(query["family_id"], family, f"{query['query_id']}: {code}")
+                        else:
+                            self.assertEqual(query["family_id"], family, f"{query['query_id']}: {code} {rule_id}")
         # 계획 표의 앞 8자가 실제 계산값과 같다.
         expected_prefixes = {
             FEE_V1: "82f74fb1", FEE_V2: "0827aed5", SOURCE: "a72302da", CONTRACT: "6a0041a7",
@@ -192,12 +212,13 @@ class SearchGoldensetContractTest(unittest.TestCase):
     def test_smoke_set_matches_the_approved_plan_table(self):
         by_id = {q["query_id"]: q for q in self.smoke["queries"]}
         self.assertEqual(set(SMOKE_PLAN), set(by_id))
-        for query_id, (family, category, relevant, must_not, hold, human) in SMOKE_PLAN.items():
+        for query_id, (family, category, relevant, supporting, must_not, hold, human) in SMOKE_PLAN.items():
             query = by_id[query_id]
             with self.subTest(query_id=query_id):
                 self.assertEqual(family, query["family_id"])
                 self.assertEqual(category, query["category"])
                 self.assertEqual({self.rules_by_key[key] for key in relevant}, set(query["relevant"]))
+                self.assertEqual({self.rules_by_key[key] for key in supporting}, set(query["supporting"]))
                 self.assertEqual({self.rules_by_key[key] for key in must_not}, set(query["must_not"]))
                 self.assertEqual(hold, query["expected_evidence_hold"])
                 self.assertEqual(human, query["requires_human_decision"])
@@ -223,6 +244,7 @@ class SearchGoldensetContractTest(unittest.TestCase):
             self.assertNotIn("variant_of", origin, variant["query_id"])
             self.assertEqual(origin["category"], variant["category"], variant["query_id"])
             self.assertEqual(set(origin["relevant"]), set(variant["relevant"]), variant["query_id"])
+            self.assertEqual(set(origin["supporting"]), set(variant["supporting"]), variant["query_id"])
             self.assertEqual(set(origin["must_not"]), set(variant["must_not"]), variant["query_id"])
             self.assertEqual(origin["expected_evidence_hold"], variant["expected_evidence_hold"], variant["query_id"])
             self.assertTrue(variant["variant_purpose"].strip(), variant["query_id"])
@@ -232,7 +254,7 @@ class SearchGoldensetContractTest(unittest.TestCase):
         plain = [q for q in queries if "variant_of" not in q]
         texts = [normalized(q["query"]) for q in plain]
         self.assertEqual(len(texts), len(set(texts)))
-        signature = lambda q: (q["category"], tuple(sorted(q["relevant"])), tuple(sorted(q["must_not"])), q["expected_evidence_hold"], q["requires_human_decision"])
+        signature = lambda q: (q["category"], tuple(sorted(q["relevant"])), tuple(sorted(q["supporting"])), tuple(sorted(q["must_not"])), q["expected_evidence_hold"], q["requires_human_decision"])
         groups = {}
         for query in plain:
             groups.setdefault(signature(query), []).append(query)
@@ -329,6 +351,24 @@ class SearchGoldensetContractTest(unittest.TestCase):
             validate(broken)
         broken = copy.deepcopy(self.eval)
         broken["queries"][0]["variant_of"] = "E99"
+        with self.assertRaises(ValidationError):
+            validate(broken)
+        # 보조 근거만 있고 선정 이유가 없으면 거부
+        broken = copy.deepcopy(self.eval)
+        supported = next(q for q in broken["queries"] if q["supporting"])
+        del supported["supporting_reason"]
+        with self.assertRaises(ValidationError):
+            validate(broken)
+        # 보류 질의에 보조 근거가 있으면 거부
+        broken = copy.deepcopy(self.eval)
+        hold = next(q for q in broken["queries"] if q["category"] == "hold")
+        hold["supporting"] = [self.rules_by_key[SOURCE]]
+        hold["supporting_reason"] = "잘못된 예"
+        with self.assertRaises(ValidationError):
+            validate(broken)
+        # 알 수 없는 제외 이유 코드는 거부
+        broken = copy.deepcopy(self.eval)
+        broken["queries"][0]["exclusion_reasons"]["UNKNOWN"] = []
         with self.assertRaises(ValidationError):
             validate(broken)
         broken = copy.deepcopy(self.safety)

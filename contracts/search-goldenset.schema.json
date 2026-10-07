@@ -71,16 +71,30 @@
     "query": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["query_id", "query", "family_id", "business_date", "category", "relevant", "must_not", "expected_evidence_hold", "requires_human_decision", "expected_fields", "rationale"],
-      "dependentRequired": {"variant_of": ["variant_purpose"], "variant_purpose": ["variant_of"]},
+      "required": ["query_id", "query", "family_id", "business_date", "category", "relevant", "supporting", "must_not", "exclusion_reasons", "expected_evidence_hold", "requires_human_decision", "expected_fields", "rationale"],
+      "dependentRequired": {"variant_of": ["variant_purpose"], "variant_purpose": ["variant_of"], "supporting_reason": ["supporting"]},
       "properties": {
         "query_id": {"$ref": "#/$defs/queryId"},
         "query": {"type": "string", "minLength": 2},
         "family_id": {"$ref": "#/$defs/familyId"},
         "business_date": {"type": "string", "format": "date"},
         "category": {"$ref": "#/$defs/category"},
-        "relevant": {"$ref": "#/$defs/ruleVersionIdList"},
-        "must_not": {"$ref": "#/$defs/ruleVersionIdList"},
+        "relevant": {"description": "질문에 답하는 데 반드시 필요한 근거. Recall@5·MRR 계산 대상", "$ref": "#/$defs/ruleVersionIdList"},
+        "supporting": {"description": "보조 설명에 도움이 되는 근거. 누락돼도 감점하지 않고 반환돼도 무관 혼입으로 세지 않는다", "$ref": "#/$defs/ruleVersionIdList"},
+        "supporting_reason": {"type": "string", "minLength": 5, "description": "보조 근거를 둔 이유. supporting이 비어 있지 않으면 필수"},
+        "must_not": {"description": "나오면 안 되는 근거. exclusion_reasons의 합집합과 같다", "$ref": "#/$defs/ruleVersionIdList"},
+        "exclusion_reasons": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "제외 이유 코드별 규칙 version ID. OUT_OF_SCOPE 요청 범위 밖, UNAPPROVED 범위 안 미승인, OLD_VERSION 구버전·FIXTURE 근거, IRRELEVANT 범위 안 사용 가능 근거이지만 질문과 무관, NOT_IN_EFFECT 질의 업무일에 적용되지 않는 공문의 규칙",
+          "properties": {
+            "OUT_OF_SCOPE": {"$ref": "#/$defs/ruleVersionIdList"},
+            "UNAPPROVED": {"$ref": "#/$defs/ruleVersionIdList"},
+            "OLD_VERSION": {"$ref": "#/$defs/ruleVersionIdList"},
+            "IRRELEVANT": {"$ref": "#/$defs/ruleVersionIdList"},
+            "NOT_IN_EFFECT": {"$ref": "#/$defs/ruleVersionIdList"}
+          }
+        },
         "expected_evidence_hold": {"type": "boolean"},
         "requires_human_decision": {"type": "boolean"},
         "expected_fields": {"type": "array", "items": {"$ref": "#/$defs/expectedField"}},
@@ -90,10 +104,15 @@
       },
       "allOf": [
         {
-          "description": "근거 보류 질의는 정답 근거와 기대 필드가 없고, 보류가 아닌 질의는 정답 근거가 1개 이상이다.",
+          "description": "근거 보류 질의는 필수 근거, 보조 근거, 기대 필드가 모두 없고, 보류가 아닌 질의는 필수 근거가 1개 이상이다.",
           "if": {"properties": {"expected_evidence_hold": {"const": true}}},
-          "then": {"properties": {"relevant": {"maxItems": 0}, "expected_fields": {"maxItems": 0}}},
+          "then": {"properties": {"relevant": {"maxItems": 0}, "supporting": {"maxItems": 0}, "expected_fields": {"maxItems": 0}}},
           "else": {"properties": {"relevant": {"minItems": 1}}}
+        },
+        {
+          "description": "보조 근거가 있으면 선정 이유가 있어야 한다.",
+          "if": {"properties": {"supporting": {"minItems": 1}}},
+          "then": {"required": ["supporting_reason"]}
         },
         {
           "description": "구버전 값을 현재 업무에 적용하려는 질문은 근거 보류가 아니고 처리 판단을 사람에게 남긴다.",
