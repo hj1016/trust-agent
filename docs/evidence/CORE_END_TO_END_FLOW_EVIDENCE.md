@@ -73,7 +73,10 @@ python3 -m unittest discover -s tests -t .   (비공개 artifact 제공: 65 통�
 
 검증 대상 코드 revision: 브랜치 `test/core-end-to-end-flow` commit `6430930`(테스트 1클래스만 변경, 확인문 추가, 테스트 수 5건 그대로). 아래 결과는 이 commit의 코드를 로컬에서 실행한 것이다. 이 문서의 갱신은 별도 문서 commit이며 코드 검증 대상이 아니다. 기대값과 완료 확인 조건은 바꾸지 않았다.
 
-공개 CI: 문서 commit push 뒤 실행 링크와 결과를 아래 "공개 CI 결과"에 기록한다.
+#### 공개 CI 결과
+
+- 실행: https://github.com/hj1016/trust-agent/actions/runs/37558528266 (push 대상 commit `3d107e3` = 코드 commit `6430930` + 문서 commit. 코드는 `6430930`과 같다). Gradle tests 성공, Python contracts 성공.
+- 이 링크를 적는 commit은 문서만 바꾸며 그 push로 도는 CI는 코드 검증 대상이 아니다.
 
 ```text
 ./gradlew test --tests 'com.trustagent.core.CoreEndToEndFlowIntegrationTest' --offline --no-daemon
