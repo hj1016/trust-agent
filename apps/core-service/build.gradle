@@ -60,6 +60,21 @@ tasks.register('prepareAiServiceEnv', Exec) {
 
 tasks.named('test') {
     useJUnitPlatform()
+    // CI 로그로 실제 실행 여부를 확인할 수 있게 한다: skip·실패는 모두, 연결 검증(preparation 패키지)은 통과도 출력하고 끝에 합계를 찍는다.
+    testLogging {
+        events 'skipped', 'failed'
+        exceptionFormat 'short'
+    }
+    afterTest { descriptor, result ->
+        if (descriptor.className?.startsWith('com.trustagent.core.preparation.')) {
+            println "TEST ${result.resultType}: ${descriptor.className}.${descriptor.name}"
+        }
+    }
+    afterSuite { descriptor, result ->
+        if (descriptor.parent == null) {
+            println "TEST SUMMARY: ${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped (${result.resultType})"
+        }
+    }
     systemProperty 'trustAgent.repositoryRoot', rootProject.projectDir.absolutePath
     systemProperty 'trustAgent.aiServiceIntegration', aiServiceIntegrationRequested.toString()
     systemProperty 'trustAgent.aiServicePython', aiServiceVenv.get().file('bin/python').asFile.absolutePath

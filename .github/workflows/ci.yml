@@ -35,7 +35,8 @@ jobs:
       - name: Run contract and unit tests
         env:
           TRUSTAGENT_PRIVATE_ARTIFACT_ROOT: ${{ runner.temp }}/trust-agent-private-artifacts
-        run: python -m unittest discover -s tests -v
+        # 저장소 루트를 top-level로 둔다(-t .). 시작 디렉터리만 쓰면 tests/ai_service가 패키지 ai_service를 가려 import가 깨진다.
+        run: python -m unittest discover -s tests -t . -v
 
       - name: Validate JSON documents
         run: find contracts datasets -type f -name '*.json' -print0 | xargs -0 -n1 python -m json.tool >/dev/null
