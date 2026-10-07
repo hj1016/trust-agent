@@ -1,8 +1,8 @@
 {
-  "preparation_id": "consultation-preparation:sha256:b1428c633aea37474b820aaa0758c92b875d550544cd3aa965ca4454f0118a7c",
-  "run_id": "consultation-preparation-run:52d8578d195f4a6ba2dee427025744bf",
+  "preparation_id": "consultation-preparation:sha256:19dfd72540eb8006ccdaccf476df9f7ccd0092e1e98d218ffadcb036b47b8c5d",
+  "run_id": "consultation-preparation-run:2c574e85e119493383600682dbce4542",
   "assembler_version": "preparation-assembler-v1",
-  "messages_hash": "sha256:3bffcd2ab2eef14f08de1148a5edb7b9b49b5d7a9125c7cc7fd284d407320c28",
+  "messages_hash": "sha256:166c900b6b00167509b67eb67df69a4921332f37687190fe1e53d3fa9d53337e",
   "family_mapping_hash": "sha256:326b488b063f5197c636fcf53a15162c5647b231aceaa2c63593cc136cf3bdd7",
   "dataset_class": "SYNTHETIC_WORK",
   "synthetic": true,
@@ -17,7 +17,7 @@
     "source_hash": "sha256:26a33656fe31638be9271fee0a600c6100b7ee03f0dacb93f966942d84d7e270"
   },
   "business_date": "2026-10-06",
-  "generated_at": "2026-10-07T17:18:35Z",
+  "generated_at": "2026-10-07T18:02:56Z",
   "status": "READY",
   "preparation_complete": true,
   "headline": "공문군 2개 가운데 필수 2개가 모두 준비됐습니다. 승인된 매핑에 따른 필수 준비 자료를 갖췄습니다. 상담이나 대출 결정의 완료가 아닙니다.",
@@ -204,7 +204,7 @@
   "record": {
     "recorded": true,
     "status": "RECORDED",
-    "core_preparation_id": "consultation-preparation:sha256:b1428c633aea37474b820aaa0758c92b875d550544cd3aa965ca4454f0118a7c",
+    "core_preparation_id": "consultation-preparation:sha256:19dfd72540eb8006ccdaccf476df9f7ccd0092e1e98d218ffadcb036b47b8c5d",
     "recorded_at": "2026-10-06T03:00:00Z"
   },
   "consultation_id": "e2e-ready"

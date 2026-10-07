@@ -1,8 +1,8 @@
 {
-  "preparation_id": "consultation-preparation:sha256:4a0cc44abf01206f3a681953cfcd0cf51ffa702e7b2a85544a51644406ffb641",
-  "run_id": "consultation-preparation-run:402861ad31d248c58d84742ae1eb7160",
+  "preparation_id": "consultation-preparation:sha256:4d860c6d3939d53ea95cfffe37d8b2118b687649802bfad509682aa2094ab303",
+  "run_id": "consultation-preparation-run:bd804caf4c5a490cb7b554e3999c1e27",
   "assembler_version": "preparation-assembler-v1",
-  "messages_hash": "sha256:3bffcd2ab2eef14f08de1148a5edb7b9b49b5d7a9125c7cc7fd284d407320c28",
+  "messages_hash": "sha256:166c900b6b00167509b67eb67df69a4921332f37687190fe1e53d3fa9d53337e",
   "family_mapping_hash": "sha256:326b488b063f5197c636fcf53a15162c5647b231aceaa2c63593cc136cf3bdd7",
   "dataset_class": "SYNTHETIC_WORK",
   "synthetic": true,
@@ -17,7 +17,7 @@
     "source_hash": "sha256:26a33656fe31638be9271fee0a600c6100b7ee03f0dacb93f966942d84d7e270"
   },
   "business_date": "2026-10-06",
-  "generated_at": "2026-10-07T17:18:30Z",
+  "generated_at": "2026-10-07T18:02:52Z",
   "status": "PARTIAL",
   "preparation_complete": false,
   "headline": "공문군 2개 가운데 1개 준비됨, 필수 공문군 1개(SIN-SELLER-CHECKLIST) 확인 남음. 상담 준비가 끝나지 않았습니다.",
@@ -171,7 +171,7 @@
   "record": {
     "recorded": true,
     "status": "RECORDED",
-    "core_preparation_id": "consultation-preparation:sha256:4a0cc44abf01206f3a681953cfcd0cf51ffa702e7b2a85544a51644406ffb641",
+    "core_preparation_id": "consultation-preparation:sha256:4d860c6d3939d53ea95cfffe37d8b2118b687649802bfad509682aa2094ab303",
     "recorded_at": "2026-10-06T03:00:00Z"
   },
   "consultation_id": "e2e-1"

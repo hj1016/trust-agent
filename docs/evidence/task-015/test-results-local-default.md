@@ -1,6 +1,6 @@
 # 로컬 기본 실행 결과 (./gradlew clean test --offline --no-daemon, CLI 실행 테스트는 명시적 skip)
 
-JUnit XML(`build/test-results/test`)에서 생성. 합계: 총 181건, 통과 175, 실패 0, 오류 0, skip 6.
+JUnit XML(`build/test-results/test`)에서 생성. 합계: 총 185건, 통과 179, 실패 0, 오류 0, skip 6.
 
 | 테스트 클래스 | 총 | skip | 실패 | 오류 |
 |---|---|---|---|---|
@@ -9,6 +9,7 @@ JUnit XML(`build/test-results/test`)에서 생성. 합계: 총 181건, 통과 17
 | com.trustagent.core.bootstrap.AppendOnlyBootstrapChecksTest | 3 | 0 | 0 | 0 |
 | com.trustagent.core.config.DemoFeatureProductionGuardTest | 8 | 0 | 0 | 0 |
 | com.trustagent.core.config.RuntimeDatasourcePropertiesTest | 6 | 0 | 0 | 0 |
+| com.trustagent.core.config.ServiceTokenSeparationTest | 4 | 0 | 0 | 0 |
 | com.trustagent.core.database.PublicProductSchemaIntegrationTest | 9 | 0 | 0 | 0 |
 | com.trustagent.core.database.SyntheticInternalSchemaIntegrationTest | 7 | 0 | 0 | 0 |
 | com.trustagent.core.internalpolicy.BusinessTimePolicyTest | 1 | 0 | 0 | 0 |

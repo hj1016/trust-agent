@@ -271,10 +271,12 @@ Core 기록은 트랜잭션 하나(SERIALIZABLE, 직렬화 실패 1회 재시도
 | AC-17 | 필수 공문군이 없는 매핑 | AI 서비스는 HOLD·`preparation_complete=false`·`NO_REQUIRED_FAMILY_CONFIGURED`, Core는 READY 요청을 422 `NO_REQUIRED_FAMILY`로 거부 | Python 단위 + Core 통합 | **통과**(로컬). Python `test_mapping_without_required_family_never_becomes_ready`, Core `mappingWithoutRequiredFamilyNeverAllowsReady` |
 | AC-18 | HOLD 섹션 기록의 공통 검사와 보증 범위 | 항목·근거가 있는 HOLD 섹션은 400 `HOLD_SECTION_INVALID`. 저장된 HOLD 행에 `hold_claim_basis`와 `recheck_*`가 있고, AI가 보낸 사유와 재조회 사유가 달라도 둘 다 저장됨 | Core 통합 | **통과**(로컬). `holdSectionsAreCheckedAndStoredWithClaimBasis`(항목 있는 HOLD 400, SERVICE_REPORTED 보류에 `recheck_usable=true`가 함께 저장됨), `partialPreparationIsRecordedWithRecheckValuesAndRunRecord` |
 | AC-19 | 직렬화 실패와 실행 기록 | 동시 철회와 기록이 충돌하면 재확인부터 1회 재시도, 재시도 실패는 FAILED(`SERIALIZATION_FAILED`) 1건. 같은 `run_id` 재전송은 409 `RUN_ID_CONFLICT`. 요청당 실행 기록 1건 | Core 통합 | **통과**(로컬). `serializationFailureIsRetriedOnceAndSecondFailureIsRecordedAsFailed`(commit 단계 40001 주입: 1회 재시도 성공, 2회 실패 → FAILED 1건), `idHashRunIdAndSchemaRulesAreEnforced`(RUN_ID_CONFLICT, 실행 기록 1건) |
+| AC-20 (4차 보완 추가, 사용자 요청) | 읽기 토큰과 기록 토큰이 같은 값으로 설정됨 | 모든 profile에서 기동 거부(`SERVICE_TOKEN_NOT_SEPARATED`), 오류·로그에 토큰 값 없음. 다른 값이면 정상 기동 | Core 단위·컨텍스트 테스트 | **통과**(로컬). `ServiceTokenSeparationTest` 4건(같은 값 거부·값 미노출, 다른 값·빈 값 통과, 컨텍스트 거부·정상) |
+| AC-21 (5차 보완 추가, 제안 9 수정 채택) | HTTP 진입점에서 기록 성공 / Core 422 / Core 409 / Core 401·토큰 미설정 / Core 400 / 연결 실패·Core 5xx / 시간 초과 | 200 / 422 / 409 / 503 / 500 / 502 / 504. 실패 본문에 `recorded=false`·원인 코드·사용 금지 안내 유지, 헤더 `X-Preparation-Recorded`와 CLI 종료 코드(0/3) 일관, 토큰·내부 오류 상세 비노출 | Python 단위(HTTP·조립·CLI) | **통과**(로컬). `test_http_entry_point_returns_preparation_and_maps_errors`(8사례), `test_record_outcomes_map_to_status_and_usage_notice`, CLI 종료 코드 테스트 |
 
 ### 완료 기준 변경 이력
 
-변경 없음(기준을 낮추지 않음). 구현 중 세부 설계 확정 2건을 기록한다: (1) 준비안 ID 해시 대상에서 `sections[].evaluated_at`에 더해 `sections[].tool_response_hash`도 제외(제안 8, 사용자 채택. 실행별 값은 실행 기록 `section_evaluations`로 추적). (2) AC-05의 "기록 실패 시 `recorded=false`"는 출력 계약의 `record.recorded`(boolean, 필수. RECORDED·ALREADY_RECORDED일 때만 true)와 `record.status`(REJECTED/FAILED/NOT_ATTEMPTED)·`usage_notice`·CLI 종료 코드 3·HTTP 헤더 `X-Preparation-Recorded`로 구현했다. 사용자 확인 요청(보완 3절) 뒤 `recorded` 필드를 계약에 추가해 계획 표현과 맞췄다.
+기준을 낮춘 변경은 없다. 추가 2건: 4차 보완에서 사용자 요청으로 **AC-20(읽기·기록 토큰 같은 값이면 기동 거부)**을, 5차 보완에서 제안 9 수정 채택으로 **AC-21(HTTP 진입점의 기록 실패 상태 구분: 200/422/409/503/500/502/504와 본문·헤더·CLI 종료 코드 일관)**을 추가했다. 또 AC-02·13의 "승인 전" HOLD 사례는 업무일을 평가 당일로 맞춰 미래 업무일 차단이 섞이지 않게 하고 `FUTURE_BUSINESS_DATE` 없음·`HUMAN_REVIEW_PENDING` 있음 단언을 더했다(조건이 더 엄격해짐). 구현 중 세부 설계 확정 2건을 기록한다: (1) 준비안 ID 해시 대상에서 `sections[].evaluated_at`에 더해 `sections[].tool_response_hash`도 제외(제안 8, 사용자 채택. 실행별 값은 실행 기록 `section_evaluations`로 추적). (2) AC-05의 "기록 실패 시 `recorded=false`"는 출력 계약의 `record.recorded`(boolean, 필수. RECORDED·ALREADY_RECORDED일 때만 true)와 `record.status`(REJECTED/FAILED/NOT_ATTEMPTED)·`usage_notice`·CLI 종료 코드 3·HTTP 헤더 `X-Preparation-Recorded`로 구현했다. 사용자 확인 요청(보완 3절) 뒤 `recorded` 필드를 계약에 추가해 계획 표현과 맞췄다.
 
 ## Implementation Plan (초안)
 
@@ -341,7 +343,7 @@ Core 기록은 트랜잭션 하나(SERIALIZABLE, 직렬화 실패 1회 재시도
 - Core: `V10__create_consultation_preparation_schema.sql`(표 4, CHECK, 보호 목록 40표·trigger 80, 권한), `preparation` 패키지(`PreparationRecordProperties`, `PreparationRecordAuthenticationFilter`, `ConsultationPreparationController`/`Service`/`Repository`, `ConsultationPreparationException`/`ExceptionHandler`, `ConsultationFamilyMappingLoader`/`Configuration`), 설정(`application.yml` version 10·기록 토큰·매핑 적재 속성, `application-prod.yml`, `ProductionRequiredSettingsConfiguration`에 기록 토큰 필수). 기존 승인·일정·변경안·검증·Tool 코드는 변경 없음.
 - AI 서비스: `apps/ai-service/ai_service/`(8 모듈), `requirements-ai.txt`, README.
 - 연결 검증·CI: `build.gradle`(`prepareAiServiceEnv`, 속성·환경변수), `AiServicePreparationIntegrationTest`, `ci.yml`(gradle job에 Python 3.11과 `TRUST_AGENT_REQUIRE_AI_INTEGRATION=1`·`-PaiServiceIntegration=true`, python job에 `requirements-ai.txt`).
-- 테스트: `ConsultationPreparationIntegrationTest`(13), `ConsultationPreparationReadyIntegrationTest`(3, 전체 READY 별도 환경), `ConsultationPreparationHashTest`(2, 해시 대상), `AiServicePreparationIntegrationTest`(5), `PreparationScenario`, `tests/ai_service/`(30), 골든셋 계약 테스트 1건 추가. 기존 테스트 기대값 갱신 5파일(보완 5절 대조표).
+- 테스트: `ServiceTokenSeparationTest`(4, AC-20), Python HTTP 상태 사례(AC-21), `ConsultationPreparationIntegrationTest`(13), `ConsultationPreparationReadyIntegrationTest`(3, 전체 READY 별도 환경), `ConsultationPreparationHashTest`(2, 해시 대상), `AiServicePreparationIntegrationTest`(5), `PreparationScenario`, `tests/ai_service/`(30), 골든셋 계약 테스트 1건 추가. 기존 테스트 기대값 갱신 5파일(보완 5절 대조표).
 - 안전성 v2: `prepayment-fee-safety-v2.json`, `search-goldenset.schema.json`(v1 문자열·v2 객체 허용), TASK-014 문서 "후속 변경" 절.
 - 문서: `docs/evidence/CONSULTATION_PREPARATION_EVIDENCE.md`, 루트 README, Core README(기록 경로·매핑 적재·토큰), AI 서비스 README, 이 문서.
 
@@ -349,12 +351,12 @@ Core 기록은 트랜잭션 하나(SERIALIZABLE, 직렬화 실패 1회 재시도
 
 ```text
 ./gradlew clean test bootJar --offline --no-daemon -PaiServiceIntegration=true
-181 tests completed (기존 158 + 신규 23: Core 통합 13 + 전체 READY 별도 환경 3 + 해시 단위 2 + 연결 검증 5), 통과 181, failures 0, errors 0, skipped 0. BUILD SUCCESSFUL (bootJar 포함). 보존: docs/evidence/task-015/test-results-full-with-ai-integration.md(저장소), gradle-full-with-ai-integration.log(로컬 보관)
+185 tests completed (기존 158 + 신규 27: 토큰 분리 4 + Core 통합 13 + 전체 READY 별도 환경 3 + 해시 단위 2 + 연결 검증 5), 통과 185, failures 0, errors 0, skipped 0. BUILD SUCCESSFUL (bootJar 포함). 보존: docs/evidence/task-015/test-results-full-with-ai-integration.md(저장소), gradle-full-with-ai-integration.log(로컬 보관)
 python3 -m unittest discover -s tests -t .
 Ran 106 tests (기존 75 + 신규 31: tests/ai_service 30 + 골든셋 계약 1), 통과 104, 실패 0, 건너뜀 2 (기존 사유: "비공개 snapshot artifact가 제공되지 않았습니다.")
 ```
 
-로컬 기본 실행은 CLI를 실행하는 테스트(연결 검증 5건, 전체 READY CLI 1건)가 명시적 skip으로 보고서에 남고(전체 181건 중 통과 175, 실패 0, skip 6(연결 검증 5건과 전체 READY CLI 1건, 명시적 skip 목록은 docs/evidence/task-015/test-results-local-default.md), BUILD SUCCESSFUL), `TRUST_AGENT_REQUIRE_AI_INTEGRATION=1`에 venv가 없으면 `AI_INTEGRATION_ENV_MISSING`로 실패함을 1회 확인했다. 세부 사례 표는 evidence 문서에, 실행별 로그와 결과 요약은 `docs/evidence/task-015/`에 있다.
+로컬 기본 실행은 CLI를 실행하는 테스트(연결 검증 5건, 전체 READY CLI 1건)가 명시적 skip으로 보고서에 남고(전체 185건 중 통과 179, 실패 0, skip 6(연결 검증 5건과 전체 READY CLI 1건, 명시적 skip 목록은 docs/evidence/task-015/test-results-local-default.md), BUILD SUCCESSFUL), `TRUST_AGENT_REQUIRE_AI_INTEGRATION=1`에 venv가 없으면 `AI_INTEGRATION_ENV_MISSING`로 실패함을 1회 확인했다. 세부 사례 표는 evidence 문서에, 실행별 로그와 결과 요약은 `docs/evidence/task-015/`에 있다.
 
 ### 계획과 다른 점 (완료 기준 변경 없음)
 
@@ -455,13 +457,92 @@ Gradle은 `build/test-results`를 실행마다 덮어쓰므로 실행별 로그�
 | 의도적 환경 누락 | `TRUST_AGENT_REQUIRE_AI_INTEGRATION=1 … -PaiServiceIntegration=false` | `gradle-env-missing-failure.log`(로컬 보관), `test-results-env-missing.md` |
 | Python | `python3 -m unittest discover -s tests -t . -v` | `python-unittest.log`(로컬 보관), `RUN_SUMMARY.txt` |
 
-결과(이번 보완 뒤 실제 실행): 연결 검증 포함 전체 181건 통과·실패 0·skip 0, 로컬 기본 181건 중 통과 175·실패 0·skip 6, 의도적 환경 누락 1건 실패(`AI_INTEGRATION_ENV_MISSING: python venv …`), Python 106건 중 통과 104·실패 0·skip 2(기존 사유). 합계는 `docs/evidence/task-015/RUN_SUMMARY.txt`.
+결과(4차 보완 뒤 다시 실행해 보존 파일을 갱신): 연결 검증 포함 전체 185건 통과·실패 0·skip 0, 로컬 기본 185건 중 통과 179·실패 0·skip 6, 의도적 환경 누락 1건 실패(`AI_INTEGRATION_ENV_MISSING`), Python 106건 중 통과 104·실패 0·skip 2(기존 비공개 snapshot 사유). 합계는 `docs/evidence/task-015/RUN_SUMMARY.txt`.
 
 #### 3. 필수 CI 실행 결과 (PR #40)
 
 - 1차 실행(https://github.com/hj1016/trust-agent/actions/runs/37659077359): `Gradle tests` 성공, `Python contracts` **실패**. 원인은 CI가 `unittest discover -s tests`를 top-level 지정 없이 실행해 `tests/ai_service`가 패키지 `ai_service`를 가리고 `ai_service.config`를 찾지 못한 것(import 오류 3건). 로컬에서 같은 명령으로 재현했다.
 - 수정 커밋 `63fee24`(`.github/workflows/ci.yml`, `apps/core-service/build.gradle`만): discover 명령을 README와 같은 `-s tests -t .`로 고치고, Gradle 로그에 preparation 패키지 테스트의 통과·skip·실패와 전체 합계를 출력하게 했다. 테스트나 완료 기준은 바꾸지 않았다.
 - 2차 실행(https://github.com/hj1016/trust-agent/actions/runs/37659799630): 두 job 모두 성공. [Gradle tests](https://github.com/hj1016/trust-agent/actions/runs/37659799630/job/112924094547) 로그에 `TEST SUMMARY: 181 tests, 181 passed, 0 failed, 0 skipped`와 연결 검증 `AiServicePreparationIntegrationTest` 5건·전체 READY CLI 1건의 `TEST SUCCESS`가 있고 `TEST SKIPPED`는 0건이다(필수 CI에서 Core와 Python CLI 연결 테스트가 실제 실행됨). [Python contracts](https://github.com/hj1016/trust-agent/actions/runs/37659799630/job/112924094871) 로그는 `Ran 106 tests`, `OK (skipped=2)`이며 skip 2건은 기존 비공개 snapshot artifact 사유로 TASK-015와 무관하다.
+
+### 3차 보완: 검수 자료 (완료 승인 전, 읽기 전용 검토. 미커밋)
+
+#### 1. HOLD 출력 표본 (필수 공문군 모두 보류, 실제 CLI 출력)
+
+연결 검증 `AiServicePreparationIntegrationTest`를 다시 실행해 얻은 실제 출력이다. 두 표본 모두 `status=HOLD`, `preparation_complete=false`, 두 섹션 모두 `items=[]`·`approved_checklist=null`, `remaining_checks` 2건, 머리 문구 "준비된 필수 공문군이 없습니다 … 상담 준비가 끝나지 않았습니다", 섹션별 `hold_message`·`manual_checklist_notice`, `record.status=RECORDED`·`recorded=true`(HOLD도 기록됨, 기록은 사용 허가가 아님)다. 입력 토큰 값은 출력에 없다.
+
+| 표본 | 입력(명령) | Core 평가 시각(테스트 시계) | 업무일 | 보류 사유(섹션별) | 파일 |
+|---|---|---|---|---|---|
+| 승인 전 시각(4차 보완으로 교체) | `--application SW-APPLICATION-001 --business-date 2026-10-05 --consultation-id e2e-3` | 2026-10-05T04:00Z (중도상환수수료 승인 04:30Z 전) | 2026-10-05 (평가 당일) | 두 섹션 모두 `APPROVED_CHECKLIST_NOTICE_MISMATCH`, `HUMAN_REVIEW_PENDING` (CORE_DECISION / CORE_REPORTED). `FUTURE_BUSINESS_DATE` 없음 | `docs/evidence/task-015/cli-output-hold-before-approval-sample.json` |
+| 철회 후 재실행 | `--business-date 2026-10-07 --consultation-id e2e-5` (철회 사건 2026-10-07T00:00Z 삽입 뒤) | 2026-10-07T01:00Z | 2026-10-07 (평가 시각 당일) | 중도상환수수료 `EFFECTIVE_NOTICE_WITHDRAWN`(선택 공문 없음), 셀러론 `APPROVED_CHECKLIST_NOTICE_MISMATCH`, `VALIDATION_STALE`(검증 24시간 경과) | `docs/evidence/task-015/cli-output-hold-after-withdrawal-sample.json` |
+
+- 구분(4차 보완에서 정리): 3차 보완 당시 "승인 전" 표본은 업무일이 평가 다음 날(2026-10-06)이라 `FUTURE_BUSINESS_DATE`가 섞여 있었다. 사용자 지시로 `stateChangeProducesNewHoldPreparation`의 업무일을 평가 당일(2026-10-05)로 맞추고, 모든 섹션에 `FUTURE_BUSINESS_DATE`가 없고 `HUMAN_REVIEW_PENDING`이 있으며 항목·승인 checklist가 없고 `hold_message`에 "검토 대기"가 있음을 단언에 더했다. 표본을 교체했고 혼합 표본 파일은 지웠다. 철회 후 표본은 그대로다. 두 표본 모두 **과거 업무일 조회**(오늘보다 이른 업무일)도, **과거 시각 조회**(`knownAt`)도 아니다. Tool API에는 `knownAt`이 없고 조회는 항상 Core의 현재 시각 기준이며, 테스트는 그 현재 시각 자체를 옮긴 것이다.
+- 순수한 과거 업무일 HOLD 사례는 Core 통합 `tamperedReadyClaimsAreRejectedWithoutRows`(업무일 2026-09-30, 예시 checklist 기간 → 422 `PREPARATION_NOT_USABLE`)와 Python 단위 `test_all_required_hold_gives_hold_without_guessed_items`가 다루며 CLI 표본은 없다.
+
+#### 2. 핵심 코드 검토 (AI 검토 결과. 사용자 검수나 독립 리뷰를 대신하지 않으며 그 입력 자료다)
+
+| 항목 | 코드 위치 | 보장하는 테스트 | 남은 한계 |
+|---|---|---|---|
+| 읽기·기록 토큰이 서로의 경로에 접근 불가 | `ToolAuthenticationFilter`(`/api/v1/tools/` 접두, Tool 토큰과 상수 시간 비교, 실패 401), `PreparationRecordAuthenticationFilter`(`/api/v1/consultation-preparations` 정확 경로, 기록 토큰 비교, 실패 401, 저장·실행 기록 없음), 두 필터는 각자 설정의 토큰만 읽고 통과 시 서비스 ID·scope 속성을 요청에 붙임. `ConsultationPreparationController`는 그 속성만 쓰고 본문의 actor는 허용 필드 밖(400). DB `token_scope = 'record'` CHECK | `recordAndToolTokensAreNotInterchangeable`(토큰 없음·Tool 토큰으로 기록 401, 기록 토큰으로 Tool 401, 실행 기록 없음), `idHashRunIdAndSchemaRulesAreEnforced`(모르는 필드 400), Python `test_record_request_uses_record_token_and_tool_requests_use_tool_token`, `DemoFeatureProductionGuardTest`(production 필수) | 두 토큰은 test/demo 수준의 고정 문자열이고 사용자별 인증·권한·회전·사용 제한이 없다. 두 토큰이 같은 값이면 구분이 사라지는 문제는 4차 보완의 `ServiceTokenSeparationConfiguration`(모든 profile에서 기동 거부, AC-20)으로 막았다 |
+| 필수 공문군 누락·변경과 거짓 READY 주장 거부 | `ConsultationPreparationService.verifyMapping`(활성 매핑 해시 대조 `MAPPING_MISMATCH`, 매핑 밖 섹션 `SECTION_NOT_IN_MAPPING`, `required` 대조 `REQUIRED_FLAG_MISMATCH`, 필수 섹션 유무 `REQUIRED_SECTION_MISSING`, 필수 없는 매핑의 READY `NO_REQUIRED_FAMILY`, `computeStatus`로 상태·`preparation_complete` 재계산 `PREPARATION_STATUS_INVALID`), `parse`(READY 섹션은 version·결정·항목·근거 필수), `recheckReady`(C1~C5) | `mappingAndStatusClaimsAreRejected`(6사례), `mappingWithoutRequiredFamilyNeverAllowsReady`, `readyClaimMustMatchComputedStatus`(READY를 PARTIAL로 낮춘 주장도 422), `tamperedReadyClaimsAreRejectedWithoutRows`, `withdrawalKnownAfterRecordingRejectsTheSameClaim`, Python `test_mapping_without_required_family_never_becomes_ready` | 매핑은 Core에 적재된 파일 해시로만 확인하며 매핑 파일 자체의 승인 여부를 Core가 검증하지는 않는다(적재는 설정으로만, 변경은 Task 기록). 선택 공문군의 READY 주장도 C1~C5로 재확인하지만 선택 공문군은 전체 상태에 영향을 주지 않는다 |
+| 같은 ID 재요청과 동시 저장 충돌 뒤 현재 상태 재확인 | `doRecord`: 매핑 확인 → 모든 섹션 재확인 → **그 뒤에** `findPreparation`으로 기존 행 비교(ALREADY_RECORDED). `executeWithRetry`: 40001은 재확인부터 1회 재시도. `resolveConcurrentInsert`: 23505 뒤 새 SERIALIZABLE 트랜잭션에서 `doRecord` 재실행 | `sameContentIsRecordedOnceAndRerunStillRechecksCurrentState`(승인 전 시각 재요청 422), `duplicateKeyConflictPathRechecksBeforeReturningExistingRecord`(실제 23505, 조회 2회, 매핑 변경 409, 사용 불가 422), `concurrentSameIdRecordsOnce`, `serializationFailureIsRetriedOnceAndSecondFailureIsRecordedAsFailed`, 연결 검증 `rerunRechecksCoreAndRecordsOnlyOnce`(Tool 재호출) | 실제 동시 철회와의 40001 충돌 타이밍은 테스트로 재현하지 않았다. HOLD 섹션의 재조회 결과는 저장만 하고 거부 조건은 아니다(설계대로: AI 보고와 Core 관찰을 둘 다 남김) |
+| 기록 실패 시 사용 금지와 실패 종료의 일관성 | Python `assembler._record`(`recorded`는 RECORDED·ALREADY_RECORDED일 때만 true), `messages.USAGE_NOTICES`(REJECTED·FAILED·NOT_ATTEMPTED 모두 "사용하지 말고 다시 실행"), `cli.main`(`recorded`가 거짓이면 stderr 경고와 종료 3, 참일 때만 0), `app.create_preparation`(헤더 `X-Preparation-Recorded`), 계약 `record` `allOf`(status와 `recorded` 일치, 실패면 `error_code`·`error_message` 필수) | Python `test_record_outcomes_map_to_status_and_usage_notice`(6사례), `test_missing_record_token_*` 2건, `test_rejected_record_exits_three_with_preparation_and_warning`, `test_http_entry_point_returns_preparation_and_maps_errors`(헤더), 연결 검증 `wrongRecordTokenLeavesPreparationUnrecorded` | 기록 실패여도 준비안 본문은 출력된다(설계: 보류 안내와 함께 보여 주되 사용 금지). HTTP 진입점은 실패도 200으로 답하고 본문·헤더로 구분하므로 호출자가 헤더나 `recorded`를 읽어야 한다. 자동 재시도는 없다 |
+| 기존 업무 상태를 기록 경로가 바꾸지 않음 | `ConsultationPreparationRepository`의 쓰기 문장은 `consultation_preparation`·`_section`·`_run` INSERT 3개뿐(UPDATE·DELETE 없음). 재확인은 `InternalPolicyApplicableService.get` 읽기만. V10 GRANT: runtime 역할은 네 표에 SELECT·INSERT만, append-only trigger로 UPDATE·DELETE 거부. 매핑 표는 별도 적재 경로만 INSERT | `businessTablesAreUntouchedAndRecordTablesAreAppendOnly`(승인·일정·변경안·검증·공문 사건·매핑 표 행 수 불변, 42501, 권한, 보호 목록 4표, CHECK 23514), `PublicProductSchemaIntegrationTest`(보호 표 40·trigger 80) | 행 수 불변 검사는 이 테스트 클래스의 요청 집합에 대한 것이고 `tool_call_audit`는 재확인이 아닌 Tool 호출로 늘어난다(재확인은 Tool 경로가 아니라 서비스 직접 호출이라 감사 행을 만들지 않음) |
+| 실패·재시도·중복 요청의 실행 기록 누락·중복 없음 | `record`: `run_id` 형식 검사 → `runExists`면 `RUN_ID_CONFLICT`(새 실행 기록 없음, 기존 1건 유지) → 본문 해석·저장 → 성공·거부·실패 모든 분기에서 `recordRun` 정확히 1회(REQUIRES_NEW, 실패 시 `FAILURE_AUDIT_WRITE_FAILED`). 재시도·충돌 해결은 같은 요청 안에서 끝나므로 실행 기록은 요청당 1건이고 `section_evaluations`는 마지막 시도의 재확인 결과 | `idHashRunIdAndSchemaRulesAreEnforced`(RUN_ID_CONFLICT와 형식 오류에서 실행 기록 수 불변), `serializationFailureIsRetriedOnceAndSecondFailureIsRecordedAsFailed`(실패 1건), `duplicateKeyConflictPathRechecksBeforeReturningExistingRecord`, `concurrentSameIdRecordsOnce`(실행 기록 2건), `assertRejected` 공통 검사(거부마다 REJECTED 1건), `recordAndToolTokensAreNotInterchangeable`(인증 실패는 실행 기록 없음) | 인증 실패(401)와 `run_id` 형식 오류·재전송은 설계상 실행 기록을 남기지 않는다(인증 전이라 서비스 ID를 신뢰할 수 없음, 재전송은 기존 기록이 그 자리). 실행 기록 저장 자체가 실패하면 500이며 그 요청의 기록은 없다 |
+| HOLD에 미승인 항목·근거가 남지 않음 | Python `assembler._build_section`(usable=false면 항목 없이 HOLD, 근거 1건이라도 실패하면 섹션 전체 HOLD, 부분 제공 없음), `_section_output`·`_record_body`(HOLD는 `items=[]`, version·결정 null). Core `parse` HOLD 공란 검사(`HOLD_SECTION_INVALID`: 항목·근거·version·결정 금지, 사유 코드 허용 목록), `recheckHold`(저장 행에 빈 목록 고정), V10 섹션 CHECK(HOLD는 version·결정 null, 항목·근거 길이 0, 사유 1개 이상) | Python `test_all_required_hold_gives_hold_without_guessed_items`, `test_single_evidence_failure_holds_whole_section`, `test_unverified_holds_…`, Core `holdSectionsAreCheckedAndStoredWithClaimBasis`(항목 있는 HOLD 400), `businessTablesAreUntouchedAndRecordTablesAreAppendOnly`(CHECK 23514), 연결 검증 PARTIAL·HOLD 사례(`items` 0) | HOLD 섹션의 `selected_notice`(공문 ID·제목·시행일)와 사유 코드는 남는다(근거 원문·항목은 아님). `warning_reasons`는 출력에만 있고 기록에는 없다 |
+
+#### 3. 사용자 검수용 설명 (쉬운 말)
+
+- **READY**: 모든 필수 공문군에 "지금 사용 가능한 승인 checklist"가 있어 항목과 근거(공문 원문 문장과 위치)가 모두 보입니다. 머리 문구는 "모두 준비됐습니다"이지만 **상담이 끝났다거나 대출이 결정됐다는 뜻이 아닙니다.** 승인·거절·한도·금리는 담당자가 판단합니다. 기록됐다고 해서 사용 허가가 난 것은 아니므로, 실제 상담에서 쓰기 전에는 Core 조회로 지금도 사용 가능한지 다시 확인해야 합니다.
+- **PARTIAL**: 일부 필수 공문군만 준비됐습니다. 준비된 섹션의 항목·근거는 보이고, 보류된 섹션은 사유와 수기 확인 안내만 보입니다. 머리 문구에 "끝나지 않았습니다"와 남은 공문군이 적힙니다. 보류된 공문군을 추측으로 채우거나 준비 완료로 보면 안 됩니다. 남은 공문군은 Core 조회나 수기 checklist로 확인합니다.
+- **HOLD**: 준비된 필수 공문군이 하나도 없습니다. 항목과 근거는 전혀 없고 사유(예: 검토 대기, 공문 철회, 미래 업무일)와 안내만 있습니다. HOLD도 기록되지만 이 기록은 "이 시점에 준비할 수 없었다"는 사실의 기록일 뿐입니다. 이 출력으로 상담 준비를 했다고 하면 안 됩니다.
+- **기록 실패(거부·실패·미시도)**: 준비안 본문은 보여도 `record.recorded=false`, 사용 금지 안내, 종료 코드 3이 함께 나옵니다. **이 준비안은 사용하지 말고** 설정(토큰 등)을 점검한 뒤 다시 실행합니다. Core에는 준비안이 없고 실행 기록만 거부·실패로 남습니다.
+- **재실행**: 같은 신청·업무일로 다시 실행하면 Core를 다시 조회합니다. 상태가 그대로면 같은 준비안 ID로 "이미 기록됨"이 나오고(기존 기록을 덮어쓰지 않음), 이번 실행의 평가 시각·Tool 응답 해시·재확인 결과는 실행 기록에 따로 남습니다. 상태가 바뀌었으면 새 ID의 준비안이 새로 기록됩니다. "이미 기록됨"이 나와도 사용 전 재확인은 그대로 필요합니다.
+- **철회**: 공문이 철회되면 그 공문군은 HOLD(`EFFECTIVE_NOTICE_WITHDRAWN`)가 되고 항목·근거가 사라집니다. 철회 전에 기록된 준비안은 그대로 남아 있지만, 같은 내용을 다시 기록하려 하면 Core가 거부합니다. 철회 전 기록을 꺼내 쓰면 안 됩니다.
+- **아직 없는 것**: 근거 검색(TASK-016), LLM 문장 생성과 그 검증(TASK-019), 화면과 행원 최종 확인(TASK-017), 실제 사용자별 인증·권한, 행원 메모 입력, 실제 고객·신청 자료. 지금 자료는 모두 합성 시나리오이며 토큰 두 개는 test/demo 수준입니다.
+
+### 4차 보완 (2026-10-08, 사용자 확인 항목 3건. 미커밋)
+
+#### 1. 승인 전 HOLD 사례 정리
+
+- 변경: `AiServicePreparationIntegrationTest.stateChangeProducesNewHoldPreparation`의 업무일을 평가 당일 2026-10-05로 맞췄다(평가 시각 2026-10-05T04:00Z, 승인 04:30Z 전). 단언 추가: `status=HOLD`, `preparation_complete=false`, 업무일 2026-10-05, 두 섹션 모두 CORE_DECISION/CORE_REPORTED, 평가 시각 04:00Z, `FUTURE_BUSINESS_DATE` 없음, `HUMAN_REVIEW_PENDING` 있음, 항목 0·승인 checklist 없음, `hold_message`에 "검토 대기", `record.recorded=true`. 철회 후 사례(`withdrawalAfterRecordingProducesNewHoldPreparation`, 업무일 2026-10-07)는 그대로다.
+- 표본: `docs/evidence/task-015/cli-output-hold-before-approval-sample.json`으로 교체(두 섹션 사유 `APPROVED_CHECKLIST_NOTICE_MISMATCH`, `HUMAN_REVIEW_PENDING`만). 혼합 표본 파일은 지웠다.
+
+#### 2. 읽기·기록 토큰 같은 값 기동 거부 (AC-20 추가)
+
+- 변경: `apps/core-service/.../config/ServiceTokenSeparationConfiguration.java`. 모든 profile에서 `trust-agent.tool-api.service-token`과 `trust-agent.preparation-record.service-token`이 둘 다 설정돼 있고 같은 값이면 `IllegalStateException("SERVICE_TOKEN_NOT_SEPARATED: …")`으로 기동을 거부한다. 비교는 상수 시간이고 메시지에는 환경변수 이름만 있고 값은 없다. 비어 있는 경우는 기존 검사(각 경로 401, production 필수 설정)가 다룬다.
+- 테스트: `ServiceTokenSeparationTest` 4건. 같은 값 거부와 메시지에 값 미포함, 다른 값·빈 값 통과, Spring 컨텍스트에서 같은 값이면 refresh 실패(오류 전체에 값 없음), 다른 값이면 정상 기동. 기존 통합 테스트들은 두 토큰을 서로 다른 임시 값으로 쓰므로 영향 없음(전체 실행으로 확인).
+- 문서: Core README에 두 토큰이 같으면 기동 거부를 적었다.
+
+#### 3. 제안 9: AI 서비스 HTTP 진입점의 기록 실패 상태 매핑 (코드 변경 전 판단 요청)
+
+현재 HTTP 진입점은 준비안을 만들면 기록 결과와 무관하게 200을 돌려주고 본문 `record.recorded`와 헤더 `X-Preparation-Recorded`로만 구분한다. 정상 기록된 READY·PARTIAL·HOLD와 기록 실패는 다른 상황이므로 상태 코드로도 구분하자는 제안이다. 실패 본문의 `recorded=false`·`error_code`·`usage_notice`와 CLI 종료 코드 3은 그대로 둔다.
+
+| 상황 | `record.status` / 원인 | 제안 HTTP 상태 | 이유 |
+|---|---|---|---|
+| 준비안 생성·기록 성공(READY·PARTIAL·HOLD 모두) | RECORDED / ALREADY_RECORDED | 200 | 요청이 끝까지 성공. HOLD도 "보류를 기록"한 성공이다 |
+| Core가 현재 상태 기준으로 거부 | REJECTED, Core 409·422(`PREPARATION_NOT_USABLE`, `PREPARATION_STALE`, `MAPPING_MISMATCH`, `PREPARATION_CONFLICT`, `RUN_ID_CONFLICT` 등) | 409 Conflict | 준비안이 Core의 지금 상태와 맞지 않아 기록되지 않음. 호출자가 다시 실행하면 해결될 수 있는 충돌이며 호출자 입력 오류도, 서버 장애도 아니다 |
+| Core가 요청 형식·계약 위반으로 거부 | REJECTED, Core 400(`INVALID_REQUEST`, `PREPARATION_ID_MISMATCH`, `HOLD_SECTION_INVALID`) | 500 Internal Server Error | 기록 본문은 AI 서비스가 만들었으므로 AI 서비스 자체의 결함이다. 호출자 잘못이 아니며 재실행으로 풀리지 않는다 |
+| Core 인증 실패 | REJECTED, Core 401 `UNAUTHENTICATED` | 503 Service Unavailable | 기록 토큰 설정 문제. 운영자가 설정을 고쳐야 하며 `NOT_ATTEMPTED`(토큰 미설정)와 같은 부류 |
+| 기록 미시도 | NOT_ATTEMPTED `RECORD_TOKEN_MISSING` | 503 Service Unavailable | 설정 누락(기존 설정 누락 503과 같은 뜻) |
+| Core 통신 실패 | FAILED `CORE_UNAVAILABLE`(5xx·연결 실패) | 502 Bad Gateway | 상위 서비스(Core) 장애·오류 |
+| Core 시간 초과 | FAILED `CORE_TIMEOUT` | 504 Gateway Timeout | 상위 서비스 응답 지연 |
+| 입력 오류(신청 없음, 매핑 없는 상품, 날짜 형식) | (준비안 없음) | 400 (현행 유지) | 호출자 입력 오류 |
+| 설정 누락(Core 주소·읽기 토큰) | (준비안 없음) | 503 (현행 유지) | 설정 문제 |
+
+- Tool 단계 실패(401·5xx·시간 초과·schema 위반)는 섹션 HOLD(UNVERIFIED)로 처리되고 기록은 성공하므로 200이다. 이것은 "확인하지 못함"을 기록한 성공이며 사용 금지는 섹션 안내로 전달된다.
+- 구현 방식(판단 뒤): FastAPI의 `HTTPException`은 본문을 바꾸므로 쓰지 않고, 같은 준비안 본문을 `JSONResponse(status_code=…)`로 돌려준다. 헤더 `X-Preparation-Recorded`는 유지한다. CLI는 바꾸지 않는다(종료 코드 3 그대로). 출력 계약은 바꾸지 않는다. 테스트는 `test_http_entry_point_returns_preparation_and_maps_errors`에 실패 사례별 상태 코드를 더한다. README의 HTTP 절을 갱신한다.
+- 대안과 기각 이유: (a) 모든 실패를 4xx로 → Core 장애·설정 오류를 호출자 잘못처럼 보이게 해 기각. (b) 현행 200 + 헤더 유지 → 모니터링·프록시·대부분의 클라이언트가 성공으로 집계해 기각(사용자 지적). (c) 실패 시 본문을 오류 객체로 바꿈 → 보류 안내와 재현 정보가 사라져 기각(사용자 조건: 본문 유지).
+**판단** - [x] 수정 채택 / 결정자 사용자 / 조건: 정상 기록 READY·PARTIAL·HOLD 200, Core 409는 409·422는 422로 구분(모든 거부가 단순 재실행으로 해결된다고 안내하지 않음), AI 서비스가 만든 요청의 계약 위반 500(입력 오류 400과 구분), 기록 토큰 누락·불일치 등 운영 설정 503, 통신 실패 502·시간 초과 504에 Core 자체 5xx 처리 명시, 실패 본문의 `recorded=false`·원인 코드·사용 금지 안내 유지, 토큰·내부 오류 상세 비노출, Tool 확인 실패를 HOLD로 기록한 200은 기록 성공일 뿐 준비 완료가 아님.
+- 구현(5차 보완): `app.py`가 기록 결과 종류(`assembler.record_class`)별 상태 표 `HTTP_STATUS_BY_RECORD_CLASS`로 같은 본문을 `JSONResponse`에 담아 돌려준다(RECORDED·ALREADY_RECORDED 200, REJECTED_NOT_USABLE 422, REJECTED_CONFLICT 409, REJECTED_SETTINGS·NOT_ATTEMPTED 503, REJECTED_CONTRACT 500, FAILED_CORE·REJECTED_OTHER 502, FAILED_TIMEOUT 504). `assembler._record_outcome`이 Core 응답의 HTTP 상태를 `record.core_http_status`로 남기고, Core 5xx는 `CORE_ERROR_RESPONSE`(상세 미전달), Core 401은 고정 문구로 바꿔 인증 상세를 전달하지 않는다. `messages.USAGE_NOTICES`를 종류별로 나눠 422는 "업무 조건이 바뀐 뒤", 409는 "다시 실행하면 현재 상태로 재확인", 401·미설정은 "운영 설정 점검", 400은 "재실행으로 해결되지 않으니 담당자에게", 502·504는 "잠시 뒤 다시 실행"으로 안내한다. CLI 종료 코드는 그대로(기록 성공 0, 실패 3)이며 stderr에 안내를 함께 출력한다. 출력 계약에 `record.core_http_status`(선택, 400~599)를 추가했다. 고정 문구 표가 바뀌어 `messages_hash`와 준비안 ID가 바뀐다(의도된 동작, 표본 재생성).
+- 테스트: Python `test_http_entry_point_returns_preparation_and_maps_errors`에 실패 7사례(422·409·500·503·502·502·504)와 기록 토큰 미설정 503을 더해 HTTP 상태·헤더 `false`·본문 `recorded=false`·원인 코드·사용 금지 안내·토큰 미노출을 함께 확인한다. `test_record_outcomes_map_to_status_and_usage_notice`가 사례별 `core_http_status`와 안내 문구(있어야 할 문구·있으면 안 되는 문구)를 확인한다. CLI 종료 코드 테스트는 그대로 통과(기록 성공 0, 실패 3).
+
+### 5차 보완 (2026-10-08, 제안 9 수정 채택 구현)
+
+- 검증 대상 커밋: `2e330d2`(4·5차 보완의 구현·테스트. 승인 전 HOLD 테스트, 토큰 동일값 기동 거부, HTTP 상태 구분). 문서는 후속 커밋.
+- 변경 파일: `apps/ai-service/ai_service/app.py`, `assembler.py`(`record_class`, `core_http_status`, Core 5xx·401 처리), `messages.py`(원인별 사용 안내), `cli.py`(stderr 안내), `contracts/consultation-preparation.schema.json`(`record.core_http_status`), 테스트 2파일, AI 서비스 README("HTTP 상태" 표). Core 코드 변경 없음.
+- 일관성: `recorded=true` ⇔ HTTP 200 ⇔ 헤더 `true` ⇔ CLI 종료 0. `recorded=false` ⇔ HTTP 422/409/503/500/502/504 ⇔ 헤더 `false` ⇔ CLI 종료 3. `app.py`가 이 대응을 단언한다.
+- 결과: 연결 검증 포함 전체 185건 통과·실패 0·skip 0, 로컬 기본 185건 중 통과 179·실패 0·skip 6, 의도적 환경 누락 1건 실패(`AI_INTEGRATION_ENV_MISSING`), Python 106건 중 통과 104·실패 0·skip 2(기존 비공개 snapshot 사유). 표본(`docs/evidence/task-015/cli-output-*.json`)은 고정 문구 표 변경 뒤 다시 생성했다. 합계는 `RUN_SUMMARY.txt`.
 
 ### AI self-review
 

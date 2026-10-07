@@ -24,7 +24,7 @@ export TRUST_AGENT_REPOSITORY_ROOT=/path/to/trust-agent       # 선택, 기본�
 .venv/bin/python -m ai_service prepare --application SW-APPLICATION-001 --business-date 2026-10-06 --consultation-id demo-001
 ```
 
-HTTP 진입점(로컬 전용, 인증 없음. 반드시 127.0.0.1에만 바인딩. 응답 헤더 `X-Preparation-Recorded`가 본문 `record.recorded`와 같은 값):
+HTTP 진입점(로컬 전용, 인증 없음. 반드시 127.0.0.1에만 바인딩. 응답 헤더 `X-Preparation-Recorded`가 본문 `record.recorded`와 같은 값이고, 기록 실패는 본문은 그대로 둔 채 HTTP 상태로 원인을 구분합니다. 아래 "HTTP 상태" 표):
 
 ```bash
 .venv/bin/uvicorn ai_service.app:app --host 127.0.0.1 --port 8090
@@ -41,8 +41,24 @@ curl -s -X POST http://127.0.0.1:8090/api/v1/ai/consultation-preparations \
 |---|---|
 | 0 | Core에 기록됨(`record.recorded=true`, 상태 `RECORDED` 또는 `ALREADY_RECORDED`). 준비안 상태가 READY·PARTIAL·HOLD 어느 것이든 기록 대상입니다 |
 | 2 | 입력 오류(신청 자료 없음, 매핑에 없는 상품, 날짜 형식 등). 준비안 없음 |
-| 3 | 기록 거부·실패·미시도(`record.recorded=false`, 상태 `REJECTED`·`FAILED`·`NOT_ATTEMPTED`와 `error_code`). 준비안은 출력되지만 `usage_notice`가 사용 금지와 재실행을 안내하고 stderr에도 같은 경고가 나옵니다 |
+| 3 | 기록 거부·실패·미시도(`record.recorded=false`, 상태 `REJECTED`·`FAILED`·`NOT_ATTEMPTED`와 `error_code`). 준비안은 출력되지만 `usage_notice`가 사용 금지와 원인별 할 일을 안내하고 stderr에도 같은 경고가 나옵니다. HTTP 진입점의 422/409/503/500/502/504와 같은 상황입니다 |
 | 4 | 설정 누락(Core 주소 또는 읽기 토큰 없음). 출력 없음 |
+
+## HTTP 상태 (기록 결과와 CLI 종료 코드의 대응)
+
+| 상황 | `record.status` / `error_code` | HTTP | CLI 종료 코드 | 뜻과 할 일 |
+|---|---|---|---|---|
+| 기록 성공(준비안 상태 READY·PARTIAL·HOLD 모두) | RECORDED / ALREADY_RECORDED, `recorded=true` | 200 | 0 | 기록됐을 뿐 사용 허가가 아닙니다. Tool 확인 실패를 HOLD로 기록한 경우도 200이지만 준비 완료가 아닙니다 |
+| Core가 현재 업무 조건상 사용 불가로 거부 | REJECTED, Core 422(예: `PREPARATION_NOT_USABLE`), `core_http_status=422` | 422 | 3 | 사용 금지. 업무 조건(승인·시행일·공문 상태)이 바뀐 뒤 다시 실행. 단순 재실행으로 해결되지 않음 |
+| Core가 현재 상태와의 충돌로 거부 | REJECTED, Core 409(예: `PREPARATION_STALE`, `MAPPING_MISMATCH`) | 409 | 3 | 사용 금지. 다시 실행하면 현재 상태로 다시 확인 |
+| 운영 설정 문제 | REJECTED `UNAUTHENTICATED`(Core 401) 또는 NOT_ATTEMPTED `RECORD_TOKEN_MISSING` | 503 | 3 | 사용 금지. 기록 토큰 설정 점검 |
+| AI 서비스가 만든 기록 요청의 계약 위반 | REJECTED, Core 400(예: `PREPARATION_ID_MISMATCH`) | 500 | 3 | 사용 금지. 재실행으로 해결되지 않으니 담당자에게 알림 |
+| Core 연결 실패 또는 Core 자체 5xx | FAILED `CORE_UNAVAILABLE` / `CORE_ERROR_RESPONSE` | 502 | 3 | 사용 금지. 잠시 뒤 다시 실행 |
+| Core 시간 초과 | FAILED `CORE_TIMEOUT` | 504 | 3 | 사용 금지. 잠시 뒤 다시 실행 |
+| 입력 오류(신청 없음, 매핑 없는 상품, 날짜 형식) | (준비안 없음) | 400 | 2 | 입력을 고쳐 다시 실행 |
+| 설정 누락(Core 주소·읽기 토큰) | (준비안 없음) | 503 | 4 | 설정 점검 |
+
+실패 응답에도 `record.recorded=false`, 원인 코드(`error_code`), `core_http_status`, 사용 금지 안내(`usage_notice`)가 본문에 그대로 있습니다. 토큰 값과 Core 내부 오류 상세(5xx 본문, 인증 실패 문구)는 전달하지 않습니다.
 
 ## 흐름과 상태
 
@@ -56,7 +72,7 @@ curl -s -X POST http://127.0.0.1:8090/api/v1/ai/consultation-preparations \
    - 매핑에 필수 공문군이 하나도 없으면 각 공문군 섹션은 정상적으로 만들되 전체 상태는 `HOLD`, `preparation_complete=false`, 머리 문구에 `NO_REQUIRED_FAMILY_CONFIGURED`를 적고, 보류 섹션은 `optional_holds`에 둡니다. 빈 설정이 준비 완료가 되는 일은 없습니다.
 5. **READY는 "승인된 매핑에 따른 필수 준비 자료(승인 checklist 항목과 근거)를 갖췄다"는 뜻입니다. 상담이 끝났다는 뜻도, 대출 결정이 났다는 뜻도 아닙니다.**
 6. 준비안 ID(`preparation_id`)는 기록 본문에서 `preparation_id`·`run_id`·`consultation_id`·`sections[].evaluated_at`·`sections[].tool_response_hash`(Tool 응답에 평가 시각이 있어 매번 달라짐)를 뺀 canonical sha256입니다. 같은 입력·같은 Core 상태면 같고, 상태가 바뀌면 바뀝니다. 실행 ID(`run_id`)는 실행마다 새 값입니다. 재실행은 기존 기록이 있어도 항상 Tool을 다시 호출합니다.
-7. Core 기록 경로 `POST /api/v1/consultation-preparations`에 기록 본문(`contracts/consultation-preparation-record.schema.json`. 근거 원문·메모·토큰 없음)을 **기록 토큰**으로 보냅니다. 201 `RECORDED`, 200 `ALREADY_RECORDED`(이 둘만 `record.recorded=true`), 400·401·409·422 `REJECTED`(Core의 오류 코드 전달), 5xx·연결 실패·시간 초과 `FAILED`, 기록 토큰 미설정 `NOT_ATTEMPTED`(모두 `record.recorded=false`). 자동 재시도는 없습니다. 재실행하면 준비안 ID는 같아도 실행 ID가 다르고, Core 실행 기록에 실행별 평가 시각·Tool 응답 해시가 남습니다. **기록은 사용 허가가 아닙니다.** 사용 전에는 Core 조회로 사용 가능 여부를 다시 확인해야 하며, 거부·실패·미시도면 준비안을 사용하지 말고 다시 실행합니다.
+7. Core 기록 경로 `POST /api/v1/consultation-preparations`에 기록 본문(`contracts/consultation-preparation-record.schema.json`. 근거 원문·메모·토큰 없음)을 **기록 토큰**으로 보냅니다. 201 `RECORDED`, 200 `ALREADY_RECORDED`(이 둘만 `record.recorded=true`), 400·401·409·422 `REJECTED`(Core의 오류 코드와 `core_http_status` 전달), 연결 실패·Core 5xx·시간 초과 `FAILED`(`CORE_UNAVAILABLE`·`CORE_ERROR_RESPONSE`·`CORE_TIMEOUT`), 기록 토큰 미설정 `NOT_ATTEMPTED`(모두 `record.recorded=false`). 자동 재시도는 없습니다. 사용 안내는 원인별로 다르며 모든 거부가 재실행으로 풀리는 것은 아닙니다(422는 업무 조건이 바뀌어야 함). 재실행하면 준비안 ID는 같아도 실행 ID가 다르고, Core 실행 기록에 실행별 평가 시각·Tool 응답 해시가 남습니다. **기록은 사용 허가가 아닙니다.** 사용 전에는 Core 조회로 사용 가능 여부를 다시 확인해야 하며, 거부·실패·미시도면 준비안을 사용하지 말고 다시 실행합니다.
 
 ## 안전성 기준(규칙 조립 출력의 구조 검증)
 

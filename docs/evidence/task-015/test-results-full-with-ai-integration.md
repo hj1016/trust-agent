@@ -1,6 +1,6 @@
 # 연결 검증 포함 전체 실행 결과 (./gradlew clean test bootJar --offline --no-daemon -PaiServiceIntegration=true)
 
-JUnit XML(`build/test-results/test`)에서 생성. 합계: 총 181건, 통과 181, 실패 0, 오류 0, skip 0.
+JUnit XML(`build/test-results/test`)에서 생성. 합계: 총 185건, 통과 185, 실패 0, 오류 0, skip 0.
 
 | 테스트 클래스 | 총 | skip | 실패 | 오류 |
 |---|---|---|---|---|
@@ -9,6 +9,7 @@ JUnit XML(`build/test-results/test`)에서 생성. 합계: 총 181건, 통과 18
 | com.trustagent.core.bootstrap.AppendOnlyBootstrapChecksTest | 3 | 0 | 0 | 0 |
 | com.trustagent.core.config.DemoFeatureProductionGuardTest | 8 | 0 | 0 | 0 |
 | com.trustagent.core.config.RuntimeDatasourcePropertiesTest | 6 | 0 | 0 | 0 |
+| com.trustagent.core.config.ServiceTokenSeparationTest | 4 | 0 | 0 | 0 |
 | com.trustagent.core.database.PublicProductSchemaIntegrationTest | 9 | 0 | 0 | 0 |
 | com.trustagent.core.database.SyntheticInternalSchemaIntegrationTest | 7 | 0 | 0 | 0 |
 | com.trustagent.core.internalpolicy.BusinessTimePolicyTest | 1 | 0 | 0 | 0 |
