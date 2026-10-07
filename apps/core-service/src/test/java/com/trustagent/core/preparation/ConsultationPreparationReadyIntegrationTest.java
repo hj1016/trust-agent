@@ -159,8 +159,10 @@ class ConsultationPreparationReadyIntegrationTest {
         JsonNode preparation = mapper.readTree(Files.readString(out, StandardCharsets.UTF_8));
         assertEquals("READY", preparation.get("status").stringValue());
         assertTrue(preparation.get("preparation_complete").booleanValue());
-        assertTrue(preparation.get("headline").stringValue().contains("모두 준비됐습니다"));
-        assertTrue(preparation.get("headline").stringValue().contains("상담이나 대출 결정의 완료가 아닙니다"));
+        assertTrue(preparation.get("headline").stringValue().contains("기준 자료 준비 완료"));
+        assertTrue(preparation.get("headline").stringValue().contains("상담·대출 결정이 끝났다는 뜻이 아닙니다"));
+        assertTrue(preparation.get("notices").get("staff_check_notice").stringValue().contains("고객별 적용 조건과 제출서류는 직원 확인이 필요합니다"));
+        assertFalse(preparation.get("notices").get("staff_check_notice").stringValue().contains("끝나지 않았습니다"));
         assertFalse(preparation.get("headline").stringValue().contains("끝나지 않았습니다"));
         assertEquals(0, preparation.get("remaining_checks").size());
         assertEquals("READY,READY", preparation.get("sections").get(0).get("status").stringValue() + "," + preparation.get("sections").get(1).get("status").stringValue());

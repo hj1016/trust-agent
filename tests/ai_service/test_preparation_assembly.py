@@ -91,13 +91,21 @@ class PreparationAssemblyTest(unittest.TestCase):
         self.assertEqual([], list(RECORD_SCHEMA.iter_errors(record_calls[0])))
         self.assertEqual("CORE_REPORTED", record_calls[0]["sections"][1]["hold_claim_basis"])
         self.assertNotIn("evidence_text", json.dumps(record_calls[0], ensure_ascii=False))
+        self.assertIn("끝나지 않았습니다", output["notices"]["staff_check_notice"])
+        self.assertIn("직원 확인이 필요합니다", output["notices"]["staff_check_notice"])
+        self.assertNotIn("기준 자료 준비 완료", output["notices"]["staff_check_notice"])
 
     def test_all_required_ready_gives_ready_with_completion_notice(self):
         output = self.run_prepare(ready_transport())
         self.assertEqual([], list(OUTPUT_SCHEMA.iter_errors(output)))
         self.assertEqual("READY", output["status"])
         self.assertTrue(output["preparation_complete"])
-        self.assertIn("상담이나 대출 결정의 완료가 아닙니다", output["headline"])
+        self.assertIn("기준 자료 준비 완료", output["headline"])
+        self.assertIn("상담·대출 결정이 끝났다는 뜻이 아닙니다", output["headline"])
+        self.assertNotIn("끝나지 않았습니다", output["headline"])
+        self.assertIn("고객별 적용 조건과 제출서류는 직원 확인이 필요합니다", output["notices"]["staff_check_notice"])
+        self.assertIn("기준 자료 준비 완료", output["notices"]["staff_check_notice"])
+        self.assertNotIn("끝나지 않았습니다", output["notices"]["staff_check_notice"])
         self.assertEqual([], output["remaining_checks"])
 
     # ---- AC-03: 모든 필수 공문군 사용 불가 → HOLD ----

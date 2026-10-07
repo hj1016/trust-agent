@@ -47,7 +47,7 @@ SERVICE_REASON_CODES = tuple(SERVICE_REASON_MESSAGES)
 NO_REQUIRED_FAMILY_CODE = "NO_REQUIRED_FAMILY_CONFIGURED"
 
 HEADLINES: dict[str, str] = {
-    "READY": "공문군 {total}개 가운데 필수 {required}개가 모두 준비됐습니다. 승인된 매핑에 따른 필수 준비 자료를 갖췄습니다. 상담이나 대출 결정의 완료가 아닙니다.",
+    "READY": "기준 자료 준비 완료: 공문군 {total}개 가운데 필수 {required}개의 기준 자료가 모두 준비됐습니다. 현재 승인된 매핑에 따른 필수 자료이며, 고객별 적용 조건·제출서류 확인이나 상담·대출 결정이 끝났다는 뜻이 아닙니다.",
     "PARTIAL": "공문군 {total}개 가운데 {ready}개 준비됨, 필수 공문군 {hold}개({hold_families}) 확인 남음. 상담 준비가 끝나지 않았습니다.",
     "HOLD": "공문군 {total}개 가운데 준비된 필수 공문군이 없습니다. 필수 공문군 {hold}개({hold_families}) 확인 남음. 상담 준비가 끝나지 않았습니다.",
     "NO_REQUIRED_FAMILY": "이 상품에는 필수 공문군이 설정되지 않았습니다(" + NO_REQUIRED_FAMILY_CODE + "). 설정 승인 전에는 준비 완료로 보지 않습니다. 상담 준비가 끝나지 않았습니다.",
@@ -56,6 +56,12 @@ HEADLINES: dict[str, str] = {
 HOLD_KIND_PREFIX: dict[str, str] = {
     "CORE_DECISION": "Core가 사용 불가로 판정했습니다.",
     "UNVERIFIED": "Core에 확인하지 못했습니다. Core의 판정이 아닙니다.",
+}
+
+# 직원 확인 안내. READY(기준 자료 준비 완료)와 PARTIAL·HOLD(준비 미완료)를 구분한다.
+STAFF_CHECK_NOTICES: dict[str, str] = {
+    "READY": "기준 자료 준비 완료입니다. 고객별 적용 조건과 제출서류는 직원 확인이 필요합니다. 고객 니즈 확인과 상품 선택은 이 준비안의 앞 단계이며 이 준비안이 대신하지 않습니다.",
+    "NOT_READY": "상담 준비가 끝나지 않았습니다. 보류된 필수 공문군을 먼저 확인하세요. 그 뒤에도 고객별 적용 조건과 제출서류는 직원 확인이 필요합니다.",
 }
 
 NOTICES: dict[str, str] = {
@@ -88,6 +94,7 @@ def message_table() -> dict:
         "headlines": HEADLINES,
         "hold_kind_prefix": HOLD_KIND_PREFIX,
         "notices": NOTICES,
+        "staff_check_notices": STAFF_CHECK_NOTICES,
         "usage_notices": USAGE_NOTICES,
     }
 
@@ -121,3 +128,7 @@ def headline(status: str, *, total: int, required: int, ready: int, hold: int, h
 
 def usage_notice(record_class: str) -> str:
     return USAGE_NOTICES[record_class]
+
+
+def staff_check_notice(status: str) -> str:
+    return STAFF_CHECK_NOTICES["READY" if status == "READY" else "NOT_READY"]

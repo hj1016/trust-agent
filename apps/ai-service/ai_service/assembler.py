@@ -129,6 +129,7 @@ def prepare(application_id: str, business_date: Optional[str] = None, consultati
             "human_decision_notice": messages.NOTICES["human_decision_notice"],
             "source_notice": messages.NOTICES["source_notice"],
             "usage_notice": messages.usage_notice(record_class(record)),
+            "staff_check_notice": messages.staff_check_notice(status),
         },
         "record": record,
     }

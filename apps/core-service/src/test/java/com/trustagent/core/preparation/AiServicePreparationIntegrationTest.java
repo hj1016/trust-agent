@@ -128,6 +128,7 @@ class AiServicePreparationIntegrationTest {
         assertEquals(0, seller.get("items").size());
         assertEquals(1, preparation.get("remaining_checks").size());
         assertTrue(preparation.get("notices").get("human_decision_notice").stringValue().contains("담당자"));
+        assertTrue(preparation.get("notices").get("staff_check_notice").stringValue().contains("끝나지 않았습니다"), "PARTIAL은 미완료 안내");
         assertFalse(result.stdout().contains(TOOL_TOKEN));
         assertFalse(result.stdout().contains(RECORD_TOKEN));
 

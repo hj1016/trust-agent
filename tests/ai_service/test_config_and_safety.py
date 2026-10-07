@@ -74,7 +74,9 @@ class SafetyTest(unittest.TestCase):
         self.assertTrue(messages.messages_hash().startswith("sha256:"))
         self.assertIn("끝나지 않았습니다", table["headlines"]["PARTIAL"])
         self.assertIn("끝나지 않았습니다", table["headlines"]["HOLD"])
-        self.assertIn("상담이나 대출 결정의 완료가 아닙니다", table["headlines"]["READY"])
+        self.assertIn("상담·대출 결정이 끝났다는 뜻이 아닙니다", table["headlines"]["READY"])
+        self.assertIn("기준 자료 준비 완료", table["headlines"]["READY"])
+        self.assertIn("직원 확인이 필요합니다", table["staff_check_notices"]["READY"])
 
     def test_reason_table_covers_every_core_blocking_and_warning_code(self):
         source = CORE_SERVICE_SOURCE.read_text(encoding="utf-8")
