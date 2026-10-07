@@ -1,6 +1,6 @@
 # TASK-015 AI 서비스 최소 흐름: 규칙 조립 상담 준비안과 보류
 
-- 상태: **계획 검토 대기** (상세 계획 작성 지시: 사용자. 큰 방향 동의, 보완 요청 8건 반영. **제안 6건 채택**(결정자 사용자, 보완된 방향)과 추가 조건 5건 반영. 제안 7(안전성 책임 표시 변경)은 판단 대기. 구현 착수는 미승인)
+- 상태: **계획 검토 대기** (상세 계획 작성 지시: 사용자. 큰 방향 동의, 보완 요청 8건 반영. **제안 6건 채택**(결정자 사용자, 보완된 방향)과 추가 조건 5건 반영. 제안 7(안전성 책임 표시 변경)은 (b) 채택. 설계 보완 4건(표 수 일치와 매핑 별도 경로, READY·HOLD 기록의 뜻 구분, 안전성 자료 v2 계획, 같은 ID 재요청도 재확인) 반영. ADR-012 최종 승인과 구현 착수는 별도 결정)
 - 담당자 / 인간 결정자: AI 조사·초안·구현·검증 / 사용자 범위·판정·검수
 - 요구사항 출처: PLAN-002 TASK-015 절(제안 1 수정 채택: LLM 없는 규칙 조립 준비안은 첫 연결 단계, "AI 생성 완료"로 표현하지 않음. 제안 2 채택: 준비안·보류 기록은 Tool이 아니라 별도 쓰기 경로, Core가 저장 전 재확인), CLAUDE.md 기술 경계(AI Service는 Python + FastAPI, 업무 DB 직접 접근과 자격증명 보유 금지, Core Tool API로만 조회. AI는 승인·거절·금리·한도·신용등급 결정 주체가 아님), ADR-011(읽기 전용 Tool 2개, 서비스 토큰, 감사, 쓰기 Tool 없음), README MVP 7단계(상담 준비안)와 9단계(AI 중단 시 수기 checklist, AI 확정 경로 차단), TASK-014 안전성 참조 3건(`pass_criteria_owner: TASK-015`), 사용자 보완 요청 8건(부분 준비 표시, 보류 기록, 재실행, Core 직접 확인, 재현 정보, 메모와 안전성, 기록 권한, 검증 환경과 변경 범위)
 - 관련 Task / ADR: TASK-008(완료), TASK-011a(완료), TASK-014(완료. 검색 목표 수치는 TASK-016 시작 전에 정하고, 실제 관련성 보류 기준값은 TASK-016에서 초기 점검 자료로 조정한 뒤 최종 평가 전에 고정한다), TASK-016·017·019(이 Task 뒤). **ADR-012 초안**(`docs/adr/ADR-012-ai-service-preparation-record-path.md`, 미승인)을 이 Task에서 함께 제안한다.
@@ -72,6 +72,7 @@ READY 섹션마다 저장 직전 한 트랜잭션 안에서:
 
 | # | 확인 | 어긋나면 |
 |---|---|---|
+| C0 | **재확인은 기존 기록 유무와 무관하게 항상 실행한다.** 같은 `preparation_id`가 이미 저장돼 있어도 C1~C5를 먼저 수행하고, 통과한 뒤에야 저장된 해시와 비교해 `ALREADY_RECORDED`로 답한다. 기존 기록 조회로 재확인을 생략하는 경로는 없다 | 재확인 실패면 기존 행이 있어도 422/409로 거부(기존 행은 그대로, 실행 기록 REJECTED) |
 | C1 | 같은 `family_id`·`business_date`로 `InternalPolicyApplicableService` 조회 → `internalChecklistUseAllowed=true` | 422 `PREPARATION_NOT_USABLE`(현재 사유 코드 첨부) |
 | C2 | 조회 결과의 승인 checklist version ID·결정 ID가 보낸 값과 같다 | 409 `PREPARATION_STALE` |
 | C3 | 보낸 항목의 규칙 version ID 목록(순서 포함)이 그 checklist의 항목 `source_rule_version_id` 목록과 정확히 같다(누락·추가·순서 변경 모두 거부) | 409 `PREPARATION_STALE` |
@@ -81,8 +82,9 @@ READY 섹션마다 저장 직전 한 트랜잭션 안에서:
 | C7 | `preparation_id`가 본문 해시와 같다(3절) | 400 `PREPARATION_ID_MISMATCH` |
 | C8 | 서비스 ID는 토큰에 묶인 값만 쓴다. 본문의 actor·service 문자열은 무시 | — |
 
-- **기록 기능이 바꿀 수 없는 것(확인 항목으로 둔다).** 기록 endpoint의 저장소 코드는 V10 세 표에만 INSERT한다. 통합 테스트가 기록 호출 전후로 `human_review_decision`, `approved_checklist_version`, `approved_checklist_schedule_revision`·`entry`, `checklist_change_proposal`, `automated_validation_result`, `internal_notice_lifecycle_event` 행 수가 변하지 않음을 확인한다(AC-10). 제안 5의 선택지에 따라 별도 DB 역할로 권한 자체를 막을 수도 있다.
-- **확인과 저장 사이의 변화(보장 범위를 정확히).** C1~C5(와 M1~M5)와 INSERT를 **하나의 DB 트랜잭션**에서 `SERIALIZABLE` 격리로 실행한다. 이 격리가 보장하는 것은 "이 트랜잭션이 읽은 승인·일정·공문 사건 행과, 같은 시간에 그 행을 바꾸는 다른 트랜잭션(철회·반려·새 승인)이 **직렬로 실행된 것과 같은 결과**"다. 즉 재확인이 본 상태와 저장된 기록이 서로 어긋나는 일은 막는다. 충돌하면 PostgreSQL이 둘 중 하나를 직렬화 실패(SQLSTATE 40001)로 끝낸다. **보장하지 않는 것:** 기록 트랜잭션이 커밋된 **뒤**에 일어나는 철회·반려는 어떤 격리로도 막을 수 없다. 그래서 **기록은 "그 시점에 Core가 사용 가능하다고 확인했다"는 증거이지 사용 허가가 아니며**, 사용 허가는 보여 주는 순간 Tool 1 재확인으로 다시 얻는다(TASK-017).
+- **저장 구조와 AI 기록 경로의 범위를 구분한다.** V10 전체 저장 구조는 **네 표**(준비안 `consultation_preparation`, 섹션 `consultation_preparation_section`, 실행 기록 `consultation_preparation_run`, 매핑 `consultation_family_mapping`)다. 이 가운데 **AI 기록 경로(기록 토큰)가 쓸 수 있는 것은 준비안·섹션·실행 기록 세 표뿐**이다. 매핑 표는 별도 경로(사용자가 승인한 매핑 파일을 Core bootstrap importer가 적재)로만 등록·갱신되며, 기록 endpoint에는 매핑을 쓰는 코드가 없고 AI 기록 토큰으로는 매핑을 변경할 수 없다(통합 테스트로 확인, AC-10).
+- **기록 기능이 바꿀 수 없는 것(확인 항목으로 둔다).** 기록 endpoint의 저장소 코드는 준비안·섹션·실행 기록 세 표에만 INSERT한다. 통합 테스트가 기록 호출 전후로 `human_review_decision`, `approved_checklist_version`, `approved_checklist_schedule_revision`·`entry`, `checklist_change_proposal`, `automated_validation_result`, `internal_notice_lifecycle_event` 행 수가 변하지 않음을 확인한다(AC-10). 제안 5의 선택지에 따라 별도 DB 역할로 권한 자체를 막을 수도 있다.
+- **확인과 저장 사이의 변화(보장 범위를 정확히).** C1~C5(와 M1~M5)와 INSERT를 **하나의 DB 트랜잭션**에서 `SERIALIZABLE` 격리로 실행한다. 이 격리가 보장하는 것은 "이 트랜잭션이 읽은 승인·일정·공문 사건 행과, 같은 시간에 그 행을 바꾸는 다른 트랜잭션(철회·반려·새 승인)이 **직렬로 실행된 것과 같은 결과**"다. 즉 재확인이 본 상태와 저장된 기록이 서로 어긋나는 일은 막는다. 충돌하면 PostgreSQL이 둘 중 하나를 직렬화 실패(SQLSTATE 40001)로 끝낸다. **보장하지 않는 것:** 기록 트랜잭션이 커밋된 **뒤**에 일어나는 철회·반려는 어떤 격리로도 막을 수 없다. 그래서 **READY 섹션의 기록은 "그 시점에 Core가 사용 가능과 항목·근거 일치를 직접 확인했다"는 증거**이고, **HOLD 섹션의 기록은 "서비스가 보고한 보류"와 "저장 시 Core가 직접 확인한 상태"를 구분해 남긴 기록**이다. 어느 쪽도 사용 허가가 아니며, 사용 허가는 보여 주는 순간 Tool 1 재확인으로 다시 얻는다(TASK-017).
 - **1회 재시도의 대상.** 재시도는 **직렬화 실패(40001)가 난 그 DB 트랜잭션에 한정**해 1회만 한다. 재시도는 재확인부터 다시 수행한다(바뀐 상태를 보고 거부할 수 있다). AI 서비스의 Tool 호출, 기록 HTTP 요청 자체, 다른 오류(제약 위반, 연결 끊김, 422·409 거부)는 재시도하지 않는다. 재시도도 실패하면 500과 실행 기록 FAILED(`SERIALIZATION_FAILED`)를 남긴다.
 - **실패·중복 실행 기록.** 실행 기록은 요청 하나에 하나다. 재시도 두 번은 실행 기록 두 개가 아니며 최종 결과 하나만 REQUIRES_NEW로 남긴다. `run_id`는 AI 서비스가 요청마다 새로 만들고 Core 실행 기록 표의 PK다. 같은 `run_id`가 다시 오면(클라이언트의 재전송) 409 `RUN_ID_CONFLICT`로 거부하고 저장하지 않는다. 같은 준비안을 다시 기록하려면 새 `run_id`로 보내야 하며 그때 ALREADY_RECORDED가 된다. 이 한계와 규칙을 ADR-012와 README에 적는다.
 - Core가 확인할 수 없는 것: 신청 자료(`SW-APPLICATION-001`)는 Core에 없는 파일이다. Core는 형식만 검사하고 AI가 보낸 신청 자료 해시를 그대로 저장한다(5절의 한계).
@@ -106,7 +108,7 @@ READY 섹션마다 저장 직전 한 트랜잭션 안에서:
 | 위험 | 자유 문장이 쓰이는 것처럼 보임. 저장하지 않아도 입력 경로 자체가 공격면 | TASK-019에서 입력 경로를 새로 설계해야 함 |
 | 복잡도 | 필드·검사·해시 기록 추가 | 최소 |
 
-- **채택(제안 4 수정안, 결정자 사용자): 이번 단계에서는 메모 입력을 뺀다.** 안전성 평가 책임은 다음과 같이 나눈다. **TASK-015 = 규칙 조립 출력의 구조 검증**(결정 필드·문구가 존재할 수 없음, 보류 섹션에 근거 없음, 사람 판단 안내 필수, 자유 문장 입력 경로 없음). **TASK-019 = 질문 기반 사례(S10·E22·E23)와 LLM 출력 검증.** 기존 안전성 참조 3건은 그대로 유지한다. 파일·schema·계약 테스트의 책임 표시를 어떻게 바꿀지는 제안 7로 계획 PR에서 검토하며, 이미 완료한 TASK-014의 역사적 기록(판단 기록, 완료 기록)은 덮어쓰지 않고 "후속 변경" 절을 덧붙이는 방식으로만 다룬다.
+- **채택(제안 4 수정안, 결정자 사용자): 이번 단계에서는 메모 입력을 뺀다.** 안전성 평가 책임은 다음과 같이 나눈다. **TASK-015 = 규칙 조립 출력의 구조 검증**(결정 필드·문구가 존재할 수 없음, 보류 섹션에 근거 없음, 사람 판단 안내 필수, 자유 문장 입력 경로 없음). **TASK-019 = 질문 기반 사례(S10·E22·E23)와 LLM 출력 검증.** 기존 안전성 참조 3건은 그대로 유지한다. 파일·schema·계약 테스트의 책임 표시는 제안 7의 (b)로 채택됐다. 안전성 참조 자료 v2에서 책임을 객체로 구분하고, 기존 v1과 TASK-014의 완료 기록은 보존하며 "후속 변경" 관계만 덧붙인다. 검색 골든셋 버전과 안전성 질문 3건·참조 ID는 유지하고, 실제 변경은 구현 단계에서 한다.
 - 메모를 포함하기로 판단한다면: 결과 동일성은 준비안의 **업무 내용**(1절 상태, 섹션, 항목, 보류 사유, 안내 문구)으로 비교하고 `evaluated_at`, `run_id`, 기록 결과는 비교에서 뺀다. 메모 본문은 출력·기록 어디에도 없고 길이와 해시만 기록한다.
 
 ### 7. 기록 권한
@@ -120,7 +122,7 @@ READY 섹션마다 저장 직전 한 트랜잭션 안에서:
 | 구현 비용 | 필터 경로 확장만 | 필터 설정 확장과 테스트 2건 추가 |
 
 - **권장(제안 5 수정안): 기록용 토큰을 분리한다.** 비용이 작고 "읽기용 토큰으로 기록까지 허용"하는 권한 확대를 피한다. 두 토큰 모두 환경변수로만 제공하며 production은 둘 중 하나라도 없으면 기동을 거부한다(ADR-011 9항과 같은 방식). 별도 DB 역할(기록 표에만 INSERT)은 선택지로 ADR-012에 적되 이번 단계 기본안은 코드 범위 + 통합 테스트(AC-10)다.
-- ADR-012 초안(미승인): 누가(기록 토큰을 가진 `ai-service`) 무엇을(준비안·섹션·실행 기록 세 표에 INSERT) 할 수 있고, 무엇을 못 하는지(승인·일정·변경안·검증·공문 상태·감사 표 변경, 기록 수정·삭제, 사용 허가 부여), 인증 실패(401, 저장 없음, 실행 기록 없음, AI 출력 `recorded=false`)와 기록 실패(500, 롤백, 실행 기록 FAILED를 REQUIRES_NEW로 남김, 그것마저 실패하면 `FAILURE_AUDIT_WRITE_FAILED`) 처리를 적었다. 승인 전까지 "초안"이다.
+- ADR-012 초안(미승인): 누가(기록 토큰을 가진 `ai-service`) 무엇을(준비안·섹션·실행 기록 세 표에 INSERT) 할 수 있고, 무엇을 못 하는지(승인·일정·변경안·검증·공문 상태·감사 표 변경, **매핑 표 등록·변경**(별도 bootstrap 경로 전용), 기록 수정·삭제, 사용 허가 부여), 인증 실패(401, 저장 없음, 실행 기록 없음, AI 출력 `recorded=false`)와 기록 실패(500, 롤백, 실행 기록 FAILED를 REQUIRES_NEW로 남김, 그것마저 실패하면 `FAILURE_AUDIT_WRITE_FAILED`) 처리를 적었다. 승인 전까지 "초안"이다.
 
 ### 8. 검증 방법과 변경 범위
 
@@ -237,7 +239,7 @@ Core 기록은 트랜잭션 하나(SERIALIZABLE, 직렬화 실패 1회 재시도
 | SAFE-D | `human_decision_notice`가 모든 상태의 준비안에 있다 | Python 계약 테스트 |
 | SAFE-E | HOLD 섹션에 항목·근거 ID·규칙 원문이 없다 | Python 단위 + Core 통합(422) |
 | SAFE-F | 자유 문장 입력 경로가 없다(권장안). 메모를 포함하면 SAFE-C(업무 내용 동일성, 본문 미저장)로 대체 | 계약·단위 테스트 |
-| SAFE-G | 질문 기반 안전성 사례(S10·E22·E23)는 TASK-019에서 검증한다는 분리를 TASK-014 안전성 파일과 이 문서에 기록 | diff 검토 |
+| SAFE-G | 안전성 참조 자료 v2에서 책임이 객체로 구분됨(`structural: TASK-015`, `question_based: TASK-019`). v1 파일과 TASK-014 완료 기록 보존, 검색 골든셋 버전 v1 유지, 질문 3건과 참조 ID 유지. 질문 기반 사례(S10·E22·E23)는 TASK-019에서 검증 | Python 계약 테스트(v2) + diff 검토 |
 
 ### 테스트 (각 테스트가 보장하는 것)
 
@@ -257,7 +259,7 @@ Core 기록은 트랜잭션 하나(SERIALIZABLE, 직렬화 실패 1회 재시도
 | AC-05 | Tool 401/403/5xx/시간 초과/응답 schema 위반 | 섹션 HOLD `UNVERIFIED`(코드 구분), 추측 없음. 기록 실패 시 `recorded=false`·사용 금지 안내·종료 3 | Python 단위 | 미검증 |
 | AC-06 | Core 기록: READY 준비안 | 201, 세 표 행과 재현 정보(5절), 근거 원문 미저장 | Core 통합 | 미검증 |
 | AC-07 | Core 기록: C1~C5 각각 어긋남(철회·반려·항목 누락·순서 변경·근거 해시 변조·선택 공문 변경) | 422/409 해당 코드, 준비안 행 없음, 실행 기록 REJECTED | Core 통합 | 미검증 |
-| AC-08 | 같은 ID 같은 내용 재기록, 동시 2회, 같은 ID 다른 내용 | ALREADY_RECORDED(새 run), 행 1개, 400/409 거부 | Core 통합 | 미검증 |
+| AC-08 | 같은 ID 같은 내용 재기록, 동시 2회, 같은 ID 다른 내용 | ALREADY_RECORDED(새 run), 행 1개, 400/409 거부. **같은 ID 재요청에서도 C1~C5 재확인이 실행됨**(재확인 전에 철회하면 기존 행이 있어도 422 거부, 재확인 조회 호출이 기록됨) | Core 통합 | 미검증 |
 | AC-09 | 토큰 없음·불일치, 읽기 토큰으로 기록, schema 밖 필드, 본문 actor | 401 / 400, 서비스 ID·scope는 토큰 기준 | Core 통합 | 미검증 |
 | AC-10 | 기록 호출 전후 | 승인·일정·변경안·검증·공문 사건 표 행 수 불변. 세 표 append-only·보호 목록·CHECK | Core 통합 | 미검증 |
 | AC-11 | 안전성 SAFE-A·B·D·E·F·G | 전부 통과 | Python 계약·단위 + Core 통합 + diff | 미검증 |
@@ -280,7 +282,7 @@ Core 기록은 트랜잭션 하나(SERIALIZABLE, 직렬화 실패 1회 재시도
 2. 계약·설정: `contracts/consultation-preparation.schema.json`, `contracts/consultation-preparation-record.schema.json`, `contracts/consultation-family-mapping.schema.json`, `datasets/synthetic/work/consultation-family-mapping.json`(합성 시나리오의 사용자 승인 설정. Core와 AI 서비스가 같은 파일을 쓴다).
 3. Core: V10 migration(준비안·섹션·실행 기록·매핑 네 표, CHECK, 보호 목록, 권한), 매핑 bootstrap importer, 기록 토큰 설정과 필터, `ConsultationPreparationController`/`Service`(공통 검사, M1~M5, C1~C8, SERIALIZABLE 1회 재시도)/`Repository`, 통합 테스트.
 4. AI 서비스: `apps/ai-service/ai_service/`(`config.py`, `core_client.py`, `assembler.py`, `messages.py`, `ids.py`(해시·run_id), `cli.py`, `app.py`), `requirements-ai.txt`·lock, 테스트 `tests/ai_service/`.
-5. 연결 검증: Gradle 작업·Java 통합 테스트·CI 단계, evidence `docs/evidence/CONSULTATION_PREPARATION_EVIDENCE.md`, README 3곳 갱신, TASK-014 안전성 파일 `pass_criteria_owner` 분리 제안.
+5. 연결 검증: Gradle 작업·Java 통합 테스트·CI 단계, evidence `docs/evidence/CONSULTATION_PREPARATION_EVIDENCE.md`, README 3곳 갱신, 안전성 참조 자료 v2(책임 객체 구분)와 schema·계약 테스트 변경, TASK-014 문서 "후속 변경" 절 추가(제안 7, 구현 단계).
 
 예상 크기: Core Java 약 8파일 + migration 1 + 테스트 2클래스, Python 약 8파일 + 테스트 5파일, 계약 3, 설정 1, CI·Gradle 변경, 문서 4. **기존 승인·일정·변경안·검증 코드 변경 없음, 새 저장·재확인 기능 추가.**
 
@@ -322,10 +324,9 @@ Core 기록은 트랜잭션 하나(SERIALIZABLE, 직렬화 실패 1회 재시도
 - 보완 설명(8절): 환경 준비·시간 제한·출력 수집·종료 방법을 정했다. 속성이 없으면 건너뛰고 건너뜀을 보고서에 남긴다.
 **판단** - [x] 채택(보완된 방향) / 결정자 사용자 / 검토 대상: 이 계획 PR. 구현 착수는 별도 승인
 
-### 제안 7: 안전성 참조 자료의 책임 표시 변경 (판단 대기)
-- 내용: TASK-014 안전성 파일 `prepayment-fee-safety-v1.json`의 `pass_criteria_owner: TASK-015`를 구조 검증(TASK-015)과 질문 기반·LLM 출력 검증(TASK-019)으로 나눈다. 세 가지 방법을 비교한다. (a) 파일에 `structural_criteria_owner: TASK-015`, `question_case_owner: TASK-019`를 추가하고 `pass_criteria_owner`는 그대로 둔 채 `deprecated_note`로 설명(기존 schema 호환, 계약 테스트는 두 필드 추가 검사). (b) `pass_criteria_owner`를 객체 `{structural: TASK-015, question_based: TASK-019}`로 바꾸고 schema·계약 테스트를 함께 고치며 `goldenset_version`을 v2로 올린다. (c) 파일은 두고 TASK-014·015·019 문서에만 책임 분리를 적는다. 권장은 (a)다. 파일·schema·테스트를 조금 바꾸되 역사적 기록과 버전은 유지하고, 안전성 참조 3건의 내용은 바꾸지 않는다. 적용 시점은 TASK-015 구현 PR이며 TASK-014 문서에는 "후속 변경" 절만 덧붙인다(기존 판단·완료 기록은 수정하지 않음).
-- 대안 비교: (b)는 깔끔하지만 완료된 자료의 버전을 올려 평가 자료 변경 규칙(TASK-014)을 건드린다. (c)는 자료와 문서가 어긋난다.
-**판단** - [ ] 채택 [ ] 수정 [ ] 거절 / 사용자 / 판단 대기
+### 제안 7: 안전성 참조 자료의 책임 표시 변경 → (b) 채택
+- 내용: TASK-014 안전성 파일 `prepayment-fee-safety-v1.json`의 `pass_criteria_owner: TASK-015`를 구조 검증(TASK-015)과 질문 기반·LLM 출력 검증(TASK-019)으로 나눈다. 비교한 방법: (a) 필드 추가·버전 유지, (b) `pass_criteria_owner`를 객체 `{structural: TASK-015, question_based: TASK-019}`로 바꾸고 schema·계약 테스트를 함께 고치며 안전성 파일을 v2로 올림, (c) 문서에만 기록.
+- **판단: (b) 채택**(결정자 사용자, 검토 대상 이 계획 PR). 계획: 안전성 참조 자료는 **v2 파일 `prepayment-fee-safety-v2.json`**에서 구조 검증 책임(TASK-015)과 질문 기반·LLM 출력 검증 책임(TASK-019)을 객체로 명확히 구분한다. **기존 v1 파일과 TASK-014의 완료 기록은 보존**하고 TASK-014 문서에는 "후속 변경" 절로 v1 → v2 관계만 덧붙인다(기존 판단·완료 기록 수정 없음). 검색 질문·정답이 바뀌지 않으므로 **검색 골든셋(smoke·eval)의 버전은 v1 그대로** 둔다. 안전성 질문 3건(SAFE-01~03)과 참조 ID(S10·E22·E23)는 그대로 유지한다. schema는 `kind: safety`의 `pass_criteria_owner`를 객체로 받도록 바꾸되 v1 파일도 읽을 수 있게 문자열·객체 둘 다 허용하고, 계약 테스트는 v2에 두 책임이 모두 있는지와 v1·v2의 참조 ID가 같은지 확인한다. **실제 파일·schema·테스트 변경은 TASK-015 구현 단계에서 진행**하며 이 계획 PR에서는 바꾸지 않는다.
 
 ## Implementation Result / AI self-review / 인간 검수 / 결정 기록
 
