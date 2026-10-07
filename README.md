@@ -32,6 +32,7 @@ checklist 변경안(proposal) 생성을 구현했습니다. 새 공문의 구조
 사람 검토 결정(승인, 수정, 반려)과 승인 checklist 발행을 구현했습니다. 승인은 사람 결정 기록, HUMAN_REVIEW 출처 checklist, 적용 일정 revision을 한 트랜잭션으로 남기고, 적용 공문 조회는 사람 결정이 있는 checklist만 사용 허용 후보로 보며 과거·미래 조회, 공문 철회, 선택 변경·모호, 필수 공개 근거 미확인은 계속 차단합니다. 검수자 ID는 합성 값이며 인증·화면·승인 철회·정기 재검증은 구현하지 않았습니다.
 검수자가 변경안의 설명 문구만 고친 경우 자동 검증은 FAIL이 아니라 WARN(`INSTRUCTION_EDITED`)으로 알리고 승인 사유를 요구합니다. 규칙 키, 변경 전후 값, 단위, 시행일, 대상 상품, 조건, 예외, 근거 필요 여부는 공문 값과 달라지면 FAIL입니다. 자동 검증은 설명 문구의 의미를 보장하지 않으므로 검수자가 원문과 고친 문구를 대조해야 합니다.
 AI 서비스용 Core Tool API(읽기 전용)를 구현했습니다. AI는 업무 DB 대신 이 Tool로 "지금 적용되는 승인 checklist"와 "항목 근거"만 읽습니다. 사용 허용 여부는 Core가 결정하며 사용 불가 상태에서는 사유만 주고 항목과 근거 ID를 주지 않습니다. 근거 Tool은 서버가 소속과 사용 가능 여부를 다시 확인합니다. 서비스 인증은 test/demo 수준의 토큰 1개(환경변수)이며 사용자별 인증·권한과 FastAPI AI 서비스 자체는 구현하지 않았습니다.
+변경안 생성 → 자동 검증 → 사람 결정 → 승인 checklist 조회 → AI용 Tool 조회의 Core 전체 흐름을 demo 명령 진입점부터 HTTP까지 한 번에 재현하는 연결 검증을 추가했습니다(화면 전). 전체 MVP 완료가 아니며 AI 서비스와 화면 연결 뒤 별도 전체 흐름 검증이 남아 있습니다.
 최종 기획서와의 대표 시나리오 차이를 해소하기 위해 중도상환수수료율 1.2퍼센트에서
 0.8퍼센트로의 변경, 시행일, 적용 조건과 예외를 구조화한 합성 공문 v1/v2를 추가했습니다.
 Flyway V5와 synthetic importer, 적용 공문 조회 API가 이 구조화 변경을 보존하고 반환합니다.
@@ -130,6 +131,7 @@ python3 scripts/extract_public_kb_product_facts.py --all
 - 사람 검토 결정과 승인 checklist 발행 검증 기록: `docs/evidence/HUMAN_REVIEW_DECISION_EVIDENCE.md`
 - 변경안 검사 기준 조정(설명 문구 수정 허용) 검증 기록: `docs/evidence/VALIDATION_INSTRUCTION_EDIT_EVIDENCE.md`
 - AI 서비스용 Core Tool API 검증 기록: `docs/evidence/CORE_TOOL_API_EVIDENCE.md`
+- Core 전체 흐름 연결 검증 기록(화면 전, demo 명령 진입점 → 조회·Tool): `docs/evidence/CORE_END_TO_END_FLOW_EVIDENCE.md`
 - 최종 기획서 정합화 검증 기록: `docs/evidence/FINAL_PROPOSAL_ALIGNMENT_EVIDENCE.md`
 - Oracle 전환 위험 검증 spike 기록(중단): `docs/evidence/TASK-003_ORACLE_SPIKE_EVIDENCE.md`
 
