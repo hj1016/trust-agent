@@ -1,6 +1,6 @@
 # TASK-011a Core 전체 흐름 연결 검증 (화면 전)
 
-- 상태: **계획 검토 대기** (상세 계획 작성 승인: 사용자, PLAN-002 PR #32. 구현 착수는 미승인)
+- 상태: **검증·검수 대기** (상세 계획 작성 승인: 사용자, PLAN-002 PR #32. 구현 착수 승인: 사용자, 아래 "착수 승인과 조건". 구현 PR #36. 인간 검수, Explainability Gate, 완료 판정은 대기)
 - 담당자 / 인간 결정자: AI 조사·초안·구현·검증 / 사용자 범위·판정·검수
 - 요구사항 출처: PLAN-002 TASK-011a 절, 사용자 판단 "Core의 변경안 생성 → 검증 → 승인 → 조회 전체 흐름 검증을 화면 뒤로만 미루지 않는다. 기존 자동 검증으로 이미 충족한 범위를 확인하고 부족한 연결 검증을 먼저 계획", README MVP 4~6단계와 9단계의 Core 범위
 - 관련 Task: TASK-005~008, 013(완료). TASK-011b(AI·화면 연결 뒤 전체 흐름 검증)는 별도
@@ -47,7 +47,7 @@
 | AC-01 | 예시 적재 → 변경안 생성 → 검증 → 승인이 **demo 설정 키와 ApplicationRunner**로 순서대로 실행되고 단계마다 실행 기록(SUCCEEDED)과 결과 ID가 남는다 | 통합 테스트 |
 | AC-02 | 승인 뒤 적용 공문 조회와 Tool `applicable_checklist`가 같은 version ID·결정 ID·항목 3개를 돌려주고 사용 허용 true. Tool `rule_evidence`가 그 항목 근거를 제공 | 통합 테스트(HTTP) |
 | AC-03 | 설명 문구만 고친 수정 결정(`revised-rules-json`) → 재검증 WARN → 사유 승인이 runner로 실행되고, 조회와 Tool 항목에 고친 문구가 보인다 | 통합 테스트 |
-| AC-04 | 잘못된 순서와 누락 인자가 각 단계에서 거부된다: 검증 전 승인 `VALIDATION_MISSING`, 없는 변경안 `PROPOSAL_NOT_FOUND`, 필수 설정 누락 기동 실패, 미승인 공문군 조회 사용 불가. 거부 시 결과·checklist가 생기지 않는다 | 통합 테스트 |
+| AC-04 | 잘못된 순서와 누락 인자가 각 단계에서 거부된다: 검증 전 승인 `VALIDATION_MISSING`, 없는 변경안 `PROPOSAL_NOT_FOUND`, 필수 설정 누락 기동 실패, 미승인 공문군 조회 사용 불가. 거부 시 결과·checklist가 생기지 않는다 | 통합 테스트. demo runner 경로는 새 테스트, 서비스 직접 호출·HTTP 경로는 기존 테스트로 나누어 연결한다(구현 결과의 AC-04 대응표). 기존 테스트가 보장하는 조건은 재작성하지 않는다 |
 | AC-05 | README의 명령 예시 설정 키가 코드의 키와 전부 일치(테스트가 README를 읽어 대조하거나 evidence에 대조표) | 테스트 또는 evidence |
 | AC-06 | 기존 테스트 수와 결과 유지(현재 Java 153, Python 65), 업무 로직 파일 변경 없음(diff가 테스트·문서·README뿐) | 로컬/CI + diff 검토 |
 | AC-07 | evidence에 단계별 실제 출력과 거부 사례, "전체 MVP 완료가 아니다" 명시 | diff 검토 |
@@ -64,12 +64,65 @@
 
 ### 제안 1: 적재 단계는 importer 명령 그대로, demo runner는 4개만
 - 내용: 공문 적재는 TASK-001 범위의 importer 진입점이라 기존 방식으로 두고, 이 Task는 TASK-005~007의 demo runner 4개 연결만 검증한다.
-**판단** - [ ] 채택 [ ] 수정 [ ] 거절 / 사용자 / 판단 대기
+
+**판단**
+- [x] 채택
+- 판단자 / 검토 대상 PR: 사용자 / PR #35(계획), PR #36(구현)
+- 이유 / 승인 범위: importer 권한과 진입점을 유지한다. 적재는 importer 명령 그대로 두고 demo runner 4개(예시 checklist 적재, 변경안 생성, 자동 검증, 사람 결정)의 연결만 검증한다.
 
 ### 제안 2: README 설정 키를 테스트가 직접 대조
 - 내용: README에서 `--trust-agent.*` 키를 읽어 코드 상수와 비교해 문서와 코드의 어긋남을 자동으로 잡는다. 대안: evidence의 대조표(수동).
-**판단** - [ ] 채택 [ ] 수정 [ ] 거절 / 사용자 / 판단 대기
+
+**판단**
+- [x] 채택
+- 판단자 / 검토 대상 PR: 사용자 / PR #35(계획), PR #36(구현)
+- 이유 / 승인 범위: 테스트가 core README의 `--trust-agent.*` 키를 읽어 main 코드(Java, yml)와 대조한다. 수동 대조표는 쓰지 않는다.
+
+### 착수 승인과 조건 (사용자 지시)
+- 결정자 / 승인 범위 / 검토 대상 PR: 사용자 / 아래 네 조건 / PR #35(계획), PR #36(구현)
+- 조건 1: importer 권한과 진입점 유지(제안 1).
+- 조건 2: README 설정 키 대조(제안 2).
+- 조건 3: demo 명령 진입점부터 적용 공문 조회와 AI용 Tool 조회까지 연결 검증. 업무 로직 변경 없음.
+- 조건 4: 결함을 숨기지 않고 보고한다. 테스트 쪽 수정과 관찰 사항도 evidence와 PR에 남긴다.
+- 이 승인은 구현 착수와 검증 실행의 승인이며, 인간 검수와 Explainability Gate 통과, 완료 판정은 아니다.
 
 ## Implementation Result / AI self-review / 인간 검수 / 결정 기록
 
-미실행 / 미기록. 구현은 사용자 착수 승인 뒤.
+### 구현 결과 (AI 작성, 사실)
+
+- 검증 대상: 브랜치 `test/core-end-to-end-flow`, PR #36. 최초 구현 commit `a3f2def`(공개 CI 통과), 검수 보완 코드 commit `6430930`(거부 사례의 발행 행 전후 건수와 실패 실행 기록 확인, FIXTURE 기간 사유 확인, 기존 테스트 연결. 로컬 Java 158건·Python 65건 통과). 문서만 바꾼 commit은 검증 대상이 아니며 evidence에 구분해 적었다. 상세: [검증 기록](../evidence/CORE_END_TO_END_FLOW_EVIDENCE.md).
+- 변경 파일: 테스트 1클래스 `CoreEndToEndFlowIntegrationTest`(5건), evidence 문서, 루트 README 한 줄과 evidence 링크. 업무 코드 0행.
+- 실행 방식: demo 명령 4개는 README의 `bootRun --args` 명령과 같은 명령행 인자로 web 없는 Spring 컨텍스트를 띄워 ApplicationRunner를 1회씩 실행했다. 적재는 importer 진입점을 그대로 썼다. 조회와 Tool은 web 컨텍스트에서 HTTP로 호출했다.
+
+AC 대응표. "demo runner"는 새 테스트가 명령 진입점으로 확인한 것, "서비스 직접 호출" 또는 "HTTP"는 기존 테스트가 보장하고 재작성하지 않은 것이다.
+
+| AC | 결과 | 보장 테스트 | 경로 |
+|---|---|---|---|
+| AC-01 | 통과 | `CoreEndToEndFlowIntegrationTest.demoCommandsRunTheCoreFlowInOrderAndLeaveRunRecords` | demo runner |
+| AC-02 | 통과 | `CoreEndToEndFlowIntegrationTest.applicableQueryAndToolReturnTheIssuedChecklistsAndEditedInstruction` | demo runner로 발행 뒤 HTTP |
+| AC-03 | 통과 | `CoreEndToEndFlowIntegrationTest.modifyRevalidateAndApproveThroughDemoCommands`, 같은 클래스 `applicableQueryAndToolReturnTheIssuedChecklistsAndEditedInstruction`(고친 문구 노출) | demo runner, HTTP |
+| AC-04 검증 전 승인 `VALIDATION_MISSING` | 통과 | `CoreEndToEndFlowIntegrationTest.demoCommandsRunTheCoreFlowInOrderAndLeaveRunRecords`(실패 실행 기록, 발행 행 전후 건수 동일). 기존 `HumanReviewIntegrationTest.approvalIsRefusedForFailedMissingStaleMismatchedOrUnexplainedWarnValidation` | demo runner. 서비스 직접 호출 |
+| AC-04 없는 변경안 `PROPOSAL_NOT_FOUND` | 통과 | 승인 쪽: `CoreEndToEndFlowIntegrationTest.wrongOrderAndMissingSettingsAreRefusedBeforeAnythingIsIssued`(실패 실행 기록, 발행 행 없음). 검증 쪽: 기존 `ProposalValidationIntegrationTest.revalidationAppendsNewResultAndRunIdConflictIsRejected`(`validation_run` FAILED) | demo runner. 서비스 직접 호출 |
+| AC-04 필수 설정 누락 기동 실패 | 통과 | `CoreEndToEndFlowIntegrationTest.wrongOrderAndMissingSettingsAreRefusedBeforeAnythingIsIssued`(실행 기록과 결과 없음) | demo runner |
+| AC-04 사유 없는 WARN 승인 `REASON_REQUIRED` | 통과 | `CoreEndToEndFlowIntegrationTest.modifyRevalidateAndApproveThroughDemoCommands`(실패 실행 기록, 발행 행 전후 건수 동일). 기존 `HumanReviewIntegrationTest.approvalIsRefusedForFailedMissingStaleMismatchedOrUnexplainedWarnValidation` | demo runner. 서비스 직접 호출 |
+| AC-04 미승인 공문군 조회 사용 불가 | 통과(기존 테스트) | Tool: `ToolApiIntegrationTest.unusableStatesReturnReasonsOnlyWithoutItemsOrRuleIds`(`HUMAN_REVIEW_PENDING`, 항목과 규칙 ID 없음). Core 조회: `InternalPolicyApplicableIntegrationTest.validationResultDrivesChecklistStatusWithoutAllowingUse`(`PENDING_REVIEW`, 사용 허용 false). 새 테스트는 두 공문군을 모두 승인하므로 이 조건을 다루지 않고, 대신 승인 전 FIXTURE 기간(`FIXTURE_CHECKLIST_NOT_APPROVED`)을 Tool과 Core 조회에서 확인한다 | 서비스 직접 호출로 발행 뒤 HTTP |
+| AC-04 거부 시 결과·checklist가 생기지 않음 | 통과 | 새 테스트의 거부 1, 4, 5에서 사람 결정, HUMAN_REVIEW checklist version과 항목, 일정 revision과 entry의 전후 건수 동일. 거부 2는 `validation_run`과 결과 0건, 거부 3은 변경안과 항목 0건. 저장 도중 실패는 기존 `HumanReviewIntegrationTest.failureInsideApprovalTransactionLeavesNoPartialRows`, `ProposalValidationIntegrationTest.failureWhileSavingIssuesRollsBackResultAndIssues` | demo runner. 서비스 직접 호출 |
+| AC-05 | 통과 | `CoreEndToEndFlowIntegrationTest.readmeDemoSettingKeysAllExistInTheCode`(README 키 16개, 누락 0) | 파일 대조 |
+| AC-06 | 통과 | 기존 Java 153건 유지 + 신규 5건 = 158건, Python 65건. diff는 테스트, evidence, README뿐 | 로컬, CI, diff |
+| AC-07 | 통과 | evidence의 단계별 실제 출력, 거부 사례 5건, "전체 MVP 완료가 아니다" 명시 | diff 검토 |
+
+- 결함 보고: 업무 코드 결함 없음. 테스트 쪽 수정 2건(빌더 속성 우선순위 → 명령행 인자, 실행 기록 열 이름)과 관찰 2건(셀러론 조회의 `APPROVED_CHECKLIST_NOTICE_MISMATCH` 동반, README의 선택 키 생략)은 evidence에 기록했다.
+
+### AI self-review
+
+- 수행한 검사: 완료 확인 조건 7개와 테스트 대조, 기존 테스트 범위 대조(재작성 여부), 업무 코드 변경 여부(diff), 권한 우회 여부(Tool 토큰은 테스트 임시값, 서비스 토큰 1개 범위 그대로), 문서와 코드 불일치(README 설정 키 대조, 상태 문구).
+- 발견과 수정: (1) 최초 구현의 evidence가 "`human_review_run` FAILED 1행"을 적었으나 테스트가 확인하지 않았다 → 거부 1의 실행 기록 확인을 추가했다. (2) 거부 시 발행 행 부재 확인이 없었다 → 거부 1, 4, 5에 결정·version·항목·일정 revision·entry 전후 건수 확인을 추가했다. (3) AC-04의 "미승인 공문군 조회 사용 불가"는 새 테스트 범위 밖이었다 → 기존 테스트 2건으로 연결하고 FIXTURE 기간 사례의 차단 사유 확인을 추가했다. (4) 계획의 "없는 변경안 검증"은 구현에서 "없는 변경안 승인"으로 바뀌어 있었다 → 검증 쪽은 기존 테스트로 연결하고 대체 사실을 기록했다. (5) evidence에 검증 대상 commit, CI 링크, Python 건너뜀 테스트명과 사유가 없었다 → 추가했다.
+- 미해결과 위험: 서비스 직접 호출로 보장되는 조건은 demo runner 경로로 다시 쓰지 않았다(runner는 같은 서비스를 호출한다). README 명령 4개를 `gradlew bootRun`으로 실제 실행하는 검증은 이번 범위에서 제외됐다(사용자 결정). 동시 실행, 성능, 사용자별 권한, AI 서비스와 화면은 범위 밖이다. 루트 README 6행과 AGENTS.md 18행의 "Core Tool API 미구현" 문구는 TASK-008 완료와 어긋나며 별도 보완 항목이다(이 Task에서 고치지 않음).
+
+### 인간 검수와 Explainability Gate
+
+대기. REVIEW_CHECKLIST 적용 / 검수자 / 검수 대상 revision / 결과: 미기록.
+
+### 결정 기록과 완료
+
+대기. 최종 결정 / 결정자 / 승인 범위 / 검토 대상 PR: 미기록. 이 Task의 완료는 "Core 승인과 조회 흐름의 연결 검증 완료(화면 전)"를 뜻하며 전체 MVP 완료가 아니다.
