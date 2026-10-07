@@ -14,7 +14,7 @@ FastAPI AI 서비스의 첫 연결 단계. 합성 신청 건 하나에 대해 AI
 
 ## 테스트 evidence
 
-검증 대상 revision: 구현·자료·테스트 커밋 `87b553b`(브랜치 `feat/task-015-consultation-preparation`, base `006c880`). 문서 커밋은 그 뒤에 따로 올렸고 검증 대상 코드는 바꾸지 않았다. CI 결과 링크는 PR 본문에 있다. 환경: 로컬 macOS arm64, Java 21, Docker, PostgreSQL 18.6 Testcontainers(digest 고정), Python 3.11.
+검증 대상 revision: 구현·자료·테스트 커밋 `87b553b`(브랜치 `feat/task-015-consultation-preparation`, base `006c880`). 문서 커밋과 CI 수정 커밋 `63fee24`(워크플로·Gradle 로그 설정만)는 그 뒤에 따로 올렸고 검증 대상 코드는 바꾸지 않았다. CI 결과는 아래 "CI 결과" 절과 PR #40 본문에 있다. 환경: 로컬 macOS arm64, Java 21, Docker, PostgreSQL 18.6 Testcontainers(digest 고정), Python 3.11.
 
 ```text
 JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew clean test bootJar --offline --no-daemon -PaiServiceIntegration=true
@@ -89,12 +89,18 @@ Gradle 결과 파일은 실행마다 덮어써지므로 실행별로 로그와 J
 | 의도적 환경 누락 | `gradle-env-missing-failure.log`(로컬 보관) | `test-results-env-missing.md` | `AI_INTEGRATION_ENV_MISSING` 실패 1건 |
 | Python | `python-unittest.log`(로컬 보관) | `RUN_SUMMARY.txt` 4절 | 건너뜀 2건은 기존 비공개 snapshot 사유 |
 
+## CI 결과 (PR #40)
+
+- 1차 실행(https://github.com/hj1016/trust-agent/actions/runs/37659077359): `Gradle tests` 성공, `Python contracts` **실패**. 원인은 CI가 `unittest discover -s tests`를 top-level 지정 없이 실행해 `tests/ai_service`가 패키지 `ai_service`를 가리고 `ai_service.config`를 찾지 못한 것(import 오류 3건). 로컬에서 같은 명령으로 재현했다.
+- 수정 커밋 `63fee24`(`.github/workflows/ci.yml`, `apps/core-service/build.gradle`만): discover 명령을 README와 같은 `-s tests -t .`로 고치고, Gradle 로그에 preparation 패키지 테스트의 통과·skip·실패와 전체 합계를 출력하게 했다. 테스트나 완료 기준은 바꾸지 않았다.
+- 2차 실행(https://github.com/hj1016/trust-agent/actions/runs/37659799630): 두 job 모두 성공. [Gradle tests](https://github.com/hj1016/trust-agent/actions/runs/37659799630/job/112924094547) 로그에 `TEST SUMMARY: 181 tests, 181 passed, 0 failed, 0 skipped`와 연결 검증 `AiServicePreparationIntegrationTest` 5건·전체 READY CLI 1건의 `TEST SUCCESS`가 있고 `TEST SKIPPED`는 0건이다(필수 CI에서 Core와 Python CLI 연결 테스트가 실제 실행됨). [Python contracts](https://github.com/hj1016/trust-agent/actions/runs/37659799630/job/112924094871) 로그는 `Ran 106 tests`, `OK (skipped=2)`이며 skip 2건은 기존 비공개 snapshot artifact 사유로 TASK-015와 무관하다.
+
 ## 확인된 사실과 한계
 
 - 셀러론(필수, 미승인) 섹션의 Core 사유는 `HUMAN_REVIEW_PENDING`과 함께 예시 checklist 일정 불일치 `APPROVED_CHECKLIST_NOTICE_MISMATCH`도 온다(TASK-014 고정 조건의 실제 Core 응답). 둘 다 사용 불가 사유로 그대로 전달·저장된다.
 - 전체 상태 **READY**인 준비안은 별도 환경(셀러론까지 승인, 30일 공개 근거 정책에서 PASS)에서 Core 기록과 CLI 모두 확인했다. 기본 고정 조건(셀러론 미승인)의 PARTIAL·HOLD 사례는 그대로다.
 - 같은 ID 다른 내용(409 PREPARATION_CONFLICT)은 ID가 내용 해시라 정상 경로에서는 400 PREPARATION_ID_MISMATCH로 먼저 걸린다. 저장되는 content_hash가 ID와 같은 함수의 값이라 409는 해시 함수 변경이나 충돌 없이는 만들 수 없는 방어선이며 테스트로 만들지 않았다.
 - 직렬화 실패 재시도는 실제 동시 철회가 아니라 commit 단계에 SQLSTATE 40001을 주입해 검증했다. 실제 충돌 타이밍은 비결정적이라 테스트로 만들지 않았다. PK 충돌(23505) 해결 경로는 저장소 대역으로 실제 23505를 재현해 충돌 뒤 재확인이 다시 실행됨을 검증했다.
-- 필수 CI에서의 실제 실행은 이후 검토용 PR의 CI 로그로 확인한다(로컬에서는 실행·skip·환경 누락 실패 세 경우를 확인).
+- 필수 CI에서의 실제 실행은 PR #40의 2차 CI 로그로 확인했다(위 "CI 결과"). 로컬에서는 실행·skip·환경 누락 실패 세 경우를 확인했다.
 - 안전성 검증은 규칙 조립 출력의 **구조 검증**(SAFE-A·B·D·E·F)이다. 질문 기반 사례(S10·E22·E23)와 LLM 출력 검증은 TASK-019이며 이 기록은 LLM 안전성 검증 완료가 아니다.
 - 행원 메모 입력, 검색, 화면, 사용자별 인증·권한은 범위 밖이다. 매핑은 합성 시나리오의 사용자 승인 설정 1건이다.

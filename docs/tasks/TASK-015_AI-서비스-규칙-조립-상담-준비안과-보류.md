@@ -265,7 +265,7 @@ Core 기록은 트랜잭션 하나(SERIALIZABLE, 직렬화 실패 1회 재시도
 | AC-11 | 안전성 SAFE-A·B·D·E·F·G | 전부 통과 | Python 계약·단위 + Core 통합 + diff | **통과**(구조 검증, 로컬). Python `SafetyTest` 4건(결정 필드 없음·금지 표현 없음·사유 표 대조·허용 목록), Core HOLD 섹션 항목 금지(400·CHECK), `human_decision_notice` 모든 출력에 포함, diff 검토. 질문 기반·LLM 출력 검증은 TASK-019 |
 | AC-12 | AI 서비스 설정·의존성 | 업무 DB 자격증명 항목 없음, DB 드라이버 의존성 없음 | Python 단위 + 검토 | **통과**(로컬). `test_no_database_credential_settings_or_drivers`, `requirements-ai.txt` 검토(fastapi·uvicorn·httpx만 추가) |
 | AC-13 | 재실행 | 기존 기록이 있어도 Tool 1·2를 다시 호출함(가짜 Core 호출 횟수), 상태 불변 시 ALREADY_RECORDED, 철회 뒤 새 ID HOLD | Python 단위 + 연결 검증 | **통과**(로컬). Python `test_rerun_calls_core_tools_again_even_when_already_recorded`, 연결 검증 `rerunRechecksCoreAndRecordsOnlyOnce`·`stateChangeProducesNewHoldPreparation`·`withdrawalAfterRecordingProducesNewHoldPreparation` |
-| AC-14 | 연결 검증 자동 테스트 | 필수 CI(Gradle tests 체크)에서 실제 실행되고 통과. 로컬 기본은 명시적 skip으로 보고서에 남고, CI에서는 환경 누락이 실패(`AI_INTEGRATION_ENV_MISSING`)로 드러남. 시간 제한, 출력 파일 수집, 실패 시 프로세스 종료 | Java 통합 + CI 로그 + 의도적 환경 누락 실패 1회 확인 | **로컬 통과, CI 실행 미확인**. 로컬 실행 5건 통과, 기본 실행은 skip 5건이 보고서에 남음, 의도적 환경 누락 1회 `AI_INTEGRATION_ENV_MISSING` 실패 확인, 60초 제한·출력 파일(`build/reports/ai-service/`)·강제 종료 구현. 필수 CI 실제 실행은 push 뒤 CI 로그로 확인 |
+| AC-14 | 연결 검증 자동 테스트 | 필수 CI(Gradle tests 체크)에서 실제 실행되고 통과. 로컬 기본은 명시적 skip으로 보고서에 남고, CI에서는 환경 누락이 실패(`AI_INTEGRATION_ENV_MISSING`)로 드러남. 시간 제한, 출력 파일 수집, 실패 시 프로세스 종료 | Java 통합 + CI 로그 + 의도적 환경 누락 실패 1회 확인 | **통과**. 필수 CI(PR #40 2차 실행) 로그에서 연결 검증 5건과 전체 READY CLI 1건 `TEST SUCCESS`, skip 0건, 합계 181/181 확인. 로컬 기본 실행은 skip 6건이 보고서에 남음, 의도적 환경 누락 1회 `AI_INTEGRATION_ENV_MISSING` 실패 확인, 60초 제한·출력 파일·강제 종료 구현 |
 | AC-15 | 기존 테스트 수·결과 유지, 기존 승인·일정·변경안·검증 코드 diff 없음, README·AI 서비스 README·ADR-012가 실제 상태 기술, "AI 생성 완료"·"LLM 안전성 검증 완료" 표현 없음, "기록은 사용 허가가 아님"과 "READY는 상담·대출 결정의 완료가 아님" 명시 | 로컬·CI + diff 검토 | **통과**(로컬, diff 검토). 기존 테스트는 기대값 갱신(version 10, 표 40·trigger 80, 기록 토큰 필수)만 변경. README 3곳·ADR-012 상태 기술, "기록은 사용 허가가 아님"·"READY는 상담·대출 결정의 완료가 아님" 명시. "AI 생성 완료"·"LLM 안전성 검증 완료"는 부정문(아니다)으로만 등장 |
 | AC-16 | 매핑 불일치 요청: 필수 섹션 누락, `required` 값 변경, 섹션 상태와 다른 전체 READY 주장, 다른 `family_mapping_hash` | 409 `MAPPING_MISMATCH` / 422 `REQUIRED_SECTION_MISSING`·`REQUIRED_FLAG_MISMATCH`·`PREPARATION_STATUS_INVALID`, 준비안 행 없음, 실행 기록 REJECTED | Core 통합 | **통과**(로컬). `mappingAndStatusClaimsAreRejected` |
 | AC-17 | 필수 공문군이 없는 매핑 | AI 서비스는 HOLD·`preparation_complete=false`·`NO_REQUIRED_FAMILY_CONFIGURED`, Core는 READY 요청을 422 `NO_REQUIRED_FAMILY`로 거부 | Python 단위 + Core 통합 | **통과**(로컬). Python `test_mapping_without_required_family_never_becomes_ready`, Core `mappingWithoutRequiredFamilyNeverAllowsReady` |
@@ -365,7 +365,7 @@ Ran 106 tests (기존 75 + 신규 31: tests/ai_service 30 + 골든셋 계약 1),
 ### 남은 한계
 
 - 409 `PREPARATION_CONFLICT`는 코드상 정상 경로로 만들 수 없는 방어선이라 테스트를 만들지 않았다(보완 4절). 직렬화 재시도는 40001 주입으로 검증했고 실제 동시 철회와의 충돌은 비결정적이라 테스트로 만들지 않았다.
-- 필수 CI 실제 실행(AC-14)은 이후 검토용 PR에서 확인한다.
+- 필수 CI 실제 실행(AC-14)은 PR #40 2차 CI에서 확인했다(2차 보완 3절).
 - 안전성은 구조 검증까지다. 질문 기반·LLM 출력 검증은 TASK-019.
 - 매핑은 합성 시나리오 1건이고 적재는 기동 시 설정으로만 한다. 행원 메모·검색·화면·사용자별 인증은 범위 밖이다.
 
@@ -446,7 +446,7 @@ where r.preparation_id = :preparation_id order by r.started_at;
 
 #### 2. 검증 결과 보존
 
-Gradle은 `build/test-results`를 실행마다 덮어쓰므로 실행별 로그와 결과 요약을 `docs/evidence/task-015/`에 따로 보존했다. 각 파일은 evidence 문서 "보존한 실행 기록" 절에서 연결한다. 원본 `.log`는 `.gitignore`(`*.log`)로 Git에 올리지 않는 로컬 보관 자료이고, 저장소에는 `.md` 결과 요약·`RUN_SUMMARY.txt`·CLI 출력 표본을 올렸다. 검증 대상 커밋은 `87b553b`(구현·자료·테스트)이며 문서 커밋은 그 뒤에 따로 올렸다. CI 실행 링크는 PR 본문에 있다.
+Gradle은 `build/test-results`를 실행마다 덮어쓰므로 실행별 로그와 결과 요약을 `docs/evidence/task-015/`에 따로 보존했다. 각 파일은 evidence 문서 "보존한 실행 기록" 절에서 연결한다. 원본 `.log`는 `.gitignore`(`*.log`)로 Git에 올리지 않는 로컬 보관 자료이고, 저장소에는 `.md` 결과 요약·`RUN_SUMMARY.txt`·CLI 출력 표본을 올렸다. 검증 대상 커밋은 `87b553b`(구현·자료·테스트)이며 문서 커밋과 CI 수정 커밋 `63fee24`는 그 뒤에 따로 올렸다. CI 실행 링크는 2차 보완 3절과 PR #40 본문에 있다.
 
 | 실행 | 명령 | 보존 파일 |
 |---|---|---|
@@ -456,6 +456,12 @@ Gradle은 `build/test-results`를 실행마다 덮어쓰므로 실행별 로그�
 | Python | `python3 -m unittest discover -s tests -t . -v` | `python-unittest.log`(로컬 보관), `RUN_SUMMARY.txt` |
 
 결과(이번 보완 뒤 실제 실행): 연결 검증 포함 전체 181건 통과·실패 0·skip 0, 로컬 기본 181건 중 통과 175·실패 0·skip 6, 의도적 환경 누락 1건 실패(`AI_INTEGRATION_ENV_MISSING: python venv …`), Python 106건 중 통과 104·실패 0·skip 2(기존 사유). 합계는 `docs/evidence/task-015/RUN_SUMMARY.txt`.
+
+#### 3. 필수 CI 실행 결과 (PR #40)
+
+- 1차 실행(https://github.com/hj1016/trust-agent/actions/runs/37659077359): `Gradle tests` 성공, `Python contracts` **실패**. 원인은 CI가 `unittest discover -s tests`를 top-level 지정 없이 실행해 `tests/ai_service`가 패키지 `ai_service`를 가리고 `ai_service.config`를 찾지 못한 것(import 오류 3건). 로컬에서 같은 명령으로 재현했다.
+- 수정 커밋 `63fee24`(`.github/workflows/ci.yml`, `apps/core-service/build.gradle`만): discover 명령을 README와 같은 `-s tests -t .`로 고치고, Gradle 로그에 preparation 패키지 테스트의 통과·skip·실패와 전체 합계를 출력하게 했다. 테스트나 완료 기준은 바꾸지 않았다.
+- 2차 실행(https://github.com/hj1016/trust-agent/actions/runs/37659799630): 두 job 모두 성공. [Gradle tests](https://github.com/hj1016/trust-agent/actions/runs/37659799630/job/112924094547) 로그에 `TEST SUMMARY: 181 tests, 181 passed, 0 failed, 0 skipped`와 연결 검증 `AiServicePreparationIntegrationTest` 5건·전체 READY CLI 1건의 `TEST SUCCESS`가 있고 `TEST SKIPPED`는 0건이다(필수 CI에서 Core와 Python CLI 연결 테스트가 실제 실행됨). [Python contracts](https://github.com/hj1016/trust-agent/actions/runs/37659799630/job/112924094871) 로그는 `Ran 106 tests`, `OK (skipped=2)`이며 skip 2건은 기존 비공개 snapshot artifact 사유로 TASK-015와 무관하다.
 
 ### AI self-review
 
