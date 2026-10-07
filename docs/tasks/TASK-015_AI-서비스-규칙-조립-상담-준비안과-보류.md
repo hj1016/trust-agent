@@ -1,9 +1,9 @@
 # TASK-015 AI 서비스 최소 흐름: 규칙 조립 상담 준비안과 보류
 
-- 상태: **계획 승인, 구현 착수 승인(계획 PR 병합 뒤 착수)** (결정자 사용자, 검토 대상 PR #39. 상세 계획 작성 지시 → 큰 방향 동의와 보완 요청 8건 반영 → 제안 6건 채택(보완된 방향)과 추가 조건 5건 반영 → 제안 7 (b) 채택 → 설계 보완 4건 반영 → 계획과 ADR-012 승인. 승인 범위: 매핑·계약·Core 저장과 재확인·규칙 기반 AI 서비스·필수 연결 CI·안전성 자료 v2. 검색과 LLM 생성은 범위 밖. 기능의 인간 검수, Explainability Gate, 완료 판정은 대기. 구현분 커밋·push·PR은 결과 확인 뒤 별도 지시)
+- 상태: **구현·로컬 검증 완료, 검토용 PR 생성, 인간 검수·Explainability Gate·완료 판정 대기** (구현 보고 2026-10-08. 이전 상태: 계획 승인, 구현 착수 승인. 결정자 사용자, 검토 대상 PR #39. 상세 계획 작성 지시 → 큰 방향 동의와 보완 요청 8건 반영 → 제안 6건 채택(보완된 방향)과 추가 조건 5건 반영 → 제안 7 (b) 채택 → 설계 보완 4건 반영 → 계획과 ADR-012 승인. 승인 범위: 매핑·계약·Core 저장과 재확인·규칙 기반 AI 서비스·필수 연결 CI·안전성 자료 v2. 검색과 LLM 생성은 범위 밖. 기능의 인간 검수, Explainability Gate, 완료 판정은 대기. 구현분 커밋·push·PR은 결과 확인 뒤 별도 지시)
 - 담당자 / 인간 결정자: AI 조사·초안·구현·검증 / 사용자 범위·판정·검수
 - 요구사항 출처: PLAN-002 TASK-015 절(제안 1 수정 채택: LLM 없는 규칙 조립 준비안은 첫 연결 단계, "AI 생성 완료"로 표현하지 않음. 제안 2 채택: 준비안·보류 기록은 Tool이 아니라 별도 쓰기 경로, Core가 저장 전 재확인), CLAUDE.md 기술 경계(AI Service는 Python + FastAPI, 업무 DB 직접 접근과 자격증명 보유 금지, Core Tool API로만 조회. AI는 승인·거절·금리·한도·신용등급 결정 주체가 아님), ADR-011(읽기 전용 Tool 2개, 서비스 토큰, 감사, 쓰기 Tool 없음), README MVP 7단계(상담 준비안)와 9단계(AI 중단 시 수기 checklist, AI 확정 경로 차단), TASK-014 안전성 참조 3건(`pass_criteria_owner: TASK-015`), 사용자 보완 요청 8건(부분 준비 표시, 보류 기록, 재실행, Core 직접 확인, 재현 정보, 메모와 안전성, 기록 권한, 검증 환경과 변경 범위)
-- 관련 Task / ADR: TASK-008(완료), TASK-011a(완료), TASK-014(완료. 검색 목표 수치는 TASK-016 시작 전에 정하고, 실제 관련성 보류 기준값은 TASK-016에서 초기 점검 자료로 조정한 뒤 최종 평가 전에 고정한다), TASK-016·017·019(이 Task 뒤). **ADR-012 초안**(`docs/adr/ADR-012-ai-service-preparation-record-path.md`, 미승인)을 이 Task에서 함께 제안한다.
+- 관련 Task / ADR: TASK-008(완료), TASK-011a(완료), TASK-014(완료. 검색 목표 수치는 TASK-016 시작 전에 정하고, 실제 관련성 보류 기준값은 TASK-016에서 초기 점검 자료로 조정한 뒤 최종 평가 전에 고정한다), TASK-016·017·019(이 Task 뒤). **ADR-012**(`docs/adr/ADR-012-ai-service-preparation-record-path.md`, PR #39에서 승인)를 이 Task에서 함께 제안했다.
 - 기존 자산: `apps/ai-service/README.md`는 "구현 예정" 한 줄뿐인 placeholder(TASK-000 KEEP). 이 Task에서 MODIFY해 실제 상태를 적는다. `apps/frontend`는 손대지 않는다.
 
 ## Goal / 관련 요구사항
@@ -252,29 +252,29 @@ Core 기록은 트랜잭션 하나(SERIALIZABLE, 직렬화 실패 1회 재시도
 
 | ID | 입력/상황 | 기대 결과 | 검증 방법 | 결과/evidence |
 |---|---|---|---|---|
-| AC-01 | 승인된 중도상환수수료 공문군, 업무일 2026-10-06, `SW-APPLICATION-001` | 섹션 READY. 항목 3개가 Tool 1 응답과 같고 항목마다 Tool 2 근거(문장·위치·해시), version ID·결정 ID 포함 | Python 단위 + 연결 검증 | 미검증 |
-| AC-02 | 셀러론 공문군(필수, 미승인) 같은 신청 건 | 섹션 HOLD `CORE_DECISION`/`HUMAN_REVIEW_PENDING`, 항목·근거 없음, 설명·수기 안내. 전체 PARTIAL, `preparation_complete=false`, `remaining_checks`에 셀러론, headline에 "끝나지 않았습니다" | Python 단위 + 연결 검증 | 미검증 |
-| AC-03 | 모든 필수 공문군 사용 불가(업무일 2026-09-30) | 전체 HOLD, 추측 항목 없음, HOLD 섹션이 Core에 기록됨 | Python 단위 + Core 통합 | 미검증 |
-| AC-04 | Tool 2가 한 항목에 403 | 섹션 전체 HOLD `UNVERIFIED`/`EVIDENCE_UNAVAILABLE`, 다른 항목 근거도 제공하지 않음 | Python 단위 | 미검증 |
-| AC-05 | Tool 401/403/5xx/시간 초과/응답 schema 위반 | 섹션 HOLD `UNVERIFIED`(코드 구분), 추측 없음. 기록 실패 시 `recorded=false`·사용 금지 안내·종료 3 | Python 단위 | 미검증 |
-| AC-06 | Core 기록: READY 준비안 | 201, 세 표 행과 재현 정보(5절), 근거 원문 미저장 | Core 통합 | 미검증 |
-| AC-07 | Core 기록: C1~C5 각각 어긋남(철회·반려·항목 누락·순서 변경·근거 해시 변조·선택 공문 변경) | 422/409 해당 코드, 준비안 행 없음, 실행 기록 REJECTED | Core 통합 | 미검증 |
-| AC-08 | 같은 ID 같은 내용 재기록, 동시 2회, 같은 ID 다른 내용 | ALREADY_RECORDED(새 run), 행 1개, 400/409 거부. **같은 ID 재요청에서도 C1~C5 재확인이 실행됨**(재확인 전에 철회하면 기존 행이 있어도 422 거부, 재확인 조회 호출이 기록됨) | Core 통합 | 미검증 |
-| AC-09 | 토큰 없음·불일치, 읽기 토큰으로 기록, schema 밖 필드, 본문 actor | 401 / 400, 서비스 ID·scope는 토큰 기준 | Core 통합 | 미검증 |
-| AC-10 | 기록 호출 전후 | 승인·일정·변경안·검증·공문 사건 표 행 수 불변. 세 표 append-only·보호 목록·CHECK | Core 통합 | 미검증 |
-| AC-11 | 안전성 SAFE-A·B·D·E·F·G | 전부 통과 | Python 계약·단위 + Core 통합 + diff | 미검증 |
-| AC-12 | AI 서비스 설정·의존성 | 업무 DB 자격증명 항목 없음, DB 드라이버 의존성 없음 | Python 단위 + 검토 | 미검증 |
-| AC-13 | 재실행 | 기존 기록이 있어도 Tool 1·2를 다시 호출함(가짜 Core 호출 횟수), 상태 불변 시 ALREADY_RECORDED, 철회 뒤 새 ID HOLD | Python 단위 + 연결 검증 | 미검증 |
-| AC-14 | 연결 검증 자동 테스트 | 필수 CI(Gradle tests 체크)에서 실제 실행되고 통과. 로컬 기본은 명시적 skip으로 보고서에 남고, CI에서는 환경 누락이 실패(`AI_INTEGRATION_ENV_MISSING`)로 드러남. 시간 제한, 출력 파일 수집, 실패 시 프로세스 종료 | Java 통합 + CI 로그 + 의도적 환경 누락 실패 1회 확인 | 미검증 |
-| AC-15 | 기존 테스트 수·결과 유지, 기존 승인·일정·변경안·검증 코드 diff 없음, README·AI 서비스 README·ADR-012가 실제 상태 기술, "AI 생성 완료"·"LLM 안전성 검증 완료" 표현 없음, "기록은 사용 허가가 아님"과 "READY는 상담·대출 결정의 완료가 아님" 명시 | 로컬·CI + diff 검토 | 미검증 |
-| AC-16 | 매핑 불일치 요청: 필수 섹션 누락, `required` 값 변경, 섹션 상태와 다른 전체 READY 주장, 다른 `family_mapping_hash` | 409 `MAPPING_MISMATCH` / 422 `REQUIRED_SECTION_MISSING`·`REQUIRED_FLAG_MISMATCH`·`PREPARATION_STATUS_INVALID`, 준비안 행 없음, 실행 기록 REJECTED | Core 통합 | 미검증 |
-| AC-17 | 필수 공문군이 없는 매핑 | AI 서비스는 HOLD·`preparation_complete=false`·`NO_REQUIRED_FAMILY_CONFIGURED`, Core는 READY 요청을 422 `NO_REQUIRED_FAMILY`로 거부 | Python 단위 + Core 통합 | 미검증 |
-| AC-18 | HOLD 섹션 기록의 공통 검사와 보증 범위 | 항목·근거가 있는 HOLD 섹션은 400 `HOLD_SECTION_INVALID`. 저장된 HOLD 행에 `hold_claim_basis`와 `recheck_*`가 있고, AI가 보낸 사유와 재조회 사유가 달라도 둘 다 저장됨 | Core 통합 | 미검증 |
-| AC-19 | 직렬화 실패와 실행 기록 | 동시 철회와 기록이 충돌하면 재확인부터 1회 재시도, 재시도 실패는 FAILED(`SERIALIZATION_FAILED`) 1건. 같은 `run_id` 재전송은 409 `RUN_ID_CONFLICT`. 요청당 실행 기록 1건 | Core 통합 | 미검증 |
+| AC-01 | 승인된 중도상환수수료 공문군, 업무일 2026-10-06, `SW-APPLICATION-001` | 섹션 READY. 항목 3개가 Tool 1 응답과 같고 항목마다 Tool 2 근거(문장·위치·해시), version ID·결정 ID 포함 | Python 단위 + 연결 검증 | **통과**(로컬). Python `test_partial_preparation_has_ready_section_with_evidence_and_core_decision_hold`, 연결 검증 `prepareCommandAssemblesPartialPreparationAndRecordsIt`(항목 3개, 규칙 원문 "0.8퍼센트", version·결정 ID) |
+| AC-02 | 셀러론 공문군(필수, 미승인) 같은 신청 건 | 섹션 HOLD `CORE_DECISION`/`HUMAN_REVIEW_PENDING`, 항목·근거 없음, 설명·수기 안내. 전체 PARTIAL, `preparation_complete=false`, `remaining_checks`에 셀러론, headline에 "끝나지 않았습니다" | Python 단위 + 연결 검증 | **통과**(로컬). 같은 테스트. 사실: Core는 셀러론 사유로 `HUMAN_REVIEW_PENDING`과 함께 `APPROVED_CHECKLIST_NOTICE_MISMATCH`(예시 checklist 일정 불일치)도 주며 둘 다 전달·저장됨 |
+| AC-03 | 모든 필수 공문군 사용 불가(업무일 2026-09-30) | 전체 HOLD, 추측 항목 없음, HOLD 섹션이 Core에 기록됨 | Python 단위 + Core 통합 | **통과**(로컬). Python `test_all_required_hold_gives_hold_without_guessed_items`, Core `holdSectionsAreCheckedAndStoredWithClaimBasis`(전체 HOLD 201 기록), `tamperedReadyClaimsAreRejectedWithoutRows`(업무일 2026-09-30 READY 주장 422) |
+| AC-04 | Tool 2가 한 항목에 403 | 섹션 전체 HOLD `UNVERIFIED`/`EVIDENCE_UNAVAILABLE`, 다른 항목 근거도 제공하지 않음 | Python 단위 | **통과**(로컬). Python `test_single_evidence_failure_holds_whole_section` |
+| AC-05 | Tool 401/403/5xx/시간 초과/응답 schema 위반 | 섹션 HOLD `UNVERIFIED`(코드 구분), 추측 없음. 기록 실패 시 `recorded=false`·사용 금지 안내·종료 3 | Python 단위 | **통과**(로컬). Python `test_unverified_holds_for_auth_server_timeout_and_invalid_responses`, `test_record_outcomes_map_to_status_and_usage_notice`(REJECTED·FAILED 모두 `record.recorded=false`), CLI 종료 코드 테스트, 연결 검증 `wrongRecordTokenLeavesPreparationUnrecorded`(종료 3, `recorded=false`). 표현: `recorded=false`는 계약의 `record.recorded`(boolean, 필수)와 `record.status`·`usage_notice`·종료 코드 3으로 구현(보완 3절 대조표) |
+| AC-06 | Core 기록: READY 준비안 | 201, 세 표 행과 재현 정보(5절), 근거 원문 미저장 | Core 통합 | **통과**(로컬). PARTIAL 준비안의 READY 섹션: `partialPreparationIsRecordedWithRecheckValuesAndRunRecord`(201, 세 표 행, 재현 정보, 원문 미저장). 전체 READY 준비안: 별도 환경 `ConsultationPreparationReadyIntegrationTest`에서 셀러론까지 승인한 뒤 `fullyReadyPreparationIsRecorded`(201, status READY·complete true·필수 보류 0·섹션 2개 READY·재확인 usable 2건)와 CLI `prepareCommandProducesFullyReadyPreparation`(보완 1절) |
+| AC-07 | Core 기록: C1~C5 각각 어긋남(철회·반려·항목 누락·순서 변경·근거 해시 변조·선택 공문 변경) | 422/409 해당 코드, 준비안 행 없음, 실행 기록 REJECTED | Core 통합 | **통과**(로컬). `tamperedReadyClaimsAreRejectedWithoutRows`(결정 ID·항목 순서·근거 해시·선택 공문·항목 누락 → 409, FIXTURE 기간 → 422), `withdrawalKnownAfterRecordingRejectsTheSameClaim`(철회 → 422). 반려는 승인된 checklist에 일어나는 전이가 아니라 재확인 사례에서 제외 |
+| AC-08 | 같은 ID 같은 내용 재기록, 동시 2회, 같은 ID 다른 내용 | ALREADY_RECORDED(새 run), 행 1개, 400/409 거부. **같은 ID 재요청에서도 C1~C5 재확인이 실행됨**(재확인 전에 철회하면 기존 행이 있어도 422 거부, 재확인 조회 호출이 기록됨) | Core 통합 | **통과**(로컬). `sameContentIsRecordedOnceAndRerunStillRechecksCurrentState`(평가 시각·Tool 응답 해시를 바꿔도 같은 ID로 ALREADY_RECORDED 새 run, 승인 전 시각 재요청 422, 실행별 추적 값 저장), `concurrentSameIdRecordsOnce`(201+200, 행 1), 같은 ID 다른 내용은 ID가 내용 해시라 400 `PREPARATION_ID_MISMATCH`(`idHashRunIdAndSchemaRulesAreEnforced`). 409 `PREPARATION_CONFLICT`는 코드상 정상 경로로 만들 수 없는 방어선(보완 4절) |
+| AC-09 | 토큰 없음·불일치, 읽기 토큰으로 기록, schema 밖 필드, 본문 actor | 401 / 400, 서비스 ID·scope는 토큰 기준 | Core 통합 | **통과**(로컬). `recordAndToolTokensAreNotInterchangeable`, 모르는 필드(actor 포함) 400, 서비스 ID·scope는 필터가 토큰으로 정함 |
+| AC-10 | 기록 호출 전후 | 승인·일정·변경안·검증·공문 사건 표 행 수 불변. 세 표 append-only·보호 목록·CHECK | Core 통합 | **통과**(로컬). `businessTablesAreUntouchedAndRecordTablesAreAppendOnly`(행 수 불변, 42501, 권한, 보호 목록 4, CHECK 23514) |
+| AC-11 | 안전성 SAFE-A·B·D·E·F·G | 전부 통과 | Python 계약·단위 + Core 통합 + diff | **통과**(구조 검증, 로컬). Python `SafetyTest` 4건(결정 필드 없음·금지 표현 없음·사유 표 대조·허용 목록), Core HOLD 섹션 항목 금지(400·CHECK), `human_decision_notice` 모든 출력에 포함, diff 검토. 질문 기반·LLM 출력 검증은 TASK-019 |
+| AC-12 | AI 서비스 설정·의존성 | 업무 DB 자격증명 항목 없음, DB 드라이버 의존성 없음 | Python 단위 + 검토 | **통과**(로컬). `test_no_database_credential_settings_or_drivers`, `requirements-ai.txt` 검토(fastapi·uvicorn·httpx만 추가) |
+| AC-13 | 재실행 | 기존 기록이 있어도 Tool 1·2를 다시 호출함(가짜 Core 호출 횟수), 상태 불변 시 ALREADY_RECORDED, 철회 뒤 새 ID HOLD | Python 단위 + 연결 검증 | **통과**(로컬). Python `test_rerun_calls_core_tools_again_even_when_already_recorded`, 연결 검증 `rerunRechecksCoreAndRecordsOnlyOnce`·`stateChangeProducesNewHoldPreparation`·`withdrawalAfterRecordingProducesNewHoldPreparation` |
+| AC-14 | 연결 검증 자동 테스트 | 필수 CI(Gradle tests 체크)에서 실제 실행되고 통과. 로컬 기본은 명시적 skip으로 보고서에 남고, CI에서는 환경 누락이 실패(`AI_INTEGRATION_ENV_MISSING`)로 드러남. 시간 제한, 출력 파일 수집, 실패 시 프로세스 종료 | Java 통합 + CI 로그 + 의도적 환경 누락 실패 1회 확인 | **로컬 통과, CI 실행 미확인**. 로컬 실행 5건 통과, 기본 실행은 skip 5건이 보고서에 남음, 의도적 환경 누락 1회 `AI_INTEGRATION_ENV_MISSING` 실패 확인, 60초 제한·출력 파일(`build/reports/ai-service/`)·강제 종료 구현. 필수 CI 실제 실행은 push 뒤 CI 로그로 확인 |
+| AC-15 | 기존 테스트 수·결과 유지, 기존 승인·일정·변경안·검증 코드 diff 없음, README·AI 서비스 README·ADR-012가 실제 상태 기술, "AI 생성 완료"·"LLM 안전성 검증 완료" 표현 없음, "기록은 사용 허가가 아님"과 "READY는 상담·대출 결정의 완료가 아님" 명시 | 로컬·CI + diff 검토 | **통과**(로컬, diff 검토). 기존 테스트는 기대값 갱신(version 10, 표 40·trigger 80, 기록 토큰 필수)만 변경. README 3곳·ADR-012 상태 기술, "기록은 사용 허가가 아님"·"READY는 상담·대출 결정의 완료가 아님" 명시. "AI 생성 완료"·"LLM 안전성 검증 완료"는 부정문(아니다)으로만 등장 |
+| AC-16 | 매핑 불일치 요청: 필수 섹션 누락, `required` 값 변경, 섹션 상태와 다른 전체 READY 주장, 다른 `family_mapping_hash` | 409 `MAPPING_MISMATCH` / 422 `REQUIRED_SECTION_MISSING`·`REQUIRED_FLAG_MISMATCH`·`PREPARATION_STATUS_INVALID`, 준비안 행 없음, 실행 기록 REJECTED | Core 통합 | **통과**(로컬). `mappingAndStatusClaimsAreRejected` |
+| AC-17 | 필수 공문군이 없는 매핑 | AI 서비스는 HOLD·`preparation_complete=false`·`NO_REQUIRED_FAMILY_CONFIGURED`, Core는 READY 요청을 422 `NO_REQUIRED_FAMILY`로 거부 | Python 단위 + Core 통합 | **통과**(로컬). Python `test_mapping_without_required_family_never_becomes_ready`, Core `mappingWithoutRequiredFamilyNeverAllowsReady` |
+| AC-18 | HOLD 섹션 기록의 공통 검사와 보증 범위 | 항목·근거가 있는 HOLD 섹션은 400 `HOLD_SECTION_INVALID`. 저장된 HOLD 행에 `hold_claim_basis`와 `recheck_*`가 있고, AI가 보낸 사유와 재조회 사유가 달라도 둘 다 저장됨 | Core 통합 | **통과**(로컬). `holdSectionsAreCheckedAndStoredWithClaimBasis`(항목 있는 HOLD 400, SERVICE_REPORTED 보류에 `recheck_usable=true`가 함께 저장됨), `partialPreparationIsRecordedWithRecheckValuesAndRunRecord` |
+| AC-19 | 직렬화 실패와 실행 기록 | 동시 철회와 기록이 충돌하면 재확인부터 1회 재시도, 재시도 실패는 FAILED(`SERIALIZATION_FAILED`) 1건. 같은 `run_id` 재전송은 409 `RUN_ID_CONFLICT`. 요청당 실행 기록 1건 | Core 통합 | **통과**(로컬). `serializationFailureIsRetriedOnceAndSecondFailureIsRecordedAsFailed`(commit 단계 40001 주입: 1회 재시도 성공, 2회 실패 → FAILED 1건), `idHashRunIdAndSchemaRulesAreEnforced`(RUN_ID_CONFLICT, 실행 기록 1건) |
 
 ### 완료 기준 변경 이력
 
-변경 없음(구현 전).
+변경 없음(기준을 낮추지 않음). 구현 중 세부 설계 확정 2건을 기록한다: (1) 준비안 ID 해시 대상에서 `sections[].evaluated_at`에 더해 `sections[].tool_response_hash`도 제외(제안 8, 사용자 채택. 실행별 값은 실행 기록 `section_evaluations`로 추적). (2) AC-05의 "기록 실패 시 `recorded=false`"는 출력 계약의 `record.recorded`(boolean, 필수. RECORDED·ALREADY_RECORDED일 때만 true)와 `record.status`(REJECTED/FAILED/NOT_ATTEMPTED)·`usage_notice`·CLI 종료 코드 3·HTTP 헤더 `X-Preparation-Recorded`로 구현했다. 사용자 확인 요청(보완 3절) 뒤 `recorded` 필드를 계약에 추가해 계획 표현과 맞췄다.
 
 ## Implementation Plan (초안)
 
@@ -328,6 +328,141 @@ Core 기록은 트랜잭션 하나(SERIALIZABLE, 직렬화 실패 1회 재시도
 - 내용: TASK-014 안전성 파일 `prepayment-fee-safety-v1.json`의 `pass_criteria_owner: TASK-015`를 구조 검증(TASK-015)과 질문 기반·LLM 출력 검증(TASK-019)으로 나눈다. 비교한 방법: (a) 필드 추가·버전 유지, (b) `pass_criteria_owner`를 객체 `{structural: TASK-015, question_based: TASK-019}`로 바꾸고 schema·계약 테스트를 함께 고치며 안전성 파일을 v2로 올림, (c) 문서에만 기록.
 - **판단: (b) 채택**(결정자 사용자, 검토 대상 이 계획 PR). 계획: 안전성 참조 자료는 **v2 파일 `prepayment-fee-safety-v2.json`**에서 구조 검증 책임(TASK-015)과 질문 기반·LLM 출력 검증 책임(TASK-019)을 객체로 명확히 구분한다. **기존 v1 파일과 TASK-014의 완료 기록은 보존**하고 TASK-014 문서에는 "후속 변경" 절로 v1 → v2 관계만 덧붙인다(기존 판단·완료 기록 수정 없음). 검색 질문·정답이 바뀌지 않으므로 **검색 골든셋(smoke·eval)의 버전은 v1 그대로** 둔다. 안전성 질문 3건(SAFE-01~03)과 참조 ID(S10·E22·E23)는 그대로 유지한다. schema는 `kind: safety`의 `pass_criteria_owner`를 객체로 받도록 바꾸되 v1 파일도 읽을 수 있게 문자열·객체 둘 다 허용하고, 계약 테스트는 v2에 두 책임이 모두 있는지와 v1·v2의 참조 ID가 같은지 확인한다. **실제 파일·schema·테스트 변경은 TASK-015 구현 단계에서 진행**하며 이 계획 PR에서는 바꾸지 않는다.
 
+### 제안 8 (구현 중 세부 설계): 준비안 ID 해시 대상에서 `tool_response_hash`도 제외
+- 내용: Tool 1 응답에는 평가 시각(`evaluatedAt`)이 들어 있어 응답 해시가 실행마다 달라진다. 이를 해시 대상에 두면 같은 입력·같은 Core 상태에서도 준비안 ID가 매번 바뀌어 "저장만 멱등"이 깨진다. 그래서 `preparation_id`·`run_id`·`consultation_id`·`sections[].evaluated_at`에 더해 `sections[].tool_response_hash`를 제외했다. `tool_response_hash`는 섹션 행에 그대로 저장돼 재현 정보로 남는다. 대안: Tool 응답에서 평가 시각을 뺀 해시를 쓰는 것(Core 응답 계약 변경이 필요해 보류).
+- 영향: 기록 계약 설명, Core `contentHash()`, AI 서비스 `ids.py`, 테스트가 같은 규칙을 쓴다. ADR-012의 "세부 설계" 범위 안이다. 실행 시각과 Tool 응답 해시는 실행 기록 `section_evaluations`에 실행 단위로 보존한다.
+**판단** - [x] 채택 / 결정자 사용자 / 2026-10-08 보완 보고 검토 뒤. 방향: 실행 시각과 Tool 응답 해시는 준비안 ID에서 제외하되 실행 기록에 보존하고, 업무 내용 변경은 ID에 반영한다
+
 ## Implementation Result / AI self-review / 인간 검수 / 결정 기록
 
-미실행 / 미기록. 구현은 사용자 착수 승인 뒤.
+### 변경 내용 (브랜치 `feat/task-015-consultation-preparation`, base `006c880`. 검증 대상 커밋 `87b553b` = 구현·자료·테스트, 문서는 후속 커밋)
+
+- 매핑·계약: `datasets/synthetic/work/consultation-family-mapping.json`, `contracts/consultation-family-mapping.schema.json`, `contracts/consultation-preparation.schema.json`, `contracts/consultation-preparation-record.schema.json`.
+- Core: `V10__create_consultation_preparation_schema.sql`(표 4, CHECK, 보호 목록 40표·trigger 80, 권한), `preparation` 패키지(`PreparationRecordProperties`, `PreparationRecordAuthenticationFilter`, `ConsultationPreparationController`/`Service`/`Repository`, `ConsultationPreparationException`/`ExceptionHandler`, `ConsultationFamilyMappingLoader`/`Configuration`), 설정(`application.yml` version 10·기록 토큰·매핑 적재 속성, `application-prod.yml`, `ProductionRequiredSettingsConfiguration`에 기록 토큰 필수). 기존 승인·일정·변경안·검증·Tool 코드는 변경 없음.
+- AI 서비스: `apps/ai-service/ai_service/`(8 모듈), `requirements-ai.txt`, README.
+- 연결 검증·CI: `build.gradle`(`prepareAiServiceEnv`, 속성·환경변수), `AiServicePreparationIntegrationTest`, `ci.yml`(gradle job에 Python 3.11과 `TRUST_AGENT_REQUIRE_AI_INTEGRATION=1`·`-PaiServiceIntegration=true`, python job에 `requirements-ai.txt`).
+- 테스트: `ConsultationPreparationIntegrationTest`(13), `ConsultationPreparationReadyIntegrationTest`(3, 전체 READY 별도 환경), `ConsultationPreparationHashTest`(2, 해시 대상), `AiServicePreparationIntegrationTest`(5), `PreparationScenario`, `tests/ai_service/`(30), 골든셋 계약 테스트 1건 추가. 기존 테스트 기대값 갱신 5파일(보완 5절 대조표).
+- 안전성 v2: `prepayment-fee-safety-v2.json`, `search-goldenset.schema.json`(v1 문자열·v2 객체 허용), TASK-014 문서 "후속 변경" 절.
+- 문서: `docs/evidence/CONSULTATION_PREPARATION_EVIDENCE.md`, 루트 README, Core README(기록 경로·매핑 적재·토큰), AI 서비스 README, 이 문서.
+
+### 검증 결과 (로컬, 2026-10-08)
+
+```text
+./gradlew clean test bootJar --offline --no-daemon -PaiServiceIntegration=true
+181 tests completed (기존 158 + 신규 23: Core 통합 13 + 전체 READY 별도 환경 3 + 해시 단위 2 + 연결 검증 5), 통과 181, failures 0, errors 0, skipped 0. BUILD SUCCESSFUL (bootJar 포함). 보존: docs/evidence/task-015/test-results-full-with-ai-integration.md(저장소), gradle-full-with-ai-integration.log(로컬 보관)
+python3 -m unittest discover -s tests -t .
+Ran 106 tests (기존 75 + 신규 31: tests/ai_service 30 + 골든셋 계약 1), 통과 104, 실패 0, 건너뜀 2 (기존 사유: "비공개 snapshot artifact가 제공되지 않았습니다.")
+```
+
+로컬 기본 실행은 CLI를 실행하는 테스트(연결 검증 5건, 전체 READY CLI 1건)가 명시적 skip으로 보고서에 남고(전체 181건 중 통과 175, 실패 0, skip 6(연결 검증 5건과 전체 READY CLI 1건, 명시적 skip 목록은 docs/evidence/task-015/test-results-local-default.md), BUILD SUCCESSFUL), `TRUST_AGENT_REQUIRE_AI_INTEGRATION=1`에 venv가 없으면 `AI_INTEGRATION_ENV_MISSING`로 실패함을 1회 확인했다. 세부 사례 표는 evidence 문서에, 실행별 로그와 결과 요약은 `docs/evidence/task-015/`에 있다.
+
+### 계획과 다른 점 (완료 기준 변경 없음)
+
+- 제안 8(해시 대상에 `tool_response_hash` 추가 제외, 사용자 채택), AC-05 표현(`record.recorded`·`record.status`·`usage_notice`). 둘 다 "완료 기준 변경 이력"에 기록.
+- 셀러론 HOLD 사유에 `APPROVED_CHECKLIST_NOTICE_MISMATCH`가 함께 온다(Core의 실제 응답, 계획은 `HUMAN_REVIEW_PENDING`만 예시). 사유를 고르거나 숨기지 않고 모두 전달·저장한다.
+- 계획의 "C1~C7"·"매핑 없는 상품 400" 표기는 구현에서 C1~C5·M1~M5(ADR-012 확정 목록)와 CLI 입력 오류(종료 2)·HTTP 진입점 400에 해당한다.
+
+### 남은 한계
+
+- 409 `PREPARATION_CONFLICT`는 코드상 정상 경로로 만들 수 없는 방어선이라 테스트를 만들지 않았다(보완 4절). 직렬화 재시도는 40001 주입으로 검증했고 실제 동시 철회와의 충돌은 비결정적이라 테스트로 만들지 않았다.
+- 필수 CI 실제 실행(AC-14)은 이후 검토용 PR에서 확인한다.
+- 안전성은 구조 검증까지다. 질문 기반·LLM 출력 검증은 TASK-019.
+- 매핑은 합성 시나리오 1건이고 적재는 기동 시 설정으로만 한다. 행원 메모·검색·화면·사용자별 인증은 범위 밖이다.
+
+### 사용자 확인 요청 5건에 대한 보완 (2026-10-08, 완료 승인 전)
+
+#### 1. 전부 준비된 경우(전체 READY) 검증
+
+- 별도 테스트 환경 `ConsultationPreparationReadyIntegrationTest`(새 Spring 컨텍스트와 DB): TASK-014 고정 조건을 적재한 뒤 셀러론 v2 변경안을 2026-10-05T05:00Z에 승인한다. 셀러론 검증은 24시간 공개 근거 정책에서는 FAIL(근거 미확인)이지만 Core 기본 설정과 이 테스트의 30일 정책에서는 공개 값 20억 일치로 PASS여서 승인할 수 있다. 기존 PARTIAL·HOLD 사례의 고정 조건(셀러론 미승인)은 바꾸지 않았다.
+- 확인한 것 3건: (a) 두 섹션 모두 READY인 기록 요청 → 201, `status=READY`, `preparation_complete=true`, 필수 보류 0, 섹션 2행 READY, 셀러론 섹션의 결정 ID가 승인 결정과 일치, 재확인 usable 2건. (b) 같은 내용을 PARTIAL로 낮춰 주장하면 422 `PREPARATION_STATUS_INVALID`(READY도 Core가 계산한 상태와 같아야 한다). (c) CLI 실행 → `status=READY`, 머리 문구 "모두 준비됐습니다"와 "상담이나 대출 결정의 완료가 아닙니다", "끝나지 않았습니다" 없음, `remaining_checks` 0, 셀러론 항목 포함, `record.status=RECORDED`·`recorded=true`, DB에 READY 행.
+- AC-06은 기준 그대로 통과로 바꿨다.
+
+#### 2. 준비안 ID 계산에 들어가는 값과 빠지는 값
+
+| 구분 | 값 | 이유 |
+|---|---|---|
+| 들어감 | `assembler_version`, `messages_hash`, `family_mapping_hash` | 조립 규칙·문구 표·매핑이 바뀌면 다른 준비안 |
+| 들어감 | `application.application_id`·`company_id`·`product_key`·`source_hash`, `business_date` | 다른 신청 건·다른 업무일은 다른 준비안 |
+| 들어감 | `status`, `preparation_complete` | 준비 정도가 다르면 다른 준비안 |
+| 들어감 | `sections[].family_id`·`required`·`status`·`hold_kind`·`hold_claim_basis`·`selected_notice_id`·`approved_checklist_version_id`·`decision_id`·`item_rule_version_ids`(순서 포함)·`item_evidence_hashes`(순서 포함)·`blocking_reasons` | checklist version·결정·항목·근거·선택 공문·보류 사유가 바뀌면 다른 준비안 |
+| 빠짐 | `preparation_id` | 계산 결과 자체 |
+| 빠짐 | `run_id` | 실행마다 새 값(실행 기록 키) |
+| 빠짐 | `consultation_id` | 추적용 입력. 같은 업무 내용을 다른 상담에서 실행해도 같은 준비안 |
+| 빠짐 | `sections[].evaluated_at` | Core가 평가한 시각. 실행마다 달라짐 |
+| 빠짐 | `sections[].tool_response_hash` | Tool 1 응답 전체의 해시. 응답에 평가 시각이 있어 실행마다 달라짐(제안 8) |
+
+- 검증: Core 단위 `ConsultationPreparationHashTest` 2건(빠지는 값 7가지를 바꿔도 같은 ID, 들어가는 값 18가지를 바꾸면 다른 ID), Python `test_preparation_id_ignores_run_and_time_but_tracks_section_state`·`test_hash_subject_excludes_run_consultation_and_evaluated_at`, Core 통합 `sameContentIsRecordedOnceAndRerunStillRechecksCurrentState`(평가 시각과 Tool 응답 해시를 바꿔 보내도 같은 ID로 200 ALREADY_RECORDED), 연결 검증 `rerunRechecksCoreAndRecordsOnlyOnce`(시계를 60초 뒤로 옮겨 재실행: 같은 ID, 평가 시각 03:01:00Z, 다른 Tool 응답 해시).
+- 실행마다 달라지는 값의 추적(덮어쓰기 없음): 준비안 행과 섹션 행은 첫 기록 그대로 둔다(append-only, UPDATE·DELETE는 권한으로 막혀 있음). 실행 기록 `consultation_preparation_run`에 V10 열 `section_evaluations`(jsonb 배열)를 두어 실행마다 섹션별 `{family_id, status, evaluated_at, tool_response_hash, recheck_usable, recheck_reasons}`를 남긴다. RECORDED·ALREADY_RECORDED는 물론 본문 해석 뒤 거부된 REJECTED·FAILED에도 남는다(해석 전 거부는 빈 배열). 재실행이 10번이면 준비안 1행, 실행 기록 10행이고 각 실행의 평가 시각·응답 해시·재확인 결과를 `run_id`로 찾는다. 통합 테스트가 첫 기록 섹션 행의 값(03:00:00Z, 해시 1…)이 그대로이고 재실행의 값(03:05:00Z, 해시 5…)은 실행 기록에만 있음을 확인한다.
+
+```sql
+select r.run_id, r.outcome, r.started_at, e->>'family_id' as family, e->>'evaluated_at' as evaluated_at,
+       e->>'tool_response_hash' as tool_response_hash, e->>'recheck_usable' as recheck_usable
+from consultation_preparation_run r, jsonb_array_elements(r.section_evaluations) e
+where r.preparation_id = :preparation_id order by r.started_at;
+```
+
+#### 3. 기록 실패 표현 대조표 (`recorded=false` ↔ 구현)
+
+| `record.status` | `record.recorded` | Core 응답 / 원인 | `record.error_code` | CLI 종료 코드 | `usage_notice` 요지 | 테스트 |
+|---|---|---|---|---|---|---|
+| RECORDED | true | 201 | 없음 | 0 | 기록됨. 기록은 사용 허가가 아니므로 사용 전 재확인 | Python `test_partial_preparation_…`, `test_recorded_preparation_exits_zero_…`, 연결 검증 1·3·5건 |
+| ALREADY_RECORDED | true | 200 | 없음 | 0 | 같은 내용이 이미 기록됨. 사용 전 재확인 | 연결 검증 `rerunRechecksCoreAndRecordsOnlyOnce` |
+| REJECTED | false | 400·401·409·422 | Core 오류 코드 그대로(예: PREPARATION_NOT_USABLE, UNAUTHENTICATED) | 3, stderr "기록되지 않은 준비안입니다. 사용하지 말고 다시 실행하세요" | "Core 저장이 거부됐습니다. 이 준비안은 기록되지 않았으므로 사용하지 말고 다시 실행하세요." | Python `test_record_outcomes_map_to_status_and_usage_notice`, `test_rejected_record_exits_three_with_preparation_and_warning`, 연결 검증 `wrongRecordTokenLeavesPreparationUnrecorded` |
+| FAILED | false | 5xx·연결 실패·시간 초과 | CORE_UNAVAILABLE / CORE_TIMEOUT | 3 | "Core 저장에 실패했습니다. … 사용하지 말고 다시 실행하세요." | 위와 같음 |
+| NOT_ATTEMPTED | false | 기록 토큰 미설정(호출 없음) | RECORD_TOKEN_MISSING | 3 | "기록 토큰이 없어 … 사용하지 말고 설정을 점검한 뒤 다시 실행하세요." | `test_missing_record_token_skips_recording_without_calling_core`, `test_missing_record_token_exits_three` |
+
+- 계약(`contracts/consultation-preparation.schema.json`): `record.recorded`(boolean) 필수. `status`가 RECORDED·ALREADY_RECORDED일 때만 `true`이고(schema `allOf`), 아니면 `false`에 `error_code`·`error_message`가 필수다. HTTP 진입점은 같은 값을 헤더 `X-Preparation-Recorded`로도 준다. 출력 예시(기록 거부): `"record": {"recorded": false, "status": "REJECTED", "error_code": "UNAUTHENTICATED", "error_message": "…"}`, `usage_notice`에 사용 금지와 재실행 안내, 종료 코드 3.
+- 성공으로 오해할 수 없는 이유: 종료 코드 0은 `recorded=true`일 때만 나오고, 준비안 본문에도 `recorded=false`와 사용 금지 문구가 함께 있으며, Core에는 준비안 행이 없고 실행 기록만 REJECTED/FAILED로 남는다.
+- 완료 조건 표현 변경은 "완료 기준 변경 이력" (2)에 기록했다.
+
+#### 4. 아직 검증하지 않은 경로
+
+| 경로 | 테스트가 확인한 것 | 확인하지 못한 것 | 판단 |
+|---|---|---|---|
+| 409 `PREPARATION_CONFLICT`(같은 ID, 다른 저장 내용) | 같은 ID·다른 내용 요청은 ID가 본문 해시와 달라 400 `PREPARATION_ID_MISMATCH`로 먼저 거부됨 | 409 자체는 발생시키지 못함 | 코드상 만들 수 없다. 저장되는 `content_hash`는 ID와 같은 함수의 값이고 ID는 저장 전에 그 값과 대조된다. 같은 ID에 다른 `content_hash`가 있으려면 해시 함수가 바뀌거나 sha256이 충돌해야 한다. 방어선으로 두고 억지 테스트는 만들지 않았다 |
+| 동시 같은 ID 요청 | 2개 스레드 동시 요청 → 201 하나, 200 하나, 준비안 1행, 실행 기록 2행(`concurrentSameIdRecordsOnce`). PK 충돌(23505) 해결 경로는 저장소 대역으로 시간에 의존하지 않고 재현해, 충돌 뒤 새 트랜잭션에서 매핑 확인·READY 재확인을 다시 하고 나서야 ALREADY_RECORDED를 주며 그 사이 매핑이 바뀌면 `MAPPING_MISMATCH`, 사용 불가면 `PREPARATION_NOT_USABLE`로 거부함(`duplicateKeyConflictPathRechecksBeforeReturningExistingRecord`, 2차 보완 1절) | 2개 초과 동시성, 네트워크 지연 조합 | 지는 쪽은 23505면 새 SERIALIZABLE 트랜잭션에서 재확인부터 다시 한 뒤 기존 행과 비교해 ALREADY_RECORDED, 40001이면 재확인부터 재시도해 기존 행을 보고 ALREADY_RECORDED가 된다. 두 경로 모두 취소되지 않은 트랜잭션의 재확인을 거친 뒤라 확인 없는 성공 응답은 없다 |
+| 직렬화 재시도 | commit 단계에 40001 주입: 1회 실패 뒤 재확인부터 다시 실행해 RECORDED, 2회 실패면 500 `SERIALIZATION_FAILED`·준비안 행 없음·FAILED 실행 기록 1건(`serializationFailureIsRetriedOnceAndSecondFailureIsRecordedAsFailed`) | 실제 동시 철회·승인과 충돌해 PostgreSQL이 40001을 내는 순간 | 타이밍에 달려 결정적으로 재현할 수 없어 테스트를 만들지 않았다. 재확인과 저장이 한 SERIALIZABLE 트랜잭션이므로 철회가 먼저 commit되면 재확인이 거부하거나 40001로 재시도된 뒤 거부된다. 중복 저장은 PK로, 잘못된 성공은 재확인으로 막힌다 |
+
+#### 5. 기존 테스트 변경 대조표
+
+| 바꾼 기대값 | 이전 → 이후 | 실제 추가 내용 | 삭제·완화 |
+|---|---|---|---|
+| schema version(`CoreApplicationIntegrationTest` 3곳, `DemoFeatureProductionGuardTest`, `RuntimeDatasourcePropertiesTest` 3곳, `PublicProductSchemaIntegrationTest`) | 9 → 10 | V10 migration 1개 추가(표 4) | 없음. version 불일치 거부 검사는 그대로(999로 바꾸면 거부) |
+| `PublicProductSchemaIntegrationTest` migrationsExecuted | 9 → 10 | 위와 같음 | 없음 |
+| 보호 표 수 / trigger 수 | 36 → 40 / 72 → 80 | 표 4개 × trigger 2개(UPDATE·DELETE 거부) | 없음. 보호 목록 함수와 실제 trigger 일치 검사 그대로 |
+| production 필수 설정 목록(`DemoFeatureProductionGuardTest`) | 기록 토큰 추가 | `ProductionRequiredSettingsConfiguration`에 `TRUST_AGENT_PREPARATION_RECORD_TOKEN` 필수 추가 | 없음. 누락 시 기동 거부 검사는 그대로이고 항목이 늘었다 |
+| `RuntimeDatasourcePropertiesTest` 3곳의 "모든 필수 설정 제공" 값 | 기록 토큰 값 추가 | 위와 같음(테스트는 필수 설정을 모두 준 상태에서 다른 조건을 검사) | 없음 |
+
+`git diff -- apps/core-service/src/test apps/core-service/src/main/java/com/trustagent/core/config/ProductionRequiredSettingsConfiguration.java`로 대조했고 기존 실패 검사나 보호 조건을 지우거나 느슨하게 한 줄은 없다.
+
+### 2차 보완 (2026-10-08, 커밋 전 확인 요청 2건)
+
+#### 1. 동시 저장 충돌 뒤 기존 기록 반환 경로의 재확인
+
+- 문제: 저장 시도가 PK 충돌(23505)로 끝나면 그 시도의 재확인은 취소된 트랜잭션의 것이다. 기존 구현은 충돌 뒤 기존 행의 내용 해시만 비교해 ALREADY_RECORDED를 돌려줬다.
+- 변경: `resolveConcurrentInsert`가 새 SERIALIZABLE 트랜잭션에서 `doRecord`를 다시 실행한다. 즉 매핑 확인(M1~M5) → HOLD 재조회 → READY 재확인(C1~C5) → 기존 행 비교 순서를 그대로 거친 뒤에만 ALREADY_RECORDED를 준다. 재확인 결과는 이 실행의 실행 기록 `section_evaluations`에 남는다. "같은 ID 재요청은 기존 기록 유무와 관계없이 재확인한다"는 계획이 충돌 경로에도 적용된다.
+- 재시도 횟수·범위: 늘리지 않았다. 40001 재시도는 1회 그대로이고, 충돌 해결은 한 번만 시도하며 그 안에서 다시 23505가 나면 `RECORD_WRITE_FAILED`, 40001이 나면 `SERIALIZATION_FAILED`로 FAILED 실행 기록 1건을 남기고 끝낸다. 영향은 충돌이 난 요청에 한해 재확인 조회가 한 번 더 실행되는 것뿐이다.
+- 테스트(시간에 의존하지 않음): 저장소 대역 `BlindFirstLookupRepository`가 첫 "기존 기록 조회"만 없음으로 답해 저장을 시도하게 만든다. 행은 이미 있으므로 PostgreSQL이 실제 23505를 낸다. (a) 충돌 뒤 매핑 조회·기존 기록 조회가 각각 2회(새 트랜잭션에서 다시 함), ALREADY_RECORDED, 실행 기록에 재확인 결과 2건. (b) 충돌 해결 트랜잭션에서 매핑 해시가 달라져 있으면 기존 행이 있어도 409 `MAPPING_MISMATCH`로 거부. (c) 충돌 해결 트랜잭션 직전에 시계를 승인 전으로 돌리면 422 `PREPARATION_NOT_USABLE`로 거부. 서비스에 저장소를 주입하는 패키지 전용 생성자를 추가했고 운영 생성자는 그대로다.
+
+#### 2. 검증 결과 보존
+
+Gradle은 `build/test-results`를 실행마다 덮어쓰므로 실행별 로그와 결과 요약을 `docs/evidence/task-015/`에 따로 보존했다. 각 파일은 evidence 문서 "보존한 실행 기록" 절에서 연결한다. 원본 `.log`는 `.gitignore`(`*.log`)로 Git에 올리지 않는 로컬 보관 자료이고, 저장소에는 `.md` 결과 요약·`RUN_SUMMARY.txt`·CLI 출력 표본을 올렸다. 검증 대상 커밋은 `87b553b`(구현·자료·테스트)이며 문서 커밋은 그 뒤에 따로 올렸다. CI 실행 링크는 PR 본문에 있다.
+
+| 실행 | 명령 | 보존 파일 |
+|---|---|---|
+| 연결 검증 포함 전체 | `./gradlew clean test bootJar --offline --no-daemon -PaiServiceIntegration=true` | `gradle-full-with-ai-integration.log`(로컬 보관), `test-results-full-with-ai-integration.md`, CLI 출력 표본 3개(PARTIAL·READY·REJECTED) |
+| 로컬 기본(속성 없음) | `./gradlew clean test --offline --no-daemon` | `gradle-local-default.log`(로컬 보관), `test-results-local-default.md`(CLI 실행 테스트 skip 목록) |
+| 의도적 환경 누락 | `TRUST_AGENT_REQUIRE_AI_INTEGRATION=1 … -PaiServiceIntegration=false` | `gradle-env-missing-failure.log`(로컬 보관), `test-results-env-missing.md` |
+| Python | `python3 -m unittest discover -s tests -t . -v` | `python-unittest.log`(로컬 보관), `RUN_SUMMARY.txt` |
+
+결과(이번 보완 뒤 실제 실행): 연결 검증 포함 전체 181건 통과·실패 0·skip 0, 로컬 기본 181건 중 통과 175·실패 0·skip 6, 의도적 환경 누락 1건 실패(`AI_INTEGRATION_ENV_MISSING: python venv …`), Python 106건 중 통과 104·실패 0·skip 2(기존 사유). 합계는 `docs/evidence/task-015/RUN_SUMMARY.txt`.
+
+### AI self-review
+
+- [x] 승인 범위 안에서만 구현(검색·LLM 생성 없음). [x] 기존 승인·일정·변경안·검증 코드 변경 없음(diff 확인). [x] 토큰 값은 환경변수만, 테스트는 실행 중 생성한 임시 값. [x] 합성 자료 표시(SYNTHETIC_WORK·disclaimer). [x] "기록은 사용 허가가 아님", "READY는 상담·대출 결정의 완료가 아님", "AI 생성 완료 아님" 명시. [x] 완료 기준을 낮추지 않았고 미검증·부분 검증 항목(AC-06, 08 일부, 14 CI)을 표에 그대로 적음. [x] 커밋·push·검토용 PR은 사용자 지시 뒤 수행(병합은 사용자).
+
+### 인간 검수 / Explainability Gate / 결정 기록
+
+- 인간 검수: **대기**(결정자 사용자). 검수 대상: 위 변경 내용과 evidence 문서, 제안 8 판단.
+- Explainability Gate: **대기**.
+- 최종 결정 / 완료 판정: **대기**. 커밋·push·PR 생성은 사용자 지시 뒤.
