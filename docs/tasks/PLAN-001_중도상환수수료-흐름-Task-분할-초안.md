@@ -17,7 +17,7 @@
 | TASK-005 | checklist 변경안(proposal) 생성 | **완료**(PR #18, 검수 통과). 자동 검증과 인간 승인은 미완 |
 | TASK-006 | checklist 변경안 자동 검증 | **완료**(PR #21, 검수 통과), [TASK-006](TASK-006_변경안-자동-검증.md) |
 | TASK-007 | 사람 검수 결정과 승인 checklist 발행 | **완료**(PR #24, 검수 통과), [TASK-007](TASK-007_사람-검토-결정과-승인-checklist-발행.md). 문구 수정 한계는 TASK-013 계획(PR #25) |
-| TASK-008 | Core Tool API | 같음 |
+| TASK-008 | Core Tool API | **완료**(PR #31, 검수 통과. demo 인증·읽기 API 범위), [TASK-008](TASK-008_Core-Tool-API-AI-조회-경계.md) |
 | TASK-009 | Elasticsearch 검색 기준선 | 같음 |
 | TASK-010 | (공개 상품 테이블 Oracle 이식) | **취소.** PostgreSQL 유지로 불필요. 번호 재사용 금지 |
 | TASK-011 | 대표 E2E | 같음 |
