@@ -113,22 +113,29 @@ class CoreEndToEndFlowIntegrationTest {
     @Test
     @Order(1)
     void wrongOrderAndMissingSettingsAreRefusedBeforeAnythingIsIssued() {
-        // 변경안이 없는데 승인
-        Throwable notFound = expectFailure(Map.of(
-                "trust-agent.human-review.enabled", "true",
-                "trust-agent.human-review.proposal-id", "checklist-proposal:sha256:" + "0".repeat(64),
-                "trust-agent.human-review.decision", "APPROVE",
-                "trust-agent.human-review.reviewer-id", "SYN-REVIEWER-01"));
+        // 거부 1: 변경안이 없는데 승인(사람 결정 runner → HumanReviewService PROPOSAL_NOT_FOUND).
+        // 계획의 "없는 변경안 검증"(ProposalValidationService PROPOSAL_NOT_FOUND)은 기존
+        // ProposalValidationIntegrationTest.revalidationAppendsNewResultAndRunIdConflictIsRejected(서비스 직접 호출)가 보장한다.
+        Issued beforeNotFound = issued();
+        String notFoundRun = "review-run:" + "6".repeat(32);
+        Throwable notFound = expectFailure(decision("checklist-proposal:sha256:" + "0".repeat(64), null, "APPROVE", null, notFoundRun, Map.of()));
         assertEquals("PROPOSAL_NOT_FOUND", code(notFound));
-        // 필수 설정 누락: 검증 명령에 proposal-id 없음
+        assertEquals("FAILED | PROPOSAL_NOT_FOUND", failedRun(notFoundRun));
+        assertNothingIssuedSince(beforeNotFound);
+
+        // 거부 2: 필수 설정 누락(검증 명령에 proposal-id 없음)은 runner가 서비스 호출 전에 거부하므로 실행 기록도 결과도 없다
         Throwable missing = expectFailure(Map.of("trust-agent.proposal-validation.enabled", "true"));
         assertTrue(rootMessage(missing).contains("trust-agent.proposal-validation.proposal-id"), rootMessage(missing));
-        // 예시 checklist가 없으면 변경안 생성은 NO_BASE_CHECKLIST로 실패하고 실패 기록만 남는다
+        assertEquals(0, count("validation_run"));
+        assertEquals(0, count("automated_validation_result"));
+
+        // 거부 3: 예시 checklist가 없으면 변경안 생성은 NO_BASE_CHECKLIST로 실패하고 실패 기록만 남는다
         Throwable noBase = expectFailure(generation(PREPAYMENT, "SIN-PREPAYMENT-FEE-V2", "proposal-run:" + "9".repeat(32)));
         assertEquals("NO_BASE_CHECKLIST", code(noBase));
-        assertEquals("FAILED", single("select status from proposal_generation_run where generation_run_id = 'proposal-run:" + "9".repeat(32) + "'"));
+        assertEquals("FAILED | NO_BASE_CHECKLIST", single("select status || ' | ' || error_code from proposal_generation_run where generation_run_id = 'proposal-run:" + "9".repeat(32) + "'"));
         assertEquals(0, count("checklist_change_proposal"));
-        assertEquals(0, count("human_review_decision"));
+        assertEquals(0, count("checklist_change_proposal_item"));
+        assertEquals(new Issued(0, 0, 0, 0, 0), issued());
     }
 
     // ---- AC-01: 예시 적재 → 변경안 생성 → 검증 → 승인을 demo 설정 키로 순서대로 실행 ----
@@ -149,9 +156,11 @@ class CoreEndToEndFlowIntegrationTest {
         assertNotNull(prepaymentProposalId);
         assertEquals(2, count("checklist_change_proposal_item where proposal_id = '" + prepaymentProposalId + "'"));
 
-        // 검증 전 승인은 거부된다
+        // 거부 4: 검증 전 승인은 거부되고 실패 실행 기록만 남는다(결정, checklist, 일정 없음)
+        Issued beforeMissing = issued();
         assertEquals("VALIDATION_MISSING", code(expectFailure(approval(prepaymentProposalId, null, null, "review-run:" + "8".repeat(32)))));
-        assertEquals("FAILED | VALIDATION_MISSING", single("select status || ' | ' || error_code from human_review_run where review_run_id = 'review-run:" + "8".repeat(32) + "'"));
+        assertEquals("FAILED | VALIDATION_MISSING", failedRun("review-run:" + "8".repeat(32)));
+        assertNothingIssuedSince(beforeMissing);
 
         runCommand(Map.of(
                 "trust-agent.proposal-validation.enabled", "true",
@@ -213,12 +222,21 @@ class CoreEndToEndFlowIntegrationTest {
         assertEquals("WARN", single("select status from automated_validation_result where validation_result_id = '" + resultId + "'"));
         assertEquals("INSTRUCTION_EDITED", single("select code from automated_validation_issue where validation_result_id = '" + resultId + "' and severity = 'WARN'"));
 
-        // 사유 없는 승인은 거부, 사유 있는 승인은 발행
+        // 거부 5: 사유 없는 WARN 승인은 거부되고 실패 실행 기록만 남는다. 사유 있는 승인은 발행한다
+        Issued beforeReason = issued();
         assertEquals("REASON_REQUIRED", code(expectFailure(approval(sellerRevisionId, resultId, null, "review-run:" + "7".repeat(32)))));
+        assertEquals("FAILED | REASON_REQUIRED", failedRun("review-run:" + "7".repeat(32)));
+        assertNothingIssuedSince(beforeReason);
         CLOCK.set(Instant.parse("2026-10-05T04:30:00Z"));
         runCommand(approval(sellerRevisionId, resultId, "원문과 대조함: 공문 뜻을 바꾸지 않는 안내 문구 보완", "review-run:" + "3".repeat(32))).close();
         sellerVersionId = single("select approved_checklist_version_id from human_review_decision where proposal_id = '" + sellerRevisionId + "'");
         assertNotNull(sellerVersionId);
+        // 사유 있는 승인은 결정 1건, HUMAN_REVIEW version 1건, 일정 revision 1건을 추가한다(수정 결정 1건은 이미 있음)
+        Issued afterApproval = issued();
+        assertEquals(beforeReason.decisions() + 1, afterApproval.decisions());
+        assertEquals(beforeReason.humanReviewVersions() + 1, afterApproval.humanReviewVersions());
+        assertEquals(beforeReason.scheduleRevisions() + 1, afterApproval.scheduleRevisions());
+        assertTrue(afterApproval.scheduleEntries() > beforeReason.scheduleEntries(), afterApproval.toString());
         CLOCK.reset();
     }
 
@@ -255,10 +273,19 @@ class CoreEndToEndFlowIntegrationTest {
             assertTrue(instructions.stream().anyMatch(text -> text.endsWith("(검수자 보완 문구)")), instructions.toString());
             assertTrue(instructions.stream().anyMatch(text -> text.startsWith("매출 정산 내역")), instructions.toString());
 
-            // 승인 전 기간(테스트용 checklist)은 둘 다 사용 불가
+            // 승인 전 기간(테스트용 FIXTURE checklist만 있는 업무일)은 Tool과 Core 조회 모두 사용 불가.
+            // 이 흐름은 두 공문군을 모두 승인하므로 "미승인 공문군" 차단은 여기서 다루지 않는다. 그 조건은 기존
+            // ToolApiIntegrationTest.unusableStatesReturnReasonsOnlyWithoutItemsOrRuleIds(HUMAN_REVIEW_PENDING)와
+            // InternalPolicyApplicableIntegrationTest.validationResultDrivesChecklistStatusWithoutAllowingUse(PENDING_REVIEW)가 보장한다.
             JsonNode fixture = json(tool(port, "applicable_checklist", Map.of("familyId", PREPAYMENT, "businessDate", "2026-09-30")));
             assertFalse(fixture.get("usable").booleanValue());
             assertTrue(fixture.get("approvedChecklist").isNull());
+            List<String> fixtureReasons = new ArrayList<>();
+            fixture.get("blockingReasons").forEach(reason -> fixtureReasons.add(reason.stringValue()));
+            assertTrue(fixtureReasons.contains("FIXTURE_CHECKLIST_NOT_APPROVED"), fixtureReasons.toString());
+            JsonNode fixtureCore = json(get(port, "/api/v1/internal-policy/checklists/" + PREPAYMENT + "/applicable?businessDate=2026-09-30"));
+            assertFalse(fixtureCore.get("internalChecklistUseAllowed").booleanValue(), fixtureCore.toString());
+            assertEquals("FIXTURE", fixtureCore.get("approvedChecklist").get("origin").stringValue());
         }
     }
 
@@ -392,6 +419,26 @@ class CoreEndToEndFlowIntegrationTest {
 
     private int count(String tableAndFilter) {
         return jdbc.sql("select count(*) from " + tableAndFilter).query(Integer.class).single();
+    }
+
+    /** 사람 결정이 발행하는 행의 건수: 결정, HUMAN_REVIEW checklist version과 항목, 일정 revision과 entry. */
+    record Issued(int decisions, int humanReviewVersions, int humanReviewItems, int scheduleRevisions, int scheduleEntries) {}
+
+    private Issued issued() {
+        return new Issued(
+                count("human_review_decision"),
+                count("approved_checklist_version where origin = 'HUMAN_REVIEW'"),
+                count("approved_checklist_item item join approved_checklist_version v on v.approved_checklist_version_id = item.approved_checklist_version_id where v.origin = 'HUMAN_REVIEW'"),
+                count("approved_checklist_schedule_revision"),
+                count("approved_checklist_schedule_entry"));
+    }
+
+    private void assertNothingIssuedSince(Issued before) {
+        assertEquals(before, issued(), "거부된 명령이 결정·checklist·일정 행을 남겼습니다");
+    }
+
+    private String failedRun(String reviewRunId) {
+        return single("select status || ' | ' || error_code from human_review_run where review_run_id = '" + reviewRunId + "'");
     }
 
     private String single(String sql) {
