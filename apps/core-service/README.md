@@ -77,6 +77,19 @@ true로 만들지 않습니다. production profile은 `TRUST_AGENT_VALIDATION_MA
 반려된 변경안은 `UNAVAILABLE` + `PROPOSAL_REJECTED`, 필수 공개 근거 미확인은 `PUBLIC_EVIDENCE_UNCONFIRMED`, 일정 구간은 덮지만 다른 공문용 checklist면
 `APPROVED_CHECKLIST_NOTICE_MISMATCH`로 차단합니다. 승인 뒤 검증 결과의 기간 경과만으로는 만료되지 않습니다.
 
+## AI 서비스용 Tool API (읽기 전용, test/demo 인증)
+
+```text
+POST /api/v1/tools/applicable_checklist   본문 {"familyId": "...", "businessDate": "YYYY-MM-DD"(생략 시 오늘), "consultationId": "..."(추적용)}
+POST /api/v1/tools/rule_evidence          본문 {"familyId": "...", "ruleVersionId": "policy-rule:sha256:...", "consultationId": "..."}
+헤더 Authorization: Bearer <TRUST_AGENT_TOOL_SERVICE_TOKEN>
+```
+
+사용 허용 여부(`usable`)는 Core의 적용 공문 조회가 결정하며 AI가 바꿀 수 없습니다. `usable=false`면 사유만 주고 `approvedChecklist`는 null입니다(항목과 근거 ID 없음).
+근거 Tool은 요청한 공문군의 현재 사용 가능한 승인 checklist 항목의 근거일 때만 원문 문장과 위치를 주고 아니면 403입니다. `knownAt`과 모르는 필드는 400이며 조회는 항상 현재 시각 기준입니다.
+쓰기 Tool은 없습니다. 모든 호출(인증 거부 포함)은 `tool_call_audit`에 결과 코드와 사유만 남기고 저장 실패 시 응답도 실패합니다.
+토큰은 환경변수 `TRUST_AGENT_TOOL_SERVICE_TOKEN`으로만 제공하고 비어 있으면 모든 호출을 거부합니다(production은 기동 거부). 사용자별 인증·권한과 FastAPI AI 서비스는 미구현입니다. 계약은 `contracts/tool-*.schema.json`.
+
 ## 공개 상품 관측 상태 조회
 
 ```text

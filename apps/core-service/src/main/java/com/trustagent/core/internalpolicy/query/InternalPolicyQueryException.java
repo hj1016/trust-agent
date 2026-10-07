@@ -1,6 +1,6 @@
 package com.trustagent.core.internalpolicy.query;
 
-final class InternalPolicyQueryException extends RuntimeException {
+public final class InternalPolicyQueryException extends RuntimeException {
 
     private final String code;
 
@@ -9,7 +9,7 @@ final class InternalPolicyQueryException extends RuntimeException {
         this.code = code;
     }
 
-    String code() {
+    public String code() {
         return code;
     }
 }

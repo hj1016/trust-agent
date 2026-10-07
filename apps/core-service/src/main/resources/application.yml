@@ -48,11 +48,15 @@ trust-agent:
     validator-version: ${TRUST_AGENT_PROPOSAL_VALIDATOR_VERSION:proposal-validator-v1}
   human-review:
     enabled: false
+  tool-api:
+    # AI 서비스용 Tool API test/demo 인증. 실제 값은 환경변수로만 제공한다. 비어 있으면 모든 Tool 호출을 거부한다.
+    service-token: ${TRUST_AGENT_TOOL_SERVICE_TOKEN:}
+    service-id: ${TRUST_AGENT_TOOL_SERVICE_ID:ai-service}
   validation-policy:
     max-validation-age: ${TRUST_AGENT_VALIDATION_MAX_AGE:24h}
     policy-version: ${TRUST_AGENT_VALIDATION_POLICY_VERSION:internal-validation-v1}
   schema:
-    expected-version: ${TRUST_AGENT_SCHEMA_EXPECTED_VERSION:8}
+    expected-version: ${TRUST_AGENT_SCHEMA_EXPECTED_VERSION:9}
 
 management:
   server:

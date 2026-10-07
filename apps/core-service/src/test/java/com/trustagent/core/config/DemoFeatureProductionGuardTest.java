@@ -13,17 +13,18 @@ import org.springframework.core.env.MapPropertySource;
 /** TASK-005 AC-17~21: production에서 demo 전용 설정이 하나라도 켜지면 기동을 거부한다. */
 class DemoFeatureProductionGuardTest {
 
-    private static final Map<String, Object> COMPLETE_PRODUCTION_SETTINGS = Map.of(
-            "TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent",
-            "TRUST_AGENT_DB_USERNAME", "runtime",
-            "TRUST_AGENT_DB_PASSWORD", "runtime-secret",
-            "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "8",
-            "TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1",
-            "TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h",
-            "TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE", "Asia/Seoul",
-            "TRUST_AGENT_INTERNAL_TIMEZONE_POLICY_VERSION", "internal-business-time-v1",
-            "TRUST_AGENT_VALIDATION_MAX_AGE", "24h",
-            "TRUST_AGENT_VALIDATION_POLICY_VERSION", "internal-validation-v1");
+    private static final Map<String, Object> COMPLETE_PRODUCTION_SETTINGS = Map.ofEntries(
+            Map.entry("TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent"),
+            Map.entry("TRUST_AGENT_DB_USERNAME", "runtime"),
+            Map.entry("TRUST_AGENT_DB_PASSWORD", "runtime-secret"),
+            Map.entry("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "9"),
+            Map.entry("TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1"),
+            Map.entry("TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h"),
+            Map.entry("TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE", "Asia/Seoul"),
+            Map.entry("TRUST_AGENT_INTERNAL_TIMEZONE_POLICY_VERSION", "internal-business-time-v1"),
+            Map.entry("TRUST_AGENT_VALIDATION_MAX_AGE", "24h"),
+            Map.entry("TRUST_AGENT_VALIDATION_POLICY_VERSION", "internal-validation-v1"),
+            Map.entry("TRUST_AGENT_TOOL_SERVICE_TOKEN", "temporary-token-for-test"));
 
     @Test
     void proposalGenerationAloneRefusesProductionStartup() {
@@ -53,6 +54,14 @@ class DemoFeatureProductionGuardTest {
         var error = refusal(Map.of("trust-agent.human-review.enabled", "true"));
         assertTrue(error.contains("DEMO_FEATURE_ENABLED_IN_PROD"));
         assertTrue(error.contains("trust-agent.human-review.enabled"));
+    }
+
+    @Test
+    void toolServiceTokenIsRequiredInProduction() {
+        // TASK-008 AC-10: 토큰 설정이 없으면 production 기동 거부. 테스트 값은 임시 문자열이며 실제 자격증명이 아니다.
+        try (var context = productionContext(Map.of("TRUST_AGENT_TOOL_SERVICE_TOKEN", ""))) {
+            assertThrows(RuntimeException.class, context::refresh);
+        }
     }
 
     @Test
