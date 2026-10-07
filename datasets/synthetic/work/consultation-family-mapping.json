@@ -1,0 +1,16 @@
+{
+  "dataset_class": "SYNTHETIC_WORK",
+  "synthetic": true,
+  "disclaimer": "프로젝트 시연을 위해 생성한 상품별 공문군 매핑이며 실제 은행의 승인 설정이나 내부자료가 아닙니다. 현재는 합성 시나리오의 사용자 승인 설정이고 실제 승인 부서가 있는 것이 아닙니다.",
+  "mapping_version": "v1",
+  "approval_note": "필수 여부(required)는 사용자가 승인한다. 변경은 TASK 판단 기록에 남기고 mapping_version을 올린다. AI 서비스는 읽기만 하고 판단하지 않는다.",
+  "products": [
+    {
+      "product_key": "kb-seller-loan",
+      "families": [
+        {"family_id": "SIN-PREPAYMENT-FEE", "required": true, "order": 0},
+        {"family_id": "SIN-SELLER-CHECKLIST", "required": true, "order": 1}
+      ]
+    }
+  ]
+}

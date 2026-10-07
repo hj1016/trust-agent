@@ -1,0 +1,6 @@
+# AI 서비스 의존성. 업무 DB 드라이버는 없다(CLAUDE.md: AI 서비스는 업무 DB에 접근하지 않는다).
+# Core 호출은 표준 라이브러리 urllib로 하며 fastapi·uvicorn·httpx는 HTTP 진입점과 그 테스트에만 쓴다.
+-r ../../requirements.txt
+fastapi==0.133.0
+uvicorn==0.40.0
+httpx==0.28.1

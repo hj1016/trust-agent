@@ -30,12 +30,13 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: python -m pip install --requirement requirements.txt
+        run: python -m pip install --requirement requirements.txt --requirement apps/ai-service/requirements-ai.txt
 
       - name: Run contract and unit tests
         env:
           TRUSTAGENT_PRIVATE_ARTIFACT_ROOT: ${{ runner.temp }}/trust-agent-private-artifacts
-        run: python -m unittest discover -s tests -v
+        # 저장소 루트를 top-level로 둔다(-t .). 시작 디렉터리만 쓰면 tests/ai_service가 패키지 ai_service를 가려 import가 깨진다.
+        run: python -m unittest discover -s tests -t . -v
 
       - name: Validate JSON documents
         run: find contracts datasets -type f -name '*.json' -print0 | xargs -0 -n1 python -m json.tool >/dev/null
@@ -74,5 +75,14 @@ jobs:
         run: |
           echo "7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172  gradle/wrapper/gradle-wrapper.jar" | sha256sum --check --strict
 
+      - name: Set up Python for AI service integration
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+
       - name: Run Gradle tests and build executable jar
-        run: ./gradlew test bootJar --no-daemon
+        # TASK-015: Core(Java)와 AI 서비스(Python CLI)를 함께 실행하는 연결 검증을 필수 CI에서 실제로 실행한다.
+        # TRUST_AGENT_REQUIRE_AI_INTEGRATION=1이면 건너뜀이 허용되지 않으며 환경 누락은 실패로 드러난다.
+        env:
+          TRUST_AGENT_REQUIRE_AI_INTEGRATION: "1"
+        run: ./gradlew test bootJar --no-daemon -PaiServiceIntegration=true

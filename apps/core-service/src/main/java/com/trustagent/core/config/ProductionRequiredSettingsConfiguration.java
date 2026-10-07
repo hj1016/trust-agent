@@ -20,7 +20,8 @@ public class ProductionRequiredSettingsConfiguration {
             "TRUST_AGENT_INTERNAL_TIMEZONE_POLICY_VERSION",
             "TRUST_AGENT_VALIDATION_MAX_AGE",
             "TRUST_AGENT_VALIDATION_POLICY_VERSION",
-            "TRUST_AGENT_TOOL_SERVICE_TOKEN");
+            "TRUST_AGENT_TOOL_SERVICE_TOKEN",
+            "TRUST_AGENT_PREPARATION_RECORD_TOKEN");
     static final List<String> REQUIRED_BASELINE_IMPORT_SETTINGS = List.of(
             "TRUST_AGENT_IMPORT_DB_URL",
             "TRUST_AGENT_IMPORT_DB_USERNAME",

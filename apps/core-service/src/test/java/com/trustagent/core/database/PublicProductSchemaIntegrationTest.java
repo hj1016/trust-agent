@@ -33,7 +33,7 @@ class PublicProductSchemaIntegrationTest {
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
                 .cleanDisabled(true)
                 .load();
-        assertEquals(9, flyway.migrate().migrationsExecuted);
+        assertEquals(10, flyway.migrate().migrationsExecuted);
         assertEquals(0, flyway.migrate().migrationsExecuted);
 
         try (Connection connection = adminConnection(); Statement statement = connection.createStatement()) {
@@ -82,7 +82,7 @@ class PublicProductSchemaIntegrationTest {
                       AND table_name <> 'flyway_schema_history'
                     """)) {
                 assertTrue(result.next());
-                assertEquals(36, result.getInt(1));
+                assertEquals(40, result.getInt(1));
             }
             try (ResultSet result = statement.executeQuery("""
                     SELECT version
@@ -92,7 +92,7 @@ class PublicProductSchemaIntegrationTest {
                     LIMIT 1
                     """)) {
                 assertTrue(result.next());
-                assertEquals("9", result.getString(1));
+                assertEquals("10", result.getString(1));
             }
             try (ResultSet result = statement.executeQuery("""
                     SELECT count(*)
@@ -110,7 +110,7 @@ class PublicProductSchemaIntegrationTest {
                     WHERE actual.tgenabled = 'O'
                     """)) {
                 assertTrue(result.next());
-                assertEquals(72, result.getInt(1));
+                assertEquals(80, result.getInt(1));
             }
 
             SQLException missingPrimaryKey = assertThrows(

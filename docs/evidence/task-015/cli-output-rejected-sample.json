@@ -1,0 +1,180 @@
+{
+  "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+  "run_id": "consultation-preparation-run:79606b83618f43c09977cd934afb98d5",
+  "assembler_version": "preparation-assembler-v1",
+  "messages_hash": "sha256:f5bd56371de17ea5815fadd771c9d4b10bebeeac657b43d29f8ae96d14922e7c",
+  "family_mapping_hash": "sha256:326b488b063f5197c636fcf53a15162c5647b231aceaa2c63593cc136cf3bdd7",
+  "dataset_class": "SYNTHETIC_WORK",
+  "synthetic": true,
+  "disclaimer": "프로젝트 시연을 위해 생성한 합성 상담 준비안이며 실제 상담 기록, 고객 정보, 은행 내부자료가 아닙니다. 항목과 근거는 Core의 승인 checklist와 합성 공문 원문에서 왔고 LLM이 생성한 문장은 없습니다.",
+  "application": {
+    "application_id": "SW-APPLICATION-001",
+    "company_id": "SW-COMPANY-001",
+    "legal_name": "가상상사 주식회사",
+    "product_key": "kb-seller-loan",
+    "requested_amount_krw": 150000000,
+    "purpose": "온라인 판매 정산 주기 사이의 운전자금 상담 준비",
+    "source_hash": "sha256:26a33656fe31638be9271fee0a600c6100b7ee03f0dacb93f966942d84d7e270"
+  },
+  "business_date": "2026-10-06",
+  "generated_at": "2026-10-07T18:22:53Z",
+  "status": "PARTIAL",
+  "preparation_complete": false,
+  "headline": "공문군 2개 가운데 1개 준비됨, 필수 공문군 1개(SIN-SELLER-CHECKLIST) 확인 남음. 상담 준비가 끝나지 않았습니다.",
+  "remaining_checks": [
+    {
+      "family_id": "SIN-SELLER-CHECKLIST",
+      "required": true,
+      "hold_kind": "CORE_DECISION",
+      "blocking_reasons": [
+        "APPROVED_CHECKLIST_NOTICE_MISMATCH",
+        "HUMAN_REVIEW_PENDING"
+      ],
+      "hold_message": "Core가 사용 불가로 판정했습니다. 적용 일정의 checklist가 선택된 공문과 맞지 않아 쓸 수 없습니다. 변경안이 담당 부서의 검토 대기 상태라 승인 checklist를 아직 쓸 수 없습니다.",
+      "manual_checklist_notice": "보류된 공문군은 Core의 적용 공문 조회(GET /api/v1/internal-policy/checklists/SIN-SELLER-CHECKLIST/applicable) 또는 수기 checklist로 확인하세요."
+    }
+  ],
+  "optional_holds": [],
+  "sections": [
+    {
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "required": true,
+      "status": "READY",
+      "hold_kind": null,
+      "hold_claim_basis": null,
+      "evaluated_at": "2026-10-06T03:00:00Z",
+      "selected_notice": {
+        "notice_id": "SIN-PREPAYMENT-FEE-V2",
+        "version": 2,
+        "title": "[합성] 기업여신 중도상환수수료 기준 변경 안내 v2",
+        "effective_from": "2026-10-01",
+        "effective_to": null
+      },
+      "approved_checklist": {
+        "version_id": "approved-checklist:46c217aa60fc2aad632fee33fcd516e4",
+        "decision_id": "review-decision:33333333333333333333333333333333",
+        "effective_from": "2026-10-01",
+        "effective_to": null
+      },
+      "items": [
+        {
+          "order": 0,
+          "rule_key": "CHECK_PREPAYMENT_FEE_RATE",
+          "instruction": "기업여신 상담 시 변경된 중도상환수수료율 0.8퍼센트와 적용 조건을 원문 근거에서 확인한다.",
+          "evidence_required": true,
+          "structured_change": {
+            "unit": "PERCENT",
+            "field_key": "prepayment_fee_rate_percent",
+            "conditions": [
+              "기업 고객의 기업여신 상담 건",
+              "2026-10-01 이후 중도상환"
+            ],
+            "exceptions": [
+              "별도 약정으로 수수료 면제가 확인된 경우"
+            ],
+            "after_value": "0.8",
+            "change_type": "NUMERIC_POLICY_CHANGE",
+            "before_value": "1.2",
+            "effective_on": "2026-10-01",
+            "applicable_product_keys": [
+              "kb-seller-loan"
+            ]
+          },
+          "source_rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "evidence": {
+            "notice_id": "SIN-PREPAYMENT-FEE-V2",
+            "evidence_text": "기업여신 상담 시 변경된 중도상환수수료율 0.8퍼센트와 적용 조건을 원문 근거에서 확인한다.",
+            "json_pointer": "/rules/0",
+            "evidence_hash": "sha256:425614ef3185a514ca7cbadd295515813893dc074a13614b128713914edd1867"
+          }
+        },
+        {
+          "order": 1,
+          "rule_key": "CHECK_NOTICE_SOURCE",
+          "instruction": "상담 안내 전 적용 공문 버전과 원문 근거 위치를 확인한다.",
+          "evidence_required": true,
+          "structured_change": null,
+          "source_rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "evidence": {
+            "notice_id": "SIN-PREPAYMENT-FEE-V2",
+            "evidence_text": "상담 안내 전 적용 공문 버전과 원문 근거 위치를 확인한다.",
+            "json_pointer": "/rules/2",
+            "evidence_hash": "sha256:03143c8f15ff80982f8b0c1e114828ab5b9bf15e095eb39cedcaa890d71f7adc"
+          }
+        },
+        {
+          "order": 2,
+          "rule_key": "CHECK_CUSTOMER_CONTRACT_DATE",
+          "instruction": "변경 기준 적용 여부를 판단하기 위해 고객 약정일과 중도상환 예정일을 확인한다.",
+          "evidence_required": true,
+          "structured_change": {
+            "unit": "BOOLEAN",
+            "field_key": "customer_contract_date_check",
+            "conditions": [
+              "수수료율 변경 공문과 상담 건의 적용 관계 확인"
+            ],
+            "exceptions": [],
+            "after_value": true,
+            "change_type": "CHECKLIST_ITEM_CHANGE",
+            "before_value": null,
+            "effective_on": "2026-10-01",
+            "applicable_product_keys": [
+              "kb-seller-loan"
+            ]
+          },
+          "source_rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "evidence": {
+            "notice_id": "SIN-PREPAYMENT-FEE-V2",
+            "evidence_text": "변경 기준 적용 여부를 판단하기 위해 고객 약정일과 중도상환 예정일을 확인한다.",
+            "json_pointer": "/rules/1",
+            "evidence_hash": "sha256:1c0b40c78115b1bb73c546100348a9b76a8ff8e13fe029f9d2ff31756bb00d1e"
+          }
+        }
+      ],
+      "blocking_reasons": [],
+      "warning_reasons": [],
+      "hold_message": null,
+      "manual_checklist_notice": null,
+      "tool_response_hash": "sha256:3a0e376cf670e48b78d0a5f574c6736ae17ad5a7fd9f38b7025013e1b595c97a"
+    },
+    {
+      "family_id": "SIN-SELLER-CHECKLIST",
+      "required": true,
+      "status": "HOLD",
+      "hold_kind": "CORE_DECISION",
+      "hold_claim_basis": "CORE_REPORTED",
+      "evaluated_at": "2026-10-06T03:00:00Z",
+      "selected_notice": {
+        "notice_id": "SIN-SELLER-CHECKLIST-V2",
+        "version": 2,
+        "title": "[합성] 셀러론 상담 준비 체크리스트 안내 v2",
+        "effective_from": "2026-10-01",
+        "effective_to": null
+      },
+      "approved_checklist": null,
+      "items": [],
+      "blocking_reasons": [
+        "APPROVED_CHECKLIST_NOTICE_MISMATCH",
+        "HUMAN_REVIEW_PENDING"
+      ],
+      "warning_reasons": [],
+      "hold_message": "Core가 사용 불가로 판정했습니다. 적용 일정의 checklist가 선택된 공문과 맞지 않아 쓸 수 없습니다. 변경안이 담당 부서의 검토 대기 상태라 승인 checklist를 아직 쓸 수 없습니다.",
+      "manual_checklist_notice": "보류된 공문군은 Core의 적용 공문 조회(GET /api/v1/internal-policy/checklists/SIN-SELLER-CHECKLIST/applicable) 또는 수기 checklist로 확인하세요.",
+      "tool_response_hash": "sha256:1b72379a38dace6afb9bdb7a1e71a08783adcb56238e440f0ebff346dfd457e4"
+    }
+  ],
+  "notices": {
+    "human_decision_notice": "이 준비안은 확인할 항목과 근거만 담습니다. 승인·거절·한도·금리·신용등급은 이 준비안이 정하지 않으며 담당자가 판단합니다.",
+    "source_notice": "항목은 Core의 승인 checklist이고 근거는 공문 원문의 규칙 문장과 위치입니다. 시행일·조건·예외 같은 값은 항목의 구조화 값이며 원문 직접 인용이 아닙니다.",
+    "usage_notice": "Core가 기록 토큰을 받아들이지 않았습니다. 이 준비안은 기록되지 않았으므로 사용하지 마세요. 운영 설정을 점검한 뒤 다시 실행하세요.",
+    "staff_check_notice": "상담 준비가 끝나지 않았습니다. 보류된 필수 공문군을 먼저 확인하세요. 그 뒤에도 고객별 적용 조건과 제출서류는 직원 확인이 필요합니다."
+  },
+  "record": {
+    "recorded": false,
+    "status": "REJECTED",
+    "error_code": "UNAUTHENTICATED",
+    "core_http_status": 401,
+    "error_message": "Core가 기록 토큰을 받아들이지 않았습니다."
+  },
+  "consultation_id": "e2e-4"
+}

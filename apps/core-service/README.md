@@ -90,6 +90,21 @@ POST /api/v1/tools/rule_evidence          본문 {"familyId": "...", "ruleVersio
 쓰기 Tool은 없습니다. 모든 호출(인증 거부 포함)은 `tool_call_audit`에 결과 코드와 사유만 남기고 저장 실패 시 응답도 실패합니다.
 토큰은 환경변수 `TRUST_AGENT_TOOL_SERVICE_TOKEN`으로만 제공하고 비어 있으면 모든 호출을 거부합니다(production은 기동 거부). 사용자별 인증·권한과 FastAPI AI 서비스는 미구현입니다. 계약은 `contracts/tool-*.schema.json`.
 
+## AI 서비스 준비안 기록 경로 (Tool 밖, 기록 토큰, TASK-015·ADR-012)
+
+```text
+POST /api/v1/consultation-preparations   본문 contracts/consultation-preparation-record.schema.json (snake_case. 근거 원문·메모·토큰 없음)
+헤더 Authorization: Bearer <TRUST_AGENT_PREPARATION_RECORD_TOKEN>
+201 {"preparationId","runId","status":"RECORDED","recordedAt"} / 200 "ALREADY_RECORDED" / 400·401·409·422·500 problem JSON(code, detail)
+```
+
+AI 서비스가 규칙으로 조립한 상담 준비안(READY·PARTIAL·HOLD 모두)을 남기는 경로입니다. 읽기 Tool 토큰과 별개의 **기록 토큰**만 받으며 두 토큰은 서로 바꿔 쓸 수 없습니다(Tool 경로에 기록 토큰, 기록 경로에 Tool 토큰은 401). 쓰는 표는 `consultation_preparation`, `consultation_preparation_section`, `consultation_preparation_run` 세 표뿐이고 승인·일정·변경안·검증·공문 사건 표는 바꾸지 않습니다.
+저장 전에 Core가 직접 다시 확인합니다. 활성 매핑과 요청의 `family_mapping_hash`·필수 섹션 유무·`required` 값·전체 상태 계산(M1~M5, 필수 공문군이 없으면 READY 불가 `NO_REQUIRED_FAMILY`), READY 섹션의 선택 공문·승인 version·결정 ID·항목 순서·근거 해시를 현재 시각의 적용 공문 조회와 대조(C1~C5. 사용 불가면 422 `PREPARATION_NOT_USABLE`, 값이 다르면 409 `PREPARATION_STALE`), HOLD 섹션은 항목·근거가 없어야 하고 사유 코드가 허용 목록에 있어야 합니다(400 `HOLD_SECTION_INVALID`). HOLD 섹션은 AI가 보낸 사유와 Core가 지금 본 결과(`recheck_usable`, `recheck_reasons`)를 둘 다 저장하며 `hold_claim_basis`가 CORE_REPORTED(Core 판정)인지 SERVICE_REPORTED(통신 오류 등 서비스 보고)인지 구분합니다.
+`preparation_id`는 본문에서 `preparation_id`·`run_id`·`consultation_id`·`sections[].evaluated_at`·`sections[].tool_response_hash`를 뺀 canonical sha256이어야 하며(아니면 400 `PREPARATION_ID_MISMATCH`), 같은 ID 같은 내용은 재확인을 거친 뒤 200 `ALREADY_RECORDED`(저장만 멱등. **같은 ID 재요청에서도 재확인은 실행되며, 동시 요청의 저장 충돌 뒤에도 새 트랜잭션에서 재확인한 뒤에만 기존 기록을 돌려줍니다**), 같은 ID 다른 내용은 409 `PREPARATION_CONFLICT`입니다. 재확인과 저장은 SERIALIZABLE 트랜잭션 하나이며 직렬화 실패(40001)는 재확인부터 1회 재시도하고 그래도 실패하면 500 `SERIALIZATION_FAILED`입니다. 요청마다 실행 기록(`run_id`, RECORDED/ALREADY_RECORDED/REJECTED/FAILED)이 별도 트랜잭션으로 1건 남고 같은 `run_id` 재전송은 409 `RUN_ID_CONFLICT`입니다. 실행마다 달라지는 값(섹션별 평가 시각·Tool 응답 해시·이번 재확인 결과)은 실행 기록의 `section_evaluations`에 실행 단위로 쌓이며 준비안·섹션 행은 첫 기록 그대로입니다.
+**기록은 사용 허가가 아닙니다.** 저장된 준비안을 쓰기 전에는 적용 공문 조회로 사용 가능 여부를 다시 확인해야 합니다. 토큰은 환경변수 `TRUST_AGENT_PREPARATION_RECORD_TOKEN`으로만 제공하고 비어 있으면 모든 기록을 거부합니다(production은 기동 거부). 읽기 토큰 `TRUST_AGENT_TOOL_SERVICE_TOKEN`과 같은 값이면 모든 profile에서 기동을 거부합니다(`SERVICE_TOKEN_NOT_SEPARATED`, 오류에 토큰 값은 나오지 않음).
+
+상품별 공문군 매핑(어떤 공문군이 필수인지)은 기록 경로가 아니라 별도 적재 경로로만 들어갑니다. 설정 `trust-agent.consultation-family-mapping.enabled=true`와 `trust-agent.consultation-family-mapping.root=<저장소 루트>`로 기동하면 `datasets/synthetic/work/consultation-family-mapping.json`(현재는 합성 시나리오의 사용자 승인 설정)을 검증해 `consultation_family_mapping`에 적재합니다. 같은 내용(해시)은 다시 넣지 않고, 가장 최근 적재된 해시가 활성 매핑입니다. 매핑 변경은 파일 버전을 올리고 Task에 기록합니다.
+
 ## 공개 상품 관측 상태 조회
 
 ```text

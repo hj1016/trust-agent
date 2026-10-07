@@ -1,0 +1,9 @@
+## 1. 연결 검증 포함 전체 실행
+연결 검증 포함 전체 실행 결과 (./gradlew clean test bootJar --offline --no-daemon -PaiServiceIntegration=true): total=185 passed=185 failed=0 errors=0 skipped=0
+## 2. 로컬 기본 실행(속성 없음)
+로컬 기본 실행 결과 (./gradlew clean test --offline --no-daemon, CLI 실행 테스트는 명시적 skip): total=185 passed=179 failed=0 errors=0 skipped=6
+## 3. 의도적 환경 누락
+의도적 환경 누락 실행 결과 (TRUST_AGENT_REQUIRE_AI_INTEGRATION=1, -PaiServiceIntegration=false: 건너뜀이 아니라 실패): total=1 passed=0 failed=1 errors=0 skipped=0
+## 4. Python
+Ran 106 tests in 0.582s
+OK (skipped=2)

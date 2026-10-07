@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/consultation-family-mapping.schema.json",
+  "title": "TrustAgent Consultation Family Mapping",
+  "description": "상품별 공문군 매핑과 필수 여부(TASK-015). 현재는 합성 시나리오의 사용자 승인 설정이며 실제 승인 부서의 설정이 아니다. Core(bootstrap importer)와 AI 서비스가 같은 파일을 읽는다. mapping_hash는 파일 전체의 canonical sha256이다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset_class", "synthetic", "disclaimer", "mapping_version", "approval_note", "products"],
+  "properties": {
+    "dataset_class": {"const": "SYNTHETIC_WORK"},
+    "synthetic": {"const": true},
+    "disclaimer": {"type": "string", "minLength": 20, "pattern": "합성"},
+    "mapping_version": {"type": "string", "pattern": "^v[1-9][0-9]*$"},
+    "approval_note": {"type": "string", "minLength": 10},
+    "products": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["product_key", "families"],
+        "properties": {
+          "product_key": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+          "families": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["family_id", "required", "order"],
+              "properties": {
+                "family_id": {"type": "string", "pattern": "^SIN-[A-Z0-9-]+$"},
+                "required": {"type": "boolean"},
+                "order": {"type": "integer", "minimum": 0}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

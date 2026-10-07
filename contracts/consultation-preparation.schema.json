@@ -1,0 +1,692 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/consultation-preparation.schema.json",
+  "title": "TrustAgent Consultation Preparation",
+  "description": "AI 서비스가 규칙으로 조립한 상담 준비안 또는 보류(TASK-015). LLM 생성이 아니다. 모든 문장은 승인 checklist 항목의 지시 문장, 근거 Tool의 규칙 원문, 구조화 값, 고정 안내 문구에서만 온다. 승인·거절·한도·금리·신용등급을 뜻하는 필드는 없다(additionalProperties false). READY는 승인된 매핑에 따른 필수 준비 자료를 갖췄다는 뜻이며 상담이나 대출 결정의 완료가 아니다. 기록(record)은 사용 허가가 아니다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "preparation_id",
+    "run_id",
+    "assembler_version",
+    "messages_hash",
+    "family_mapping_hash",
+    "dataset_class",
+    "synthetic",
+    "disclaimer",
+    "application",
+    "business_date",
+    "generated_at",
+    "status",
+    "preparation_complete",
+    "headline",
+    "remaining_checks",
+    "optional_holds",
+    "sections",
+    "notices",
+    "record"
+  ],
+  "properties": {
+    "preparation_id": {
+      "type": "string",
+      "pattern": "^consultation-preparation:sha256:[a-f0-9]{64}$"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^consultation-preparation-run:[a-f0-9]{32}$"
+    },
+    "assembler_version": {
+      "type": "string",
+      "pattern": "^preparation-assembler-v[1-9][0-9]*$"
+    },
+    "messages_hash": {
+      "$ref": "#/$defs/sha256"
+    },
+    "family_mapping_hash": {
+      "$ref": "#/$defs/sha256"
+    },
+    "dataset_class": {
+      "const": "SYNTHETIC_WORK"
+    },
+    "synthetic": {
+      "const": true
+    },
+    "disclaimer": {
+      "type": "string",
+      "minLength": 20,
+      "pattern": "합성"
+    },
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "application_id",
+        "company_id",
+        "legal_name",
+        "product_key",
+        "requested_amount_krw",
+        "purpose",
+        "source_hash"
+      ],
+      "properties": {
+        "application_id": {
+          "type": "string",
+          "pattern": "^SW-APPLICATION-[0-9]{3}$"
+        },
+        "company_id": {
+          "type": "string",
+          "pattern": "^SW-COMPANY-[0-9]{3}$"
+        },
+        "legal_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "product_key": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "requested_amount_krw": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_hash": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "business_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "consultation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "status": {
+      "enum": [
+        "READY",
+        "PARTIAL",
+        "HOLD"
+      ]
+    },
+    "preparation_complete": {
+      "type": "boolean"
+    },
+    "headline": {
+      "type": "string",
+      "minLength": 1
+    },
+    "remaining_checks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/holdSummary"
+      }
+    },
+    "optional_holds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/holdSummary"
+      }
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/section"
+      }
+    },
+    "notices": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "human_decision_notice",
+        "source_notice",
+        "usage_notice",
+        "staff_check_notice"
+      ],
+      "properties": {
+        "human_decision_notice": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_notice": {
+          "type": "string",
+          "minLength": 1
+        },
+        "usage_notice": {
+          "type": "string",
+          "minLength": 1
+        },
+        "staff_check_notice": {
+          "type": "string",
+          "minLength": 1,
+          "description": "직원 확인 안내. READY는 '기준 자료 준비 완료'와 고객별 적용 조건·제출서류 직원 확인 필요, PARTIAL·HOLD는 준비 미완료 안내."
+        }
+      }
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recorded",
+        "status"
+      ],
+      "properties": {
+        "recorded": {
+          "type": "boolean",
+          "description": "Core에 기록됐으면 true(RECORDED·ALREADY_RECORDED). false면 이 준비안은 기록되지 않았으므로 사용하지 않는다. HTTP 진입점은 true면 200, false면 원인별 422/409/503/500/502/504를 준다."
+        },
+        "status": {
+          "enum": [
+            "RECORDED",
+            "ALREADY_RECORDED",
+            "REJECTED",
+            "FAILED",
+            "NOT_ATTEMPTED"
+          ]
+        },
+        "core_preparation_id": {
+          "type": "string",
+          "pattern": "^consultation-preparation:sha256:[a-f0-9]{64}$"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "error_code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]+$"
+        },
+        "error_message": {
+          "type": "string"
+        },
+        "core_http_status": {
+          "type": "integer",
+          "minimum": 400,
+          "maximum": 599,
+          "description": "Core 기록 경로가 거부·오류로 응답했을 때의 HTTP 상태. 기록되지 않은 원인 분류(422 사용 불가, 409 충돌, 401 설정, 400 계약 위반, 5xx Core 오류)에 쓴다."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "RECORDED",
+                  "ALREADY_RECORDED"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "recorded": {
+                "const": true
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "recorded": {
+                "const": false
+              }
+            },
+            "required": [
+              "error_code",
+              "error_message"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "READY"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "preparation_complete": {
+            "const": true
+          },
+          "remaining_checks": {
+            "maxItems": 0
+          },
+          "notices": {
+            "properties": {
+              "staff_check_notice": {
+                "pattern": "직원 확인이 필요합니다"
+              }
+            }
+          },
+          "headline": {
+            "pattern": "기준 자료 준비 완료"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "preparation_complete": {
+            "const": false
+          },
+          "headline": {
+            "pattern": "끝나지 않았습니다"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "reasonCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]+$"
+    },
+    "holdSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family_id",
+        "required",
+        "hold_kind",
+        "blocking_reasons",
+        "hold_message",
+        "manual_checklist_notice"
+      ],
+      "properties": {
+        "family_id": {
+          "type": "string",
+          "pattern": "^SIN-[A-Z0-9-]+$"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "hold_kind": {
+          "enum": [
+            "CORE_DECISION",
+            "UNVERIFIED"
+          ]
+        },
+        "blocking_reasons": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/reasonCode"
+          }
+        },
+        "hold_message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manual_checklist_notice": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family_id",
+        "required",
+        "status",
+        "hold_kind",
+        "hold_claim_basis",
+        "evaluated_at",
+        "selected_notice",
+        "approved_checklist",
+        "items",
+        "blocking_reasons",
+        "warning_reasons",
+        "hold_message",
+        "manual_checklist_notice",
+        "tool_response_hash"
+      ],
+      "properties": {
+        "family_id": {
+          "type": "string",
+          "pattern": "^SIN-[A-Z0-9-]+$"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "READY",
+            "HOLD"
+          ]
+        },
+        "hold_kind": {
+          "enum": [
+            "CORE_DECISION",
+            "UNVERIFIED",
+            null
+          ]
+        },
+        "hold_claim_basis": {
+          "enum": [
+            "CORE_REPORTED",
+            "SERVICE_REPORTED",
+            null
+          ]
+        },
+        "evaluated_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "selected_notice": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "notice_id",
+            "version",
+            "title",
+            "effective_from",
+            "effective_to"
+          ],
+          "properties": {
+            "notice_id": {
+              "type": "string",
+              "pattern": "^SIN-[A-Z0-9-]+-V[1-9][0-9]*$"
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "title": {
+              "type": "string"
+            },
+            "effective_from": {
+              "type": "string",
+              "format": "date"
+            },
+            "effective_to": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date"
+            }
+          }
+        },
+        "approved_checklist": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "version_id",
+            "decision_id",
+            "effective_from",
+            "effective_to"
+          ],
+          "properties": {
+            "version_id": {
+              "type": "string",
+              "pattern": "^approved-checklist:[a-f0-9]{32}$"
+            },
+            "decision_id": {
+              "type": "string",
+              "pattern": "^review-decision:[a-f0-9]{32}$"
+            },
+            "effective_from": {
+              "type": "string",
+              "format": "date"
+            },
+            "effective_to": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date"
+            }
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "order",
+              "rule_key",
+              "instruction",
+              "evidence_required",
+              "structured_change",
+              "source_rule_version_id",
+              "evidence"
+            ],
+            "properties": {
+              "order": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "rule_key": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9_]+$"
+              },
+              "instruction": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_required": {
+                "type": "boolean"
+              },
+              "structured_change": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "source_rule_version_id": {
+                "type": "string",
+                "pattern": "^policy-rule:sha256:[a-f0-9]{64}$"
+              },
+              "evidence": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "notice_id",
+                  "evidence_text",
+                  "json_pointer",
+                  "evidence_hash"
+                ],
+                "properties": {
+                  "notice_id": {
+                    "type": "string"
+                  },
+                  "evidence_text": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "json_pointer": {
+                    "type": "string",
+                    "pattern": "^/"
+                  },
+                  "evidence_hash": {
+                    "$ref": "#/$defs/sha256"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "blocking_reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reasonCode"
+          }
+        },
+        "warning_reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reasonCode"
+          }
+        },
+        "hold_message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "manual_checklist_notice": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tool_response_hash": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "READY"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "hold_kind": {
+                "const": null
+              },
+              "hold_claim_basis": {
+                "const": null
+              },
+              "selected_notice": {
+                "type": "object"
+              },
+              "approved_checklist": {
+                "type": "object"
+              },
+              "items": {
+                "minItems": 1
+              },
+              "blocking_reasons": {
+                "maxItems": 0
+              },
+              "hold_message": {
+                "const": null
+              },
+              "manual_checklist_notice": {
+                "const": null
+              },
+              "evaluated_at": {
+                "type": "string"
+              },
+              "tool_response_hash": {
+                "type": "string"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "hold_kind": {
+                "type": "string"
+              },
+              "hold_claim_basis": {
+                "type": "string"
+              },
+              "approved_checklist": {
+                "const": null
+              },
+              "items": {
+                "maxItems": 0
+              },
+              "blocking_reasons": {
+                "minItems": 1
+              },
+              "hold_message": {
+                "type": "string",
+                "minLength": 1
+              },
+              "manual_checklist_notice": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "hold_kind": {
+                "const": "CORE_DECISION"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "hold_claim_basis": {
+                "const": "CORE_REPORTED"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "hold_kind": {
+                "const": "UNVERIFIED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "hold_claim_basis": {
+                "const": "SERVICE_REPORTED"
+              },
+              "blocking_reasons": {
+                "items": {
+                  "enum": [
+                    "TOOL_AUTH_FAILED",
+                    "CORE_UNAVAILABLE",
+                    "CORE_TIMEOUT",
+                    "EVIDENCE_UNAVAILABLE",
+                    "TOOL_RESPONSE_INVALID"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

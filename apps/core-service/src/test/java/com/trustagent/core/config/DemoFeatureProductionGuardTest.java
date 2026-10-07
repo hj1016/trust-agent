@@ -17,14 +17,15 @@ class DemoFeatureProductionGuardTest {
             Map.entry("TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent"),
             Map.entry("TRUST_AGENT_DB_USERNAME", "runtime"),
             Map.entry("TRUST_AGENT_DB_PASSWORD", "runtime-secret"),
-            Map.entry("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "9"),
+            Map.entry("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "10"),
             Map.entry("TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1"),
             Map.entry("TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h"),
             Map.entry("TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE", "Asia/Seoul"),
             Map.entry("TRUST_AGENT_INTERNAL_TIMEZONE_POLICY_VERSION", "internal-business-time-v1"),
             Map.entry("TRUST_AGENT_VALIDATION_MAX_AGE", "24h"),
             Map.entry("TRUST_AGENT_VALIDATION_POLICY_VERSION", "internal-validation-v1"),
-            Map.entry("TRUST_AGENT_TOOL_SERVICE_TOKEN", "temporary-token-for-test"));
+            Map.entry("TRUST_AGENT_TOOL_SERVICE_TOKEN", "temporary-token-for-test"),
+            Map.entry("TRUST_AGENT_PREPARATION_RECORD_TOKEN", "temporary-record-token-for-test"));
 
     @Test
     void proposalGenerationAloneRefusesProductionStartup() {
