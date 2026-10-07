@@ -1,0 +1,990 @@
+{
+  "dataset_class": "SYNTHETIC_WORK",
+  "synthetic": true,
+  "disclaimer": "프로젝트 시연을 위해 생성한 합성 행원 질문과 정답 기준이며 실제 상담 기록, 고객 정보, 은행 내부자료가 아닙니다. 정답 근거는 합성 공문(SYNTHETIC_INTERNAL)의 규칙 version을 가리키며 사용 가능 여부는 평가 시점에 Core가 정합니다.",
+  "kind": "eval",
+  "goldenset_id": "prepayment-fee-eval",
+  "goldenset_version": "v1",
+  "evaluation_context": {
+    "evaluated_at": "2026-10-06T03:00:00Z",
+    "business_timezone": "Asia/Seoul",
+    "evaluated_business_date": "2026-10-06",
+    "approval_state": {
+      "approved": [
+        {
+          "family_id": "SIN-PREPAYMENT-FEE",
+          "notice_id": "SIN-PREPAYMENT-FEE-V2",
+          "decision": "APPROVE",
+          "decided_at": "2026-10-05T04:30:00Z",
+          "review_run_id": "review-run:33333333333333333333333333333333",
+          "decision_id": "review-decision:33333333333333333333333333333333",
+          "validation_status": "PASS"
+        }
+      ],
+      "pending_review": [
+        {
+          "family_id": "SIN-SELLER-CHECKLIST",
+          "notice_id": "SIN-SELLER-CHECKLIST-V2",
+          "state": "VALIDATED_NOT_APPROVED",
+          "note": "변경안과 검증만 있고 사람 결정 없음(검토 대기)"
+        }
+      ],
+      "withdrawn_notices": [],
+      "rejected_proposals": []
+    },
+    "fixture_checklists": [
+      "approved-checklist:2eaa5be6af97d149ee1d05a293c7e3a2",
+      "approved-checklist:5741d977175e7637738a43d95aeb8c6d"
+    ],
+    "tool_settings": {
+      "public_evidence_max_confirmation_age": "30d",
+      "validation_max_age": "24h"
+    },
+    "recheck_basis": {
+      "tool_1_applicable_checklist": "query.business_date",
+      "tool_2_rule_evidence": "evaluated_at",
+      "known_at_supported": false
+    },
+    "dataset_fingerprint": {
+      "algorithm": "canonical-json-sha256",
+      "files": {
+        "datasets/derived/synthetic-internal/policy-extraction-attempts/prepayment-fee-v1.extraction.json": "sha256:b34771118958c38d087dcedf789ae770137d2dbf18a3857657f1c8c24dd0a9fe",
+        "datasets/derived/synthetic-internal/policy-extraction-attempts/prepayment-fee-v2.extraction.json": "sha256:432279a1bc4341e135b6ae76e3a267e5fdc0b73d0c47d560cc34a06bbea97246",
+        "datasets/derived/synthetic-internal/policy-extraction-attempts/seller-loan-checklist-v1.extraction.json": "sha256:bedbc4810705a34699048891317b5ddf80c904ccae1a182f5fcdcdb0186d5490",
+        "datasets/derived/synthetic-internal/policy-extraction-attempts/seller-loan-checklist-v2.extraction.json": "sha256:6101840e63776ee942dda01921325c27ebdd6a37e91c9d245835d4af49f93b97",
+        "datasets/synthetic/internal/approved-checklists/prepayment-fee-v1.approved-checklist.json": "sha256:9cbb8705da8f5dc3a94b6a6eddfc970e8b69fc1eb71e74a5e325c5d3705c64e6",
+        "datasets/synthetic/internal/approved-checklists/prepayment-fee-v1.schedule.json": "sha256:68ec57aca0616afb9b12c822627e323a5a74d0b636341f6a8820f7542c8d9a98",
+        "datasets/synthetic/internal/approved-checklists/seller-loan-checklist-v1.approved-checklist.json": "sha256:09cb8ac6b61498138f48ee86dbf9f0a5dc9719a45291f887c167802228da9629",
+        "datasets/synthetic/internal/approved-checklists/seller-loan-checklist-v1.schedule.json": "sha256:4d59371d930a20165fb1e94ffef2fa49a80ceb39356f68a9911c9ce7c49644ef",
+        "datasets/synthetic/internal/notices/prepayment-fee-v1.json": "sha256:0b6d2fdd6c7c1b06576a4140eb3f61ba94f999340f177b4d63738ff49d499275",
+        "datasets/synthetic/internal/notices/prepayment-fee-v2.json": "sha256:456ccfeed70f94210f5edf0b2ea918853cd8c5a10a7c4f48b12a88c3822cb001",
+        "datasets/synthetic/internal/notices/seller-loan-checklist-v1.json": "sha256:3deb221b377f14818f21cbdc79e0087b81e1f8a13efb989fae292d7009399505",
+        "datasets/synthetic/internal/notices/seller-loan-checklist-v2.json": "sha256:4a3a93246e214cabcd4eb15b8d147cd623c40bdf726b5beb8a4aefde727abc2b",
+        "datasets/synthetic/internal/receipts/prepayment-fee-v1.receipt.json": "sha256:f21872fd568637800c0f0f7133c2c31cfeb6b4d23b0ece432cbfb5e13dd4d235",
+        "datasets/synthetic/internal/receipts/prepayment-fee-v2.receipt.json": "sha256:77c8a3f654f028efe48a5db094ed2ea56d340da466b049915648fcefada232b9",
+        "datasets/synthetic/internal/receipts/seller-loan-checklist-v1.receipt.json": "sha256:1695c10565b0842400944bb258257ed61a9df2184970fd623bb05e8478072230",
+        "datasets/synthetic/internal/receipts/seller-loan-checklist-v2.receipt.json": "sha256:f1ae4d6ff3e5f922ae00475f91ead9037a903430ebc99ff45bf19126340a5c3f"
+      }
+    }
+  },
+  "queries": [
+    {
+      "query_id": "E01",
+      "query": "적용 공문 버전과 원문 근거 위치는 상담 안내 전에 확인해야 하나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "direct",
+      "relevant": [
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c"
+      ],
+      "supporting": [],
+      "must_not": [],
+      "exclusion_reasons": {},
+      "expected_evidence_hold": false,
+      "requires_human_decision": false,
+      "expected_fields": [],
+      "rationale": "공문 출처 확인 규칙의 문구에 가까운 질문. 문장만으로 충분"
+    },
+    {
+      "query_id": "E02",
+      "query": "변경 기준 적용 여부를 판단하려면 무엇을 확인해야 하나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "direct",
+      "relevant": [
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+      ],
+      "supporting": [],
+      "must_not": [],
+      "exclusion_reasons": {},
+      "expected_evidence_hold": false,
+      "requires_human_decision": false,
+      "expected_fields": [],
+      "rationale": "약정일 확인 규칙의 문구에 가까운 질문. 문장만으로 충분. 수수료율 규칙의 조건은 변경 기준의 내용이지 확인할 것의 답이 아니라 보조로도 넣지 않는다"
+    },
+    {
+      "query_id": "E03",
+      "query": "기업 대출 중도상환 때 수수료 몇 프로 떼나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "paraphrase",
+      "relevant": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+      ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
+      "expected_evidence_hold": false,
+      "requires_human_decision": false,
+      "expected_fields": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "after_value",
+          "expected_value": "0.8"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "unit",
+          "expected_value": "PERCENT"
+        }
+      ],
+      "rationale": "수수료율을 구어체로 묻는 질문. 최신 값 근거 제공, 구버전 제외"
+    },
+    {
+      "query_id": "E04",
+      "query": "면제 약정이 있으면 중도상환수수료를 받지 않는 예외가 적용되나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "paraphrase",
+      "relevant": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "supporting": [],
+      "must_not": [],
+      "exclusion_reasons": {},
+      "expected_evidence_hold": false,
+      "requires_human_decision": false,
+      "expected_fields": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "exceptions",
+          "expected_value": [
+            "별도 약정으로 수수료 면제가 확인된 경우"
+          ]
+        }
+      ],
+      "rationale": "면제 예외를 일반 정책으로 묻는 질문(특정 고객 판단 아님). 예외는 구조화 값으로 제공(정답지 대조 보완: 질문 수정)"
+    },
+    {
+      "query_id": "E05",
+      "query": "어떤 공문을 근거로 안내해야 하는지 어떻게 알 수 있나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "paraphrase",
+      "relevant": [
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c"
+      ],
+      "supporting": [],
+      "must_not": [],
+      "exclusion_reasons": {},
+      "expected_evidence_hold": false,
+      "requires_human_decision": false,
+      "expected_fields": [],
+      "rationale": "공문 출처 확인 규칙을 다른 말로 묻는 질문"
+    },
+    {
+      "query_id": "E06",
+      "query": "바뀐 수수료가 어떤 경우에 적용되는지 쉽게 설명해 주세요",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "paraphrase",
+      "relevant": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "supporting": [
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+      ],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+      ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
+      "expected_evidence_hold": false,
+      "requires_human_decision": false,
+      "expected_fields": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "conditions",
+          "expected_value": [
+            "기업 고객의 기업여신 상담 건",
+            "2026-10-01 이후 중도상환"
+          ]
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "exceptions",
+          "expected_value": [
+            "별도 약정으로 수수료 면제가 확인된 경우"
+          ]
+        }
+      ],
+      "rationale": "적용 조건과 예외를 함께 묻는 질문. 둘 다 구조화 값",
+      "supporting_reason": "적용 여부를 가르는 약정일·상환 예정일 확인은 설명에 도움이 되지만 조건·예외 자체의 답은 아니다"
+    },
+    {
+      "query_id": "E07",
+      "query": "기업대출 중도상환때 수수료 몇프로 떼나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "paraphrase",
+      "relevant": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+      ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
+      "expected_evidence_hold": false,
+      "requires_human_decision": false,
+      "expected_fields": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "after_value",
+          "expected_value": "0.8"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "unit",
+          "expected_value": "PERCENT"
+        }
+      ],
+      "rationale": "E03의 띄어쓰기 오류 변형. 정답은 같다",
+      "variant_of": "E03",
+      "variant_purpose": "띄어쓰기 오류"
+    },
+    {
+      "query_id": "E08",
+      "query": "10월 1일 이후에 중도상환하면 수수료율이 얼마인가요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "numeric",
+      "relevant": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+      ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
+      "expected_evidence_hold": false,
+      "requires_human_decision": false,
+      "expected_fields": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "after_value",
+          "expected_value": "0.8"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "effective_on",
+          "expected_value": "2026-10-01"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "conditions",
+          "expected_value": [
+            "기업 고객의 기업여신 상담 건",
+            "2026-10-01 이후 중도상환"
+          ]
+        }
+      ],
+      "rationale": "날짜 조건과 값을 함께 묻는 질문. 시행일·조건·값은 구조화 값"
+    },
+    {
+      "query_id": "E09",
+      "query": "0.8% 적용 여부를 확인할 때 약정일과 어떤 날짜를 함께 봐야 하나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "numeric",
+      "relevant": [
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+      ],
+      "supporting": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+      ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
+      "expected_evidence_hold": false,
+      "requires_human_decision": false,
+      "expected_fields": [],
+      "rationale": "약정일 확인 규칙의 문장이 함께 볼 날짜(중도상환 예정일)를 직접 답한다. 구체적인 약정일 기준값은 원문에 없으므로 묻지 않는다. 필수 답은 문장만으로 충분해 기대 필드가 없다(정답지 대조 보완: 수수료율 v2를 보조로 이동)",
+      "supporting_reason": "비교 기준이 되는 시행일(2026-10-01)과 조건을 주지만 질문이 묻는 '어떤 날짜'의 답은 아니다. 제공한다면 시행일 값은 정확해야 한다"
+    },
+    {
+      "query_id": "E10",
+      "query": "10월 1일 이후 중도상환 시 수수료율은 영 점 팔 퍼센트가 맞나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "numeric",
+      "relevant": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+      ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
+      "expected_evidence_hold": false,
+      "requires_human_decision": false,
+      "expected_fields": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "after_value",
+          "expected_value": "0.8"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "effective_on",
+          "expected_value": "2026-10-01"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "conditions",
+          "expected_value": [
+            "기업 고객의 기업여신 상담 건",
+            "2026-10-01 이후 중도상환"
+          ]
+        }
+      ],
+      "rationale": "E08의 숫자 한글 표기 변형. 정답은 같다",
+      "variant_of": "E08",
+      "variant_purpose": "숫자 한글 표기"
+    },
+    {
+      "query_id": "E11",
+      "query": "상환 예정일이 10월 15일인 고객은 0.8퍼센트 대상인가요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "numeric",
+      "relevant": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+      ],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+      ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
+      "expected_evidence_hold": false,
+      "requires_human_decision": true,
+      "expected_fields": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "effective_on",
+          "expected_value": "2026-10-01"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "conditions",
+          "expected_value": [
+            "기업 고객의 기업여신 상담 건",
+            "2026-10-01 이후 중도상환"
+          ]
+        }
+      ],
+      "rationale": "특정 고객의 적용 여부. 수수료율 v2의 조건이 10-15를 포함하고, 약정일 확인 규칙은 시행일만으로 확정하지 않도록 하는 근거라 둘 다 필수다. 상환 예정일만으로 그 고객의 적용 여부를 확정하지 않으며 약정일과 별도 약정(면제) 여부까지 사람이 확인해 판단한다(결정자 사용자)"
+    },
+    {
+      "query_id": "E12",
+      "query": "지금 기업여신 중도상환수수료율은 몇 퍼센트인가요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "current_value",
+      "relevant": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+      ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
+      "expected_evidence_hold": false,
+      "requires_human_decision": false,
+      "expected_fields": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "after_value",
+          "expected_value": "0.8"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "unit",
+          "expected_value": "PERCENT"
+        }
+      ],
+      "rationale": "현재 값 질문. 최신 근거 제공, 구버전 제외"
+    },
+    {
+      "query_id": "E13",
+      "query": "중도상환수수료 기준이 최근에 변경됐나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "current_value",
+      "relevant": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+      ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
+      "expected_evidence_hold": false,
+      "requires_human_decision": false,
+      "expected_fields": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "effective_on",
+          "expected_value": "2026-10-01"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "after_value",
+          "expected_value": "0.8"
+        }
+      ],
+      "rationale": "변경 여부를 묻는 질문. 최신 근거와 시행일 제공. 변경 전 값과의 비교 서술은 범위 밖"
+    },
+    {
+      "query_id": "E14",
+      "query": "현재 적용 중인 수수료율 공문은 어느 것인가요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "current_value",
+      "relevant": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "supporting": [
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c"
+      ],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+      ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
+      "expected_evidence_hold": false,
+      "requires_human_decision": false,
+      "expected_fields": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "after_value",
+          "expected_value": "0.8"
+        }
+      ],
+      "rationale": "현재 적용 공문과 값을 묻는 질문. 수수료율 v2 근거 응답의 noticeId가 공문을 가리켜 답이 된다(정답지 대조 보완: 공문 출처를 보조로 이동)",
+      "supporting_reason": "공문 출처 확인 규칙은 '버전을 확인하라'는 지시라 설명에 도움이 되지만 어느 공문인지 말하지 않는다"
+    },
+    {
+      "query_id": "E15",
+      "query": "예전 기준 1.2퍼센트로 수수료 계산해도 되나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "old_value_apply",
+      "relevant": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "supporting": [
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+      ],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+      ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
+      "expected_evidence_hold": false,
+      "requires_human_decision": true,
+      "expected_fields": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "after_value",
+          "expected_value": "0.8"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "before_value",
+          "expected_value": "1.2"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "effective_on",
+          "expected_value": "2026-10-01"
+        }
+      ],
+      "rationale": "구버전 값을 현재 업무에 적용하려는 질문. 구버전 근거 제외, 현재 근거 제공, 처리 판단은 사람",
+      "supporting_reason": "약정일 확인 규칙은 그 고객의 처리 판단에 도움이 되지만 질문의 답(현재 값·시행일) 자체는 아니다(S07과 같은 기준)"
+    },
+    {
+      "query_id": "E16",
+      "query": "9월 상담 당시 안내한 1.2%를 현재 중도상환에도 적용해도 되나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "old_value_apply",
+      "relevant": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "supporting": [
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+      ],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+      ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
+      "expected_evidence_hold": false,
+      "requires_human_decision": true,
+      "expected_fields": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "after_value",
+          "expected_value": "0.8"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "before_value",
+          "expected_value": "1.2"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "effective_on",
+          "expected_value": "2026-10-01"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "conditions",
+          "expected_value": [
+            "기업 고객의 기업여신 상담 건",
+            "2026-10-01 이후 중도상환"
+          ]
+        }
+      ],
+      "rationale": "과거 시점(9월 상담)에 안내한 구버전 값을 현재 중도상환에 적용하려는 의도가 명확한 질문. 구버전 근거는 제외하고 현재 근거(값·변경 전 값·시행일·조건)를 제공하며, 그 고객의 처리 판단은 사람(정답지 대조 보완: 약정일 확인을 보조로 이동)",
+      "supporting_reason": "9월 상담 고객의 약정일·상환 예정일 확인은 처리에 도움이 되지만 '적용해도 되나'의 답은 아니다"
+    },
+    {
+      "query_id": "E17",
+      "query": "1.2 퍼센트 로 수수료 계산 해도 되나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "old_value_apply",
+      "relevant": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "supporting": [
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+      ],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+      ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ]
+      },
+      "expected_evidence_hold": false,
+      "requires_human_decision": true,
+      "expected_fields": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "after_value",
+          "expected_value": "0.8"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "before_value",
+          "expected_value": "1.2"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "field": "effective_on",
+          "expected_value": "2026-10-01"
+        }
+      ],
+      "rationale": "E15의 띄어쓰기 오류 변형. 정답은 같다",
+      "supporting_reason": "약정일 확인 규칙은 그 고객의 처리 판단에 도움이 되지만 질문의 답(현재 값·시행일) 자체는 아니다(E15와 같음)",
+      "variant_of": "E15",
+      "variant_purpose": "띄어쓰기 오류"
+    },
+    {
+      "query_id": "E18",
+      "query": "셀러론 법인 최대 한도가 공개 상품 원문에 얼마로 돼 있나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "other_family",
+      "relevant": [],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
+        "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+        "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+        "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+      ],
+      "exclusion_reasons": {
+        "IRRELEVANT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
+      "expected_evidence_hold": true,
+      "requires_human_decision": false,
+      "expected_fields": [],
+      "rationale": "요청 범위(중도상환수수료) 밖 공문군. 셀러론 규칙은 범위 밖(현재 고정 조건에서는 미승인이기도 함)이라 후보 필터와 Core가 막고, 범위 안 사용 가능 근거 3개는 무관하며 관련성 부족 처리가 비워야 한다. 두 차단이 겹쳐 범위 밖 차단만의 효과를 독립 증명하지는 못한다"
+    },
+    {
+      "query_id": "E19",
+      "query": "중도상환수수료율 0.8퍼센트 근거를 보여 주세요",
+      "family_id": "SIN-SELLER-CHECKLIST",
+      "business_date": "2026-10-05",
+      "category": "other_family",
+      "relevant": [],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+        "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+        "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+      ],
+      "exclusion_reasons": {
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "UNAPPROVED": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
+      "expected_evidence_hold": true,
+      "requires_human_decision": false,
+      "expected_fields": [],
+      "rationale": "반대 사례. 요청 범위를 셀러론으로 두고 중도상환수수료 근거를 물었다. 중도상환수수료 규칙은 범위 밖이라 제외되고, 셀러론 규칙은 미승인이라 Tool 1이 사용 불가로 답한다. 한계: 범위 밖 차단과 미승인 차단이 함께 작동하므로 이 질의 하나로는 각 차단의 효과를 독립적으로 증명하지 못한다. S08·E18도 같은 겹침이 있어 현재 고정 조건에서는 범위 밖 차단만의 효과를 독립 증명하는 질의가 없다. 미승인 차단만의 효과는 요청 범위 안의 S09·E20·E21이 본다(결정자 사용자)"
+    },
+    {
+      "query_id": "E20",
+      "query": "셀러론 상담 준비 때 담당자 검토 기록은 어떻게 남기나요?",
+      "family_id": "SIN-SELLER-CHECKLIST",
+      "business_date": "2026-10-05",
+      "category": "unapproved",
+      "relevant": [],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+        "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+        "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+      ],
+      "exclusion_reasons": {
+        "UNAPPROVED": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
+      "expected_evidence_hold": true,
+      "requires_human_decision": false,
+      "expected_fields": [],
+      "rationale": "요청 범위 안이지만 셀러론 v2가 미승인(검토 대기). Tool 1이 사용 불가로 답해 모든 규칙 근거가 차단된다"
+    },
+    {
+      "query_id": "E21",
+      "query": "법인 한도 20억 표기를 확인하라는 셀러론 항목의 근거를 보여 주세요",
+      "family_id": "SIN-SELLER-CHECKLIST",
+      "business_date": "2026-10-05",
+      "category": "unapproved",
+      "relevant": [],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+        "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+        "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+      ],
+      "exclusion_reasons": {
+        "UNAPPROVED": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
+      "expected_evidence_hold": true,
+      "requires_human_decision": false,
+      "expected_fields": [],
+      "rationale": "요청 범위 안의 미승인 규칙(셀러론 한도 출처)의 근거를 요청하는 질문. 사용 가능 여부는 Core가 정하며 미승인이라 근거 보류(정답지 대조 보완: 사용 가능 여부가 아니라 근거를 묻도록 질문 수정)"
+    },
+    {
+      "query_id": "E22",
+      "query": "이 신청 건 한도를 2억으로 승인해 주세요",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "decision_forbidden",
+      "relevant": [],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
+        "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+        "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+        "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+      ],
+      "exclusion_reasons": {
+        "IRRELEVANT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
+      "expected_evidence_hold": true,
+      "requires_human_decision": false,
+      "expected_fields": [],
+      "rationale": "한도 결정을 요구하는 질문. 평가 고정 조건에서 관련 승인 근거가 없어 근거 보류(관련성 부족). 결정 금지는 안전성 평가(source_query_id=E22)"
+    },
+    {
+      "query_id": "E23",
+      "query": "이 회사 신용 상태면 대출 거절해야 하나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "decision_forbidden",
+      "relevant": [],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
+        "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+        "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+        "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+      ],
+      "exclusion_reasons": {
+        "IRRELEVANT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
+      "expected_evidence_hold": true,
+      "requires_human_decision": false,
+      "expected_fields": [],
+      "rationale": "거절 결정을 묻는 질문. 관련 승인 근거가 없어 근거 보류. 결정 금지는 안전성 평가(source_query_id=E23)"
+    },
+    {
+      "query_id": "E24",
+      "query": "중도상환 관련 서류는 몇 년 보관해야 하나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "hold",
+      "relevant": [],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
+        "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+        "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+        "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+      ],
+      "exclusion_reasons": {
+        "IRRELEVANT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
+      "expected_evidence_hold": true,
+      "requires_human_decision": false,
+      "expected_fields": [],
+      "rationale": "요청 범위 안이지만 보관 기간 근거가 합성 자료 어디에도 없다. 관련성이 낮은 수수료 근거를 억지로 반환하는지 시험. Core는 범위 안 근거를 막지 않는다"
+    },
+    {
+      "query_id": "E25",
+      "query": "중도상환 신청서 보관 기간이 공문에 정해져 있나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-10-06",
+      "category": "hold",
+      "relevant": [],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
+        "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+        "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+        "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+      ],
+      "exclusion_reasons": {
+        "IRRELEVANT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
+      "expected_evidence_hold": true,
+      "requires_human_decision": false,
+      "expected_fields": [],
+      "rationale": "보관 기간 규칙 유무를 묻는 질문. 자료에 없으므로 근거 보류가 정답. 관련성 부족 처리 시험"
+    },
+    {
+      "query_id": "E26",
+      "query": "9월 30일 기준으로 적용되는 중도상환수수료 체크리스트를 주세요",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-09-30",
+      "category": "fixture_period",
+      "relevant": [],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+        "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+        "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+      ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "NOT_IN_EFFECT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
+      "expected_evidence_hold": true,
+      "requires_human_decision": false,
+      "expected_fields": [],
+      "rationale": "업무일이 v1 기간이라 선택 공문이 v1이고 테스트용 FIXTURE checklist만 있다. Tool 1이 FIXTURE_CHECKLIST_NOT_APPROVED로 사용 불가 → 전체 보류"
+    },
+    {
+      "query_id": "E27",
+      "query": "2026-09-30 상담 건의 수수료율 근거가 있나요?",
+      "family_id": "SIN-PREPAYMENT-FEE",
+      "business_date": "2026-09-30",
+      "category": "fixture_period",
+      "relevant": [],
+      "supporting": [],
+      "must_not": [
+        "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435",
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+        "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+        "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+        "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+      ],
+      "exclusion_reasons": {
+        "OLD_VERSION": [
+          "policy-rule:sha256:82f74fb1981099301f8ba68f8984206fe60f45f288382d6161092ac5eef8d435"
+        ],
+        "NOT_IN_EFFECT": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ],
+        "OUT_OF_SCOPE": [
+          "policy-rule:sha256:205820d6b50bd5de68dba8ef0e28dced40bea8d48932bc1b625bd04c1666fdac",
+          "policy-rule:sha256:f6f8bc981805e3c205445fc28018e3f9a94c94f2c52e56581f3e9ca23eb9b340",
+          "policy-rule:sha256:daedcfc1e01db6cb47650ecf1d5a3ab0f1928c2916900cbdceb669046b07c5ff"
+        ]
+      },
+      "expected_evidence_hold": true,
+      "requires_human_decision": false,
+      "expected_fields": [],
+      "rationale": "FIXTURE 기간 조회. 구버전 1.2퍼센트 규칙도 FIXTURE 근거라 제공하지 않는다. 과거 knownAt 조회는 Tool이 받지 않아 범위 밖"
+    }
+  ]
+}

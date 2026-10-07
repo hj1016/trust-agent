@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/search-goldenset.schema.json",
+  "title": "TrustAgent Search Goldenset",
+  "description": "검색 골든셋 계약(TASK-014). kind가 smoke(초기 점검용), eval(최종 검색 평가용), tuning(관련성 보류 기준 조정용), safety(안전성 질문 묶음, 검색 점수에 들어가지 않음)인 파일에 공통으로 적용한다. 정답 근거는 합성 공문의 규칙 version ID를 가리키며 사용 가능 여부는 평가 시점에 Core가 정한다. 안전성 파일의 통과 기준은 이 계약이 정하지 않는다(TASK-015).",
+  "type": "object",
+  "required": ["dataset_class", "synthetic", "disclaimer", "kind", "goldenset_id", "goldenset_version"],
+  "oneOf": [
+    {"$ref": "#/$defs/searchGoldenset"},
+    {"$ref": "#/$defs/safetyGoldenset"}
+  ],
+  "$defs": {
+    "header": {
+      "dataset_class": {"const": "SYNTHETIC_WORK"},
+      "synthetic": {"const": true},
+      "disclaimer": {"type": "string", "minLength": 20, "pattern": "합성"},
+      "goldenset_id": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+      "goldenset_version": {"type": "string", "pattern": "^v[1-9][0-9]*$"}
+    },
+    "searchGoldenset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dataset_class", "synthetic", "disclaimer", "kind", "goldenset_id", "goldenset_version", "evaluation_context", "queries"],
+      "properties": {
+        "dataset_class": {"$ref": "#/$defs/header/dataset_class"},
+        "synthetic": {"$ref": "#/$defs/header/synthetic"},
+        "disclaimer": {"$ref": "#/$defs/header/disclaimer"},
+        "kind": {"enum": ["smoke", "eval", "tuning"]},
+        "goldenset_id": {"$ref": "#/$defs/header/goldenset_id"},
+        "goldenset_version": {"$ref": "#/$defs/header/goldenset_version"},
+        "evaluation_context": {"$ref": "#/$defs/evaluationContext"},
+        "queries": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/query"}}
+      }
+    },
+    "safetyGoldenset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dataset_class", "synthetic", "disclaimer", "kind", "goldenset_id", "goldenset_version", "purpose", "pass_criteria_owner", "llm_output_verification_owner", "scope_note", "cases"],
+      "properties": {
+        "dataset_class": {"$ref": "#/$defs/header/dataset_class"},
+        "synthetic": {"$ref": "#/$defs/header/synthetic"},
+        "disclaimer": {"$ref": "#/$defs/header/disclaimer"},
+        "kind": {"const": "safety"},
+        "goldenset_id": {"$ref": "#/$defs/header/goldenset_id"},
+        "goldenset_version": {"$ref": "#/$defs/header/goldenset_version"},
+        "purpose": {"type": "string", "minLength": 10},
+        "pass_criteria_owner": {"const": "TASK-015"},
+        "llm_output_verification_owner": {"const": "TASK-019"},
+        "scope_note": {"type": "string", "pattern": "LLM"},
+        "cases": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/safetyCase"}}
+      }
+    },
+    "ruleVersionId": {"type": "string", "pattern": "^policy-rule:sha256:[a-f0-9]{64}$"},
+    "ruleVersionIdList": {"type": "array", "items": {"$ref": "#/$defs/ruleVersionId"}, "uniqueItems": true},
+    "queryId": {"type": "string", "pattern": "^[A-Z]{1,8}[0-9]{2,3}$"},
+    "familyId": {"type": "string", "pattern": "^SIN-[A-Z0-9-]+$"},
+    "noticeId": {"type": "string", "pattern": "^SIN-[A-Z0-9-]+-V[1-9][0-9]*$"},
+    "category": {
+      "enum": ["direct", "paraphrase", "numeric", "old_value_apply", "current_value", "other_family", "unapproved", "decision_forbidden", "hold", "fixture_period"]
+    },
+    "expectedField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule_version_id", "field", "expected_value"],
+      "properties": {
+        "rule_version_id": {"$ref": "#/$defs/ruleVersionId"},
+        "field": {"enum": ["change_type", "field_key", "before_value", "after_value", "unit", "effective_on", "applicable_product_keys", "conditions", "exceptions"]},
+        "expected_value": {}
+      }
+    },
+    "query": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["query_id", "query", "family_id", "business_date", "category", "relevant", "supporting", "must_not", "exclusion_reasons", "expected_evidence_hold", "requires_human_decision", "expected_fields", "rationale"],
+      "dependentRequired": {"variant_of": ["variant_purpose"], "variant_purpose": ["variant_of"], "supporting_reason": ["supporting"]},
+      "properties": {
+        "query_id": {"$ref": "#/$defs/queryId"},
+        "query": {"type": "string", "minLength": 2},
+        "family_id": {"$ref": "#/$defs/familyId"},
+        "business_date": {"type": "string", "format": "date"},
+        "category": {"$ref": "#/$defs/category"},
+        "relevant": {"description": "질문에 답하는 데 반드시 필요한 근거. Recall@5·MRR 계산 대상", "$ref": "#/$defs/ruleVersionIdList"},
+        "supporting": {"description": "보조 설명에 도움이 되는 근거. 누락돼도 감점하지 않고 반환돼도 무관 혼입으로 세지 않는다", "$ref": "#/$defs/ruleVersionIdList"},
+        "supporting_reason": {"type": "string", "minLength": 5, "description": "보조 근거를 둔 이유. supporting이 비어 있지 않으면 필수"},
+        "must_not": {"description": "나오면 안 되는 근거. exclusion_reasons의 합집합과 같다", "$ref": "#/$defs/ruleVersionIdList"},
+        "exclusion_reasons": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "제외 이유 코드별 규칙 version ID. OUT_OF_SCOPE 요청 범위 밖, UNAPPROVED 범위 안 미승인, OLD_VERSION 구버전·FIXTURE 근거, IRRELEVANT 범위 안 사용 가능 근거이지만 질문과 무관, NOT_IN_EFFECT 질의 업무일에 적용되지 않는 공문의 규칙",
+          "properties": {
+            "OUT_OF_SCOPE": {"$ref": "#/$defs/ruleVersionIdList"},
+            "UNAPPROVED": {"$ref": "#/$defs/ruleVersionIdList"},
+            "OLD_VERSION": {"$ref": "#/$defs/ruleVersionIdList"},
+            "IRRELEVANT": {"$ref": "#/$defs/ruleVersionIdList"},
+            "NOT_IN_EFFECT": {"$ref": "#/$defs/ruleVersionIdList"}
+          }
+        },
+        "expected_evidence_hold": {"type": "boolean"},
+        "requires_human_decision": {"type": "boolean"},
+        "expected_fields": {"type": "array", "items": {"$ref": "#/$defs/expectedField"}},
+        "rationale": {"type": "string", "minLength": 5},
+        "variant_of": {"$ref": "#/$defs/queryId"},
+        "variant_purpose": {"type": "string", "minLength": 2}
+      },
+      "allOf": [
+        {
+          "description": "근거 보류 질의는 필수 근거, 보조 근거, 기대 필드가 모두 없고, 보류가 아닌 질의는 필수 근거가 1개 이상이다.",
+          "if": {"properties": {"expected_evidence_hold": {"const": true}}},
+          "then": {"properties": {"relevant": {"maxItems": 0}, "supporting": {"maxItems": 0}, "expected_fields": {"maxItems": 0}}},
+          "else": {"properties": {"relevant": {"minItems": 1}}}
+        },
+        {
+          "description": "보조 근거가 있으면 선정 이유가 있어야 한다.",
+          "if": {"properties": {"supporting": {"minItems": 1}}},
+          "then": {"required": ["supporting_reason"]}
+        },
+        {
+          "description": "구버전 값을 현재 업무에 적용하려는 질문은 근거 보류가 아니고 처리 판단을 사람에게 남긴다.",
+          "if": {"properties": {"category": {"const": "old_value_apply"}}},
+          "then": {"properties": {"expected_evidence_hold": {"const": false}, "requires_human_decision": {"const": true}, "must_not": {"minItems": 1}}}
+        },
+        {
+          "description": "범위 밖, 미승인, 승인 결정, 무관, FIXTURE 기간 질의는 근거 보류다.",
+          "if": {"properties": {"category": {"enum": ["other_family", "unapproved", "decision_forbidden", "hold", "fixture_period"]}}},
+          "then": {"properties": {"expected_evidence_hold": {"const": true}, "must_not": {"minItems": 1}}}
+        },
+        {
+          "description": "승인 결정 질문의 결정 금지는 검색 골든셋이 아니라 안전성 평가가 다루므로 처리 판단 표시를 두지 않는다.",
+          "if": {"properties": {"category": {"const": "decision_forbidden"}}},
+          "then": {"properties": {"requires_human_decision": {"const": false}}}
+        },
+        {
+          "description": "FIXTURE 기간 질의의 업무일은 2026-09-30이다.",
+          "if": {"properties": {"category": {"const": "fixture_period"}}},
+          "then": {"properties": {"business_date": {"const": "2026-09-30"}}}
+        }
+      ]
+    },
+    "evaluationContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evaluated_at", "business_timezone", "evaluated_business_date", "approval_state", "fixture_checklists", "tool_settings", "recheck_basis", "dataset_fingerprint"],
+      "properties": {
+        "evaluated_at": {"type": "string", "format": "date-time", "pattern": "Z$"},
+        "business_timezone": {"const": "Asia/Seoul"},
+        "evaluated_business_date": {"type": "string", "format": "date"},
+        "approval_state": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["approved", "pending_review", "withdrawn_notices", "rejected_proposals"],
+          "properties": {
+            "approved": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["family_id", "notice_id", "decision", "decided_at", "review_run_id", "decision_id", "validation_status"],
+                "properties": {
+                  "family_id": {"$ref": "#/$defs/familyId"},
+                  "notice_id": {"$ref": "#/$defs/noticeId"},
+                  "decision": {"const": "APPROVE"},
+                  "decided_at": {"type": "string", "format": "date-time", "pattern": "Z$"},
+                  "review_run_id": {"type": "string", "pattern": "^review-run:[a-f0-9]{32}$"},
+                  "decision_id": {"type": "string", "pattern": "^review-decision:[a-f0-9]{32}$"},
+                  "validation_status": {"enum": ["PASS", "WARN"]}
+                }
+              }
+            },
+            "pending_review": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["family_id", "notice_id", "state"],
+                "properties": {
+                  "family_id": {"$ref": "#/$defs/familyId"},
+                  "notice_id": {"$ref": "#/$defs/noticeId"},
+                  "state": {"enum": ["PROPOSED", "VALIDATED_NOT_APPROVED"]},
+                  "note": {"type": "string"}
+                }
+              }
+            },
+            "withdrawn_notices": {"type": "array", "items": {"$ref": "#/$defs/noticeId"}},
+            "rejected_proposals": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "fixture_checklists": {"type": "array", "items": {"type": "string", "pattern": "^approved-checklist:[a-f0-9]{32}$"}, "uniqueItems": true},
+        "tool_settings": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["public_evidence_max_confirmation_age", "validation_max_age"],
+          "properties": {
+            "public_evidence_max_confirmation_age": {"type": "string", "pattern": "^[0-9]+[dh]$"},
+            "validation_max_age": {"type": "string", "pattern": "^[0-9]+[dh]$"}
+          }
+        },
+        "recheck_basis": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tool_1_applicable_checklist", "tool_2_rule_evidence", "known_at_supported"],
+          "properties": {
+            "tool_1_applicable_checklist": {"const": "query.business_date"},
+            "tool_2_rule_evidence": {"const": "evaluated_at"},
+            "known_at_supported": {"const": false}
+          }
+        },
+        "dataset_fingerprint": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["algorithm", "files"],
+          "properties": {
+            "algorithm": {"const": "canonical-json-sha256"},
+            "files": {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {"pattern": "^datasets/(synthetic/internal|derived/synthetic-internal)/.+\\.json$"},
+              "additionalProperties": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+            }
+          }
+        }
+      }
+    },
+    "safetyCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "source_goldenset", "source_query_id", "forbidden_outputs", "required_outputs", "rationale"],
+      "properties": {
+        "case_id": {"type": "string", "pattern": "^SAFE-[0-9]{2,3}$"},
+        "source_goldenset": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*-v[1-9][0-9]*$"},
+        "source_query_id": {"$ref": "#/$defs/queryId"},
+        "forbidden_outputs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"enum": ["APPROVAL_DECISION", "REJECTION_DECISION", "LIMIT_DETERMINATION", "RATE_DETERMINATION", "CREDIT_GRADE"]}
+        },
+        "required_outputs": {"type": "array", "minItems": 1, "items": {"enum": ["HUMAN_DECISION_NOTICE"]}},
+        "rationale": {"type": "string", "minLength": 5}
+      }
+    }
+  }
+}

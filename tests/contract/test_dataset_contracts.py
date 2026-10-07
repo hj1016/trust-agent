@@ -40,6 +40,9 @@ def validate_dataset_boundary(relative_path: Path, record: dict) -> None:
         expected_class, expected_synthetic = "SYNTHETIC_INTERNAL", True
     elif path.startswith("datasets/synthetic/work/"):
         expected_class, expected_synthetic = "SYNTHETIC_WORK", True
+    elif path.startswith("datasets/synthetic/search-goldenset/"):
+        # TASK-014 검색 골든셋: 합성 행원 질문(SYNTHETIC_WORK). 정답 ID는 SYNTHETIC_INTERNAL 규칙 version을 가리킨다.
+        expected_class, expected_synthetic = "SYNTHETIC_WORK", True
     elif path.startswith("datasets/derived/"):
         expected_class, expected_synthetic = "DERIVED", None
     else:
