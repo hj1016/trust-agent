@@ -18,9 +18,9 @@
 | TASK-006 | checklist 변경안 자동 검증 | **완료**(PR #21, 검수 통과), [TASK-006](TASK-006_변경안-자동-검증.md) |
 | TASK-007 | 사람 검수 결정과 승인 checklist 발행 | **완료**(PR #24, 검수 통과), [TASK-007](TASK-007_사람-검토-결정과-승인-checklist-발행.md). 문구 수정 한계는 TASK-013 계획(PR #25) |
 | TASK-008 | Core Tool API | **완료**(PR #31, 검수 통과. demo 인증·읽기 API 범위), [TASK-008](TASK-008_Core-Tool-API-AI-조회-경계.md) |
-| TASK-009 | Elasticsearch 검색 기준선 | 같음 |
+| TASK-009 | Elasticsearch 검색 기준선 | **PLAN-002로 재분할**(TASK-014 골든셋 → TASK-016 BM25 기준선 → TASK-018 벡터+reranker). 번호 보존 |
 | TASK-010 | (공개 상품 테이블 Oracle 이식) | **취소.** PostgreSQL 유지로 불필요. 번호 재사용 금지 |
-| TASK-011 | 대표 E2E | 같음 |
+| TASK-011 | 대표 E2E | PLAN-002에서 011a와 011b로 분할. **TASK-011a 완료**(화면 전 Core 전체 흐름 연결 검증, PR #35·#36, 검수 통과), [TASK-011a](TASK-011a_Core-전체-흐름-연결-검증.md). TASK-011b(AI·화면 연결 뒤 전체 흐름 검증)는 PLAN-002 TASK-017·019 뒤 |
 | TASK-012 | 적용 공문 조회 시간 경계 테스트 보완 | 완료(PR #16). 업무 로직 변경 없음 |
 | TASK-013 | 변경안 검사 기준 조정(설명 문구 수정 허용) | **완료**(PR #29, 검수 통과), [TASK-013](TASK-013_변경안-검사-기준-문구-수정-허용.md). TASK-007 구현 중 확인한 한계에서 분리 |
 
