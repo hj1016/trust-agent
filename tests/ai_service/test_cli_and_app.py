@@ -5,7 +5,7 @@ import unittest
 from datetime import datetime, timezone
 
 from tests.ai_service.support import (
-    PREPAYMENT, SELLER, FakeTransport, make_root, ok, prepayment_usable, problem, seller_pending,
+    PREPAYMENT, SELLER, FakeTransport, make_root, ok, prepayment_usable, problem, raise_timeout, raise_unavailable, seller_pending,
 )
 
 from ai_service import config  # noqa: E402
@@ -118,6 +118,39 @@ class AppTest(unittest.TestCase):
             bad = client.post("/api/v1/ai/consultation-preparations", json={"applicationId": "SW-APPLICATION-404"})
             self.assertEqual(400, bad.status_code)
             self.assertEqual("APPLICATION_NOT_FOUND", bad.json()["detail"]["code"])
+
+            # 기록 실패는 본문(recorded=false, 원인 코드, 사용 금지 안내)을 그대로 두고 HTTP 상태로 원인을 구분한다.
+            failure_cases = [
+                (lambda body: problem(422, "PREPARATION_NOT_USABLE"), 422, "REJECTED", "PREPARATION_NOT_USABLE"),
+                (lambda body: problem(409, "PREPARATION_STALE"), 409, "REJECTED", "PREPARATION_STALE"),
+                (lambda body: problem(400, "PREPARATION_ID_MISMATCH"), 500, "REJECTED", "PREPARATION_ID_MISMATCH"),
+                (lambda body: problem(401, "UNAUTHENTICATED"), 503, "REJECTED", "UNAUTHENTICATED"),
+                (lambda body: problem(500, "RECORD_WRITE_FAILED"), 502, "FAILED", "CORE_ERROR_RESPONSE"),
+                (lambda body: raise_unavailable(), 502, "FAILED", "CORE_UNAVAILABLE"),
+                (lambda body: raise_timeout(), 504, "FAILED", "CORE_TIMEOUT"),
+            ]
+            for record, http_status, status, code in failure_cases:
+                with self.subTest(code=code):
+                    transport.record = record
+                    failed = client.post("/api/v1/ai/consultation-preparations",
+                                         json={"applicationId": "SW-APPLICATION-001", "businessDate": "2026-10-06"})
+                    self.assertEqual(http_status, failed.status_code, failed.text)
+                    self.assertEqual("false", failed.headers.get("x-preparation-recorded"))
+                    body = failed.json()
+                    self.assertEqual("PARTIAL", body["status"], "준비안 본문은 그대로다")
+                    self.assertEqual((False, status, code), (body["record"]["recorded"], body["record"]["status"], body["record"]["error_code"]))
+                    self.assertIn("사용하지 마세요", body["notices"]["usage_notice"])
+                    self.assertNotIn("temporary-record-token", failed.text)
+                    self.assertNotIn("temporary-tool-token", failed.text)
+        # 기록 토큰 미설정(운영 설정 문제)은 503이며 본문은 NOT_ATTEMPTED다.
+        with mock.patch.dict(os.environ, environ_for(self.root, record_token=None), clear=False), \
+                mock.patch.object(app_module, "prepare", prepare_with_fake):
+            transport.record = partial_transport().record
+            not_attempted = TestClient(app_module.app).post("/api/v1/ai/consultation-preparations",
+                                                             json={"applicationId": "SW-APPLICATION-001", "businessDate": "2026-10-06"})
+            self.assertEqual(503, not_attempted.status_code, not_attempted.text)
+            self.assertEqual(("false", False, "NOT_ATTEMPTED"), (not_attempted.headers.get("x-preparation-recorded"),
+                                                                not_attempted.json()["record"]["recorded"], not_attempted.json()["record"]["status"]))
         with mock.patch.dict(os.environ, {config.ENV_CORE_BASE_URL: "", config.ENV_TOOL_TOKEN: ""}, clear=False):
             unavailable = TestClient(app_module.app).post("/api/v1/ai/consultation-preparations", json={"applicationId": "SW-APPLICATION-001"})
             self.assertEqual(503, unavailable.status_code)

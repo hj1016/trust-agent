@@ -168,15 +168,30 @@ class AiServicePreparationIntegrationTest {
     @Test
     @Order(3)
     void stateChangeProducesNewHoldPreparation() throws Exception {
+        // 승인(2026-10-05T04:30Z) 전 시각으로 평가하되 업무일은 평가 당일(2026-10-05)로 맞춘다. 미래 업무일 차단이 섞이면 안 된다.
         CLOCK.set(Instant.parse("2026-10-05T04:00:00Z"));
         try {
-            CliResult result = runPrepare("before-approval", "e2e-3");
+            CliResult result = runPrepare("before-approval", "e2e-3", Map.of(), "2026-10-05");
             assertEquals(0, result.exitCode(), result.stderr());
             JsonNode preparation = mapper.readTree(result.stdout());
             assertEquals("HOLD", preparation.get("status").stringValue());
+            assertFalse(preparation.get("preparation_complete").booleanValue());
+            assertEquals("2026-10-05", preparation.get("business_date").stringValue());
             assertNotEquals(firstPreparationId, preparation.get("preparation_id").stringValue());
             assertEquals("RECORDED", preparation.get("record").get("status").stringValue());
+            assertTrue(preparation.get("record").get("recorded").booleanValue());
             assertEquals(2, preparation.get("remaining_checks").size());
+            for (JsonNode section : preparation.get("sections")) {
+                List<String> reasons = new ArrayList<>();
+                section.get("blocking_reasons").forEach(reason -> reasons.add(reason.stringValue()));
+                assertEquals("HOLD | CORE_DECISION | CORE_REPORTED", section.get("status").stringValue() + " | " + section.get("hold_kind").stringValue() + " | " + section.get("hold_claim_basis").stringValue());
+                assertEquals("2026-10-05T04:00:00Z", section.get("evaluated_at").stringValue());
+                assertFalse(reasons.contains("FUTURE_BUSINESS_DATE"), "미래 업무일 차단이 섞이면 안 된다: " + reasons);
+                assertTrue(reasons.contains("HUMAN_REVIEW_PENDING"), "승인 대기 사유로 보류돼야 한다: " + reasons);
+                assertEquals(0, section.get("items").size());
+                assertTrue(section.get("approved_checklist").isNull());
+                assertTrue(section.get("hold_message").stringValue().contains("검토 대기"));
+            }
             assertTrue(preparation.get("notices").get("usage_notice").stringValue().contains("다시 확인"));
         } finally {
             CLOCK.reset();

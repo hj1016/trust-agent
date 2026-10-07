@@ -128,7 +128,7 @@ def prepare(application_id: str, business_date: Optional[str] = None, consultati
         "notices": {
             "human_decision_notice": messages.NOTICES["human_decision_notice"],
             "source_notice": messages.NOTICES["source_notice"],
-            "usage_notice": messages.usage_notice(record["status"]),
+            "usage_notice": messages.usage_notice(record_class(record)),
         },
         "record": record,
     }
@@ -358,6 +358,29 @@ def _record_body(run_id: str, mapping_hash: str, application: dict, business_dat
     return body
 
 
+def record_class(record: dict) -> str:
+    """기록 결과를 안내·HTTP 상태 결정에 쓰는 종류로 나눈다. 기록됐으면 status 그대로, 아니면 원인별 종류다.
+
+    REJECTED는 Core의 HTTP 상태로 나눈다: 422 사용 불가(업무 조건), 409 상태 충돌, 401 설정(기록 토큰), 400 계약 위반(AI 서비스 결함).
+    FAILED는 통신 실패·Core 5xx(FAILED_CORE)와 시간 초과(FAILED_TIMEOUT)로 나눈다.
+    """
+    status = record["status"]
+    if status in ("RECORDED", "ALREADY_RECORDED", "NOT_ATTEMPTED"):
+        return status
+    if status == "FAILED":
+        return "FAILED_TIMEOUT" if record.get("error_code") == "CORE_TIMEOUT" else "FAILED_CORE"
+    core_status = record.get("core_http_status")
+    if core_status == 422:
+        return "REJECTED_NOT_USABLE"
+    if core_status == 409:
+        return "REJECTED_CONFLICT"
+    if core_status == 401:
+        return "REJECTED_SETTINGS"
+    if core_status == 400:
+        return "REJECTED_CONTRACT"
+    return "REJECTED_OTHER"
+
+
 def _record(client: CoreClient, record_body: dict) -> dict:
     """기록 결과. recorded는 RECORDED·ALREADY_RECORDED일 때만 true이며 그 밖은 모두 '기록되지 않음'이다."""
     result = _record_outcome(client, record_body)
@@ -386,11 +409,16 @@ def _record_outcome(client: CoreClient, record_body: dict) -> dict:
             result["recorded_at"] = recorded_at
         return result
     if response.status >= 500:
-        return {"status": "FAILED", "error_code": "CORE_UNAVAILABLE",
+        # Core 자체의 5xx: 내부 오류 상세는 전달하지 않고 상태 코드만 남긴다.
+        return {"status": "FAILED", "error_code": "CORE_ERROR_RESPONSE", "core_http_status": response.status,
                 "error_message": "Core 기록 경로가 오류로 응답했습니다(" + str(response.status) + ")."}
     code = response.problem_code or ("UNAUTHENTICATED" if response.status == 401 else "RECORD_REJECTED")
-    detail = body.get("detail") if isinstance(body.get("detail"), str) else "Core가 기록을 거부했습니다."
-    return {"status": "REJECTED", "error_code": code, "error_message": detail}
+    if response.status == 401:
+        # 인증 실패 상세(토큰 관련 문구)는 전달하지 않는다.
+        detail = "Core가 기록 토큰을 받아들이지 않았습니다."
+    else:
+        detail = body.get("detail") if isinstance(body.get("detail"), str) else "Core가 기록을 거부했습니다."
+    return {"status": "REJECTED", "error_code": code, "core_http_status": response.status, "error_message": detail}
 
 
 def _hold_summary(section: _Section) -> dict:

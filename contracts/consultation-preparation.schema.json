@@ -177,7 +177,7 @@
       "properties": {
         "recorded": {
           "type": "boolean",
-          "description": "Core에 기록됐으면 true(RECORDED·ALREADY_RECORDED). false면 이 준비안은 기록되지 않았으므로 사용하지 않는다."
+          "description": "Core에 기록됐으면 true(RECORDED·ALREADY_RECORDED). false면 이 준비안은 기록되지 않았으므로 사용하지 않는다. HTTP 진입점은 true면 200, false면 원인별 422/409/503/500/502/504를 준다."
         },
         "status": {
           "enum": [
@@ -202,6 +202,12 @@
         },
         "error_message": {
           "type": "string"
+        },
+        "core_http_status": {
+          "type": "integer",
+          "minimum": 400,
+          "maximum": 599,
+          "description": "Core 기록 경로가 거부·오류로 응답했을 때의 HTTP 상태. 기록되지 않은 원인 분류(422 사용 불가, 409 충돌, 401 설정, 400 계약 위반, 5xx Core 오류)에 쓴다."
         }
       },
       "allOf": [

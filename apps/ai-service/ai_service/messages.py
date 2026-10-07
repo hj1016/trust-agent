@@ -65,12 +65,19 @@ NOTICES: dict[str, str] = {
     "unknown_reason": "Core가 사용 불가로 판정했습니다({code}).",
 }
 
+# 기록 결과 종류(assembler.record_class)별 사용 안내. 기록되지 않은 종류는 모두 "사용하지 말라"를 담고, 해결 방법을 종류별로 다르게 적는다.
+# 모든 거부가 단순 재실행으로 풀리는 것이 아니다.
 USAGE_NOTICES: dict[str, str] = {
     "RECORDED": "Core에 기록됐습니다. 기록은 사용 허가가 아니므로 사용 전 Core 조회로 사용 가능 여부를 다시 확인하세요.",
     "ALREADY_RECORDED": "같은 내용이 이미 Core에 기록돼 있습니다. 기록은 사용 허가가 아니므로 사용 전 Core 조회로 사용 가능 여부를 다시 확인하세요.",
-    "REJECTED": "Core 저장이 거부됐습니다. 이 준비안은 기록되지 않았으므로 사용하지 말고 다시 실행하세요.",
-    "FAILED": "Core 저장에 실패했습니다. 이 준비안은 기록되지 않았으므로 사용하지 말고 다시 실행하세요.",
-    "NOT_ATTEMPTED": "기록 토큰이 없어 Core에 기록하지 않았습니다. 이 준비안은 기록되지 않았으므로 사용하지 말고 설정을 점검한 뒤 다시 실행하세요.",
+    "REJECTED_NOT_USABLE": "Core가 현재 업무 조건에서 사용 불가로 판정해 저장을 거부했습니다. 이 준비안은 기록되지 않았으므로 사용하지 마세요. 사유 코드를 확인하고 업무 조건(승인·시행일·공문 상태)이 바뀐 뒤 다시 실행하세요. 단순 재실행으로는 해결되지 않습니다.",
+    "REJECTED_CONFLICT": "준비안이 Core의 현재 상태와 충돌해 저장이 거부됐습니다. 이 준비안은 기록되지 않았으므로 사용하지 마세요. 다시 실행하면 현재 상태로 다시 확인합니다.",
+    "REJECTED_SETTINGS": "Core가 기록 토큰을 받아들이지 않았습니다. 이 준비안은 기록되지 않았으므로 사용하지 마세요. 운영 설정을 점검한 뒤 다시 실행하세요.",
+    "REJECTED_CONTRACT": "AI 서비스가 만든 기록 요청이 Core 계약과 달라 거부됐습니다. 이 준비안은 기록되지 않았으므로 사용하지 마세요. 재실행으로 해결되지 않으니 담당자에게 알리세요.",
+    "REJECTED_OTHER": "Core가 저장을 거부했습니다. 이 준비안은 기록되지 않았으므로 사용하지 마세요. 사유 코드를 확인한 뒤 다시 실행하세요.",
+    "FAILED_CORE": "Core 저장 경로가 오류로 응답하거나 연결되지 않았습니다. 이 준비안은 기록되지 않았으므로 사용하지 마세요. 잠시 뒤 다시 실행하세요.",
+    "FAILED_TIMEOUT": "Core 저장 응답이 시간 안에 오지 않았습니다. 이 준비안은 기록되지 않았으므로 사용하지 마세요. 잠시 뒤 다시 실행하세요.",
+    "NOT_ATTEMPTED": "기록 토큰이 없어 Core에 기록하지 않았습니다. 이 준비안은 기록되지 않았으므로 사용하지 마세요. 설정을 점검한 뒤 다시 실행하세요.",
 }
 
 
@@ -112,5 +119,5 @@ def headline(status: str, *, total: int, required: int, ready: int, hold: int, h
     return HEADLINES[status].format(total=total, required=required, ready=ready, hold=hold, hold_families=", ".join(hold_families))
 
 
-def usage_notice(record_status: str) -> str:
-    return USAGE_NOTICES[record_status]
+def usage_notice(record_class: str) -> str:
+    return USAGE_NOTICES[record_class]

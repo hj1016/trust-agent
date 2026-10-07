@@ -1,7 +1,7 @@
 """명령행 진입점. 준비안 JSON을 stdout에 쓰고 종료 코드로 결과를 구분한다.
 
 0: Core에 기록됨(RECORDED, ALREADY_RECORDED). 상태 READY·PARTIAL·HOLD 모두 기록 대상이다.
-2: 입력 오류(신청·매핑 없음, 날짜 형식 등). 3: 기록 거부·실패·미시도(준비안은 출력됨, 사용 금지 안내). 4: 설정 누락.
+2: 입력 오류(신청·매핑 없음, 날짜 형식 등). 3: 기록 거부·실패·미시도(준비안은 출력됨, 사용 금지 안내. HTTP 진입점의 422/409/503/500/502/504와 같은 상황). 4: 설정 누락.
 오류 메시지에 토큰 값은 없다.
 """
 from __future__ import annotations
@@ -54,6 +54,6 @@ def main(argv: Optional[Sequence[str]] = None, environ: Optional[dict] = None, s
     print(json.dumps(preparation, ensure_ascii=False, indent=2), file=out)
     if preparation["record"]["recorded"]:
         return EXIT_RECORDED
-    print("기록되지 않은 준비안입니다. 사용하지 말고 다시 실행하세요: " + preparation["record"]["status"]
-          + " " + preparation["record"].get("error_code", ""), file=err)
+    print("기록되지 않은 준비안입니다. 사용하지 말고 안내를 따르세요: " + preparation["record"]["status"]
+          + " " + preparation["record"].get("error_code", "") + " — " + preparation["notices"]["usage_notice"], file=err)
     return EXIT_NOT_RECORDED

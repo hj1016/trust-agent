@@ -229,22 +229,27 @@ class PreparationAssemblyTest(unittest.TestCase):
 
     # ---- 기록 결과 매핑 ----
     def test_record_outcomes_map_to_status_and_usage_notice(self):
+        # (Core 응답, 기록 상태, 원인 코드, Core HTTP 상태, 안내에 꼭 있어야 하는 문구, 안내에 있으면 안 되는 문구)
         cases = [
-            (lambda body: problem(422, "PREPARATION_NOT_USABLE"), "REJECTED", "PREPARATION_NOT_USABLE"),
-            (lambda body: problem(409, "PREPARATION_STALE"), "REJECTED", "PREPARATION_STALE"),
-            (lambda body: problem(400, "PREPARATION_ID_MISMATCH"), "REJECTED", "PREPARATION_ID_MISMATCH"),
-            (lambda body: problem(401, "UNAUTHENTICATED"), "REJECTED", "UNAUTHENTICATED"),
-            (lambda body: problem(500, "RECORD_WRITE_FAILED"), "FAILED", "CORE_UNAVAILABLE"),
-            (lambda body: raise_timeout(), "FAILED", "CORE_TIMEOUT"),
+            (lambda body: problem(422, "PREPARATION_NOT_USABLE"), "REJECTED", "PREPARATION_NOT_USABLE", 422, "업무 조건", "다시 실행하면 현재 상태로"),
+            (lambda body: problem(409, "PREPARATION_STALE"), "REJECTED", "PREPARATION_STALE", 409, "현재 상태와 충돌", "단순 재실행"),
+            (lambda body: problem(400, "PREPARATION_ID_MISMATCH"), "REJECTED", "PREPARATION_ID_MISMATCH", 400, "담당자에게 알리세요", "다시 실행"),
+            (lambda body: problem(401, "UNAUTHENTICATED"), "REJECTED", "UNAUTHENTICATED", 401, "운영 설정", "담당자"),
+            (lambda body: problem(500, "RECORD_WRITE_FAILED"), "FAILED", "CORE_ERROR_RESPONSE", 500, "잠시 뒤 다시 실행", "담당자"),
+            (lambda body: raise_timeout(), "FAILED", "CORE_TIMEOUT", None, "시간 안에 오지 않았습니다", "담당자"),
         ]
-        for record, status, code in cases:
+        for record, status, code, core_status, required, forbidden in cases:
             with self.subTest(code=code):
                 transport = partial_transport()
                 transport.record = record
                 output = self.run_prepare(transport)
                 self.assertEqual((status, code), (output["record"]["status"], output["record"]["error_code"]))
+                self.assertEqual(core_status, output["record"].get("core_http_status"))
                 self.assertFalse(output["record"]["recorded"])
-                self.assertIn("사용하지 말고 다시 실행", output["notices"]["usage_notice"])
+                self.assertIn("사용하지 마세요", output["notices"]["usage_notice"])
+                self.assertIn(required, output["notices"]["usage_notice"])
+                self.assertNotIn(forbidden, output["notices"]["usage_notice"])
+                self.assertNotIn("temporary-record-token", json.dumps(output, ensure_ascii=False))
                 self.assertEqual([], list(OUTPUT_SCHEMA.iter_errors(output)))
 
     def test_missing_record_token_skips_recording_without_calling_core(self):
@@ -253,7 +258,7 @@ class PreparationAssemblyTest(unittest.TestCase):
         self.assertEqual(("NOT_ATTEMPTED", "RECORD_TOKEN_MISSING"), (output["record"]["status"], output["record"]["error_code"]))
         self.assertFalse(output["record"]["recorded"])
         self.assertEqual([], transport.tool_calls("/api/v1/consultation-preparations"))
-        self.assertIn("사용하지 말고", output["notices"]["usage_notice"])
+        self.assertIn("사용하지 마세요", output["notices"]["usage_notice"])
 
     def test_record_request_uses_record_token_and_tool_requests_use_tool_token(self):
         transport = partial_transport()
