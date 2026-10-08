@@ -69,6 +69,8 @@ Core(Java)와 AI 서비스(Python CLI)를 함께 실행하는 연결 검증까�
 JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew clean test bootJar --offline --no-daemon -PaiServiceIntegration=true
 ```
 
+`--offline`은 Gradle 의존성 해석에만 적용됩니다. `-PaiServiceIntegration=true`가 실행하는 `prepareAiServiceEnv` 작업은 `python3 -m venv`로 가상환경을 만들고 `pip install --requirement apps/ai-service/requirements-ai.txt`를 실행하므로, Gradle 캐시와 별개로 Python 패키지 저장소(PyPI 또는 로컬 pip 캐시·미러)에 접근할 수 있어야 합니다. 접근할 수 없으면 venv 준비가 실패하고 연결 검증은 건너뜀이 아니라 실패로 끝납니다.
+
 현재 main(`c54c923`)의 Java 테스트는 185개입니다. 연결 검증을 포함한 CI [run 37667987850](https://github.com/hj1016/trust-agent/actions/runs/37667987850)(브랜치 최종 커밋 `b55ae62`, main과 같은 내용)에서 185 통과, 실패 0, 건너뜀 0이고 executable jar 생성도 통과했습니다. CI의 `gradle-tests` job은 `TRUST_AGENT_REQUIRE_AI_INTEGRATION=1`로 실행하므로 연결 검증 환경이 없으면 건너뜀이 아니라 실패입니다. 속성 없이 로컬에서 실행하면 CLI를 실행하는 테스트 6건(연결 검증 5건, 전체 READY CLI 1건)이 명시적 skip으로 보고되어 통과 179, 건너뜀 6입니다(목록은 `docs/evidence/task-015/test-results-local-default.md`). 기능별 검증 당시의 수치는 각 evidence 문서에 그대로 남겨 둡니다. 상세
 증거는 `docs/evidence/CORE_SERVICE_SCHEMA_AUDIT_EVIDENCE.md`와
 `docs/evidence/PUBLIC_PRODUCT_BASELINE_IMPORTER_EVIDENCE.md`, `docs/evidence/PUBLIC_PRODUCT_OBSERVED_STATE_EVIDENCE.md`,
