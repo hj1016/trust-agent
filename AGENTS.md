@@ -15,5 +15,5 @@
 
 - 작업 전 `CLAUDE.md`와 `docs/development/DEVELOPMENT_RULES.md`를 먼저 읽고 Source of Truth 우선순위를 적용합니다.
 - Task는 `docs/development/TASK_TEMPLATE.md`로 작성하고 완료 전 `docs/development/REVIEW_CHECKLIST.md`를 적용합니다.
-- Core 업무 DB는 PostgreSQL을 유지합니다(ADR-009). Core Tool API는 AI 서비스용 읽기 전용 Tool 2개(`applicable_checklist`, `rule_evidence`)와 test/demo 서비스 토큰 인증, 감사 기록 범위로 구현됐습니다(TASK-008, ADR-011). Elasticsearch 검색과 FastAPI AI 서비스, 사용자별 인증·권한은 아직 구현되지 않았습니다. 과거 ADR/evidence는 Pre-SDLC 구현 근거로 보존하며 현재 기준의 검수 통과로 간주하지 않습니다.
+- Core 업무 DB는 PostgreSQL을 유지합니다(ADR-009). Core Tool API는 AI 서비스용 읽기 전용 Tool 2개(`applicable_checklist`, `rule_evidence`)와 test/demo 서비스 토큰 인증, 감사 기록 범위로 구현됐습니다(TASK-008, ADR-011). FastAPI AI 서비스는 TASK-015 범위(LLM 없는 규칙 조립 상담 준비안·보류, Tool 밖 Core 기록 경로와 저장 전 Core 재확인, 읽기·기록 토큰 분리. ADR-012)까지 구현됐습니다. Elasticsearch 검색, LLM 생성과 그 안전성 검증, 화면과 행원 최종 확인, 실제 사용자별 인증·권한은 아직 구현되지 않았습니다. 과거 ADR/evidence는 Pre-SDLC 구현 근거로 보존하며 현재 기준의 검수 통과로 간주하지 않습니다.
 - Task/Issue/PR 제목은 한국어 중심, 커밋은 feat/fix/test/refactor/docs/chore 영문 타입 + 한국어 변경 설명입니다. AI 판단 근거는 Task와 ADR에 남깁니다.
