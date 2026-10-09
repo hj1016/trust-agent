@@ -1,6 +1,6 @@
 # TASK-017a 사용자 인증·객체 권한·AI 요청 승인(grant) 기반
 
-- 상태: **계획 승인**, 첫 구현 PR(Spring Security, 제어 DB, 합성 사용자, 세션·역할 권한, 기존 조회 API 인증, 보안 사건 기록) 착수 승인 (결정자 사용자, PR #47. 채택: 제어 DB 별도 데이터베이스, 합성 사용자 3명, 보유·활성 역할 모두 검사, 담당자 아니면 404와 내부 감사, 읽기 상한 50 설정값, Core가 사용자·상담 건·workspace 범위 소유, AI 서비스는 서비스 토큰과 grant 함께 검증, cloud/prod에서 require-grant 강제, TASK-015 흐름·계약 보존. 이전 상태: 합성 사용자 3명(STAFF, REVIEWER, 겸임) 구성, 역할 보유와 활성 역할 검사 구분, 상담 건별 권한과 AI grant 검증 포함. ADR-014는 보완 2건 반영 뒤 승인 대기(PR #45). 구현 착수는 계획·ADR 검수 뒤 별도 승인)
+- 상태: **계획 승인**, 첫 구현 PR 완료·검수 대기(PR #48), 두 번째 PR(상담 건·grant, 신청·기업 자료 Core 적재 A안) 착수 승인 (결정자 사용자, PR #47. 채택: 제어 DB 별도 데이터베이스, 합성 사용자 3명, 보유·활성 역할 모두 검사, 담당자 아니면 404와 내부 감사, 읽기 상한 50 설정값, Core가 사용자·상담 건·workspace 범위 소유, AI 서비스는 서비스 토큰과 grant 함께 검증, cloud/prod에서 require-grant 강제, TASK-015 흐름·계약 보존. 이전 상태: 합성 사용자 3명(STAFF, REVIEWER, 겸임) 구성, 역할 보유와 활성 역할 검사 구분, 상담 건별 권한과 AI grant 검증 포함. ADR-014는 보완 2건 반영 뒤 승인 대기(PR #45). 구현 착수는 계획·ADR 검수 뒤 별도 승인)
 - 담당자 / 인간 결정자: AI 계획·구현·검증 / 사용자 범위·판정·검수
 - 요구사항 출처: ADR-014(초안), 사용자 지시(브라우저 → Core → FastAPI 단일 진입, Spring Security 세션, 역할별 권한, 상담 건별 객체 권한, AI 요청 Grant에 workspace 범위, 서비스 토큰 우회 방지, 합성 직원으로 STAFF·REVIEWER를 각각 검증하되 불필요한 사용자 관리 기능 금지, TASK-017을 017a·017b·017c로 분할), DEVELOPMENT_RULES(API/Tool마다 권한 검사, 클라이언트 actor 불신, fail-closed), ADR-011·012
 - 관련 Task / ADR: TASK-015(완료), TASK-017b(화면·최종 확인 기록, 이 Task 뒤), TASK-017c(검색 패널), TASK-026(체험 코드·workspace 복제, 이 기반 위), TASK-027(검수자 HTTP 경로), ADR-013·014
@@ -13,7 +13,7 @@
 - 입력: 로그인(사용자 ID, 비밀번호), 상담 건 생성(신청 ID), 준비안 요청(상담 ID, 업무일)
 - 업무규칙: ADR-014 결정 1~10항. 요약: 세션 쿠키(HttpOnly, Secure, SameSite=Lax), CSRF 쿠키 토큰, 역할 STAFF·REVIEWER, 활성 역할 서버 관리, 상담 건 담당자 검사, grant 발급·검사·사용 처리, require-grant 모드, AI 서비스 수신 토큰.
 - 상태전이: 상담 건 `OPEN`만 둔다(종료·재배정은 범위 밖). grant `ISSUED → CONSUMED | EXPIRED`.
-- 데이터 영향: 제어 DB(신규, 별도 Flyway history): `app_user`, `app_user_role`, `ai_request_grant`, `ai_request_grant_use`, `security_event`(로그인·역할 전환·거부, append-only). 업무 DB: V11 `consultation`(append-only). 기존 표 변경 없음.
+- 데이터 영향: 제어 DB(신규, 별도 Flyway history): `app_user`, `app_user_role`, `security_event`(첫 PR, V1), `ai_request_grant`, `ai_request_grant_use`(두 번째 PR, V2). 업무 DB(두 번째 PR, V11): `synthetic_work_application`·`synthetic_work_company`(기존 합성 JSON을 bootstrap runner가 적재, append-only, `source_hash` 포함. A안)와 `consultation`(append-only, 신청 FK). 기존 표 변경 없음.
 - API: 아래 "API".
 - 트랜잭션: grant 발급은 제어 DB 짧은 트랜잭션. 기록 경로의 grant 사용 처리는 제어 DB `CONSUMING` → 업무 DB 기록 트랜잭션(기존) → 제어 DB `CONSUMED`. 외부 호출(AI 서비스)은 트랜잭션 밖.
 - 권한: 경로별 역할 요구 표(아래). Tool·기록 경로는 서비스 토큰 + grant.
@@ -51,7 +51,7 @@
 | `GET /api/v1/session` | 인증 | principal, 보유 역할, 활성 역할, workspace |
 | `POST /api/v1/session/active-role` | 인증 | `{"role": "STAFF"\|"REVIEWER"}`. 보유하지 않은 역할 403. 전환은 `security_event`에 기록 |
 | `GET /api/v1/consultations` | STAFF 활성 | 내 상담 건 목록 |
-| `POST /api/v1/consultations` | STAFF 활성 | `{"applicationId"}` → 담당자 = principal. 합성 신청 자료가 Core에 없으므로 ID 형식만 검사 |
+| `POST /api/v1/consultations` | STAFF 활성 | `{"applicationId"}` → 담당자 = principal. 신청은 업무 DB `synthetic_work_application`에 등록된 것만 허용(없으면 422 `APPLICATION_NOT_REGISTERED`), 상품 키로 허용 공문군을 매핑에서 뽑는다(A안) |
 | `GET /api/v1/consultations/{id}` | STAFF 활성, 담당자 | 아니면 404(존재 노출 방지) |
 | `POST /api/v1/consultations/{id}/preparation` | STAFF 활성, 담당자 | grant 발급 → AI 서비스 호출 → 준비안 응답 그대로 반환(HTTP 상태 매핑은 TASK-015 표 유지) |
 | `GET /api/v1/internal-policy/checklists/{familyId}/applicable` | STAFF 또는 REVIEWER 활성 | 기존 경로에 인증 추가 |
@@ -91,7 +91,7 @@
 | (b) 상담 건 생성 시 AI 서비스에 조회 | Core → AI 서비스 `GET /api/v1/ai/applications/{id}` | 생성 경로가 AI 서비스 가동에 의존하고 Core가 자료를 소유하지 않음 |
 | (c) 형식 검사만(초안) | | 존재하지 않는 신청의 상담 건 허용. 거절 |
 
-(a)를 채택하면 TASK-017a 두 번째 PR(상담 건·grant)에 표 V12와 runner가 추가되고, 체험 템플릿 DB(TASK-026)에도 같은 적재가 들어간다. **판단 대기(사용자).**
+**판단: (a) 채택**(결정자 사용자, PR #47 검토). 신청 ID 형식만 검사하는 방식은 채택하지 않는다. 두 번째 PR(상담 건·grant)에 업무 DB 표 `synthetic_work_application`·`synthetic_work_company`와 bootstrap runner(기존 합성 JSON을 초기 자료로 재사용, 계약 검증, canonical `source_hash` 저장, 재실행 멱등)를 추가하고, 상담 건 생성은 등록된 신청만 허용하며, 기록 경로는 AI 서비스가 보낸 `application.source_hash`를 이 표와 대조한다(불일치 422 `APPLICATION_SOURCE_MISMATCH`). 두 원본이 어긋나지 않도록 AI 서비스는 당분간 같은 JSON을 읽되 해시 대조로 일치를 강제하고, 최종적으로 Core가 신청·상담 자료의 원장이 되어 AI 서비스는 허용된 Core API로 필요한 정보만 받는 방향으로 간다(후속 Task). 체험 템플릿 DB(TASK-026)에도 같은 적재가 들어간다.
 
 ## Acceptance Criteria (구현 전 고정)
 
@@ -108,6 +108,7 @@
 | AC-07 | require-grant=true에서 서비스 토큰만으로 Tool·기록 | 401 `GRANT_REQUIRED`, 감사에 거부 | 통합 테스트 | 미검증 |
 | AC-08 | grant 수용 기준 8항 | 각각 지정된 상태 코드, 동시 기록은 하나만 201 | 통합 테스트(동시 요청은 스레드 2개) | 미검증 |
 | AC-09 | 준비안 경로 전체 | STAFF 세션 → grant → AI 서비스(수신 토큰) → Tool·기록(grant 헤더) → 준비안 응답. `ai_request_grant_use`에 Tool 5회·기록 1회, grant `CONSUMED` | Java + Python 연결 검증(기존 하네스 확장, 필수 CI) | 미검증 |
+| AC-16 | 신청 존재·일치 검증(A안) | 등록되지 않은 신청 ID로 상담 건 생성 422 `APPLICATION_NOT_REGISTERED`. 등록된 신청은 상품 키로 허용 공문군이 정해짐. 기록 경로에서 `application.source_hash`가 등록된 해시와 다르면 422 `APPLICATION_SOURCE_MISMATCH`. 적재 runner 재실행 멱등, 같은 ID 다른 내용 거부 | Java 통합 테스트 | 미검증 |
 | AC-10 | AI 서비스 수신 토큰 없음·불일치 | 401, Tool 호출 없음 | Python 테스트 | 미검증 |
 | AC-11 | require-grant=false(로컬 CLI)와 서비스 토큰 경로 | TASK-015·021 흐름이 그대로 동작. Tool·기록 경로는 세션·CSRF 없이 토큰만으로 동작하고 토큰 없으면 401 JSON(리다이렉트 없음) | 기존 테스트 + 연결 검증(필수 CI) | 미검증 |
 | AC-12 | 정합성 기본 사례(ADR-014 9-1항) | 기록 커밋 뒤 `CONSUMED` 갱신 실패 주입 → 업무 기록 1건, 같은 run_id 재전송 409 `RUN_ID_CONFLICT`, 새 run_id·새 grant 재전송 `ALREADY_RECORDED`, 대조 runner가 `CONSUMING` 만료 grant 1건을 사후 정리. TTL 설정값이 grant 행에 기록 | 통합 테스트(제어 DB 실패 주입) | 미검증 |
@@ -121,12 +122,12 @@
 
 ## Implementation Plan
 
-예상 변경 파일: Core `security/`(SecurityConfig, 사용자 서비스, 활성 역할, 세션 API, 사건 기록), `control/`(제어 DataSource·Flyway `db/control`), `consultation/`(V11, repository, controller), `grant/`(발급·검사·사용), `ai/`(AI 서비스 클라이언트), 기존 필터 2개(grant 검사 호출), `application.yml`(제어 DB·수신 토큰·require-grant), `build.gradle`(spring-boot-starter-security), 테스트; AI 서비스 `app.py`(수신 토큰, grantId), `core_client.py`(헤더), `config.py`, 테스트; README 2곳; 이 문서.
+예상 변경 파일: Core `security/`(SecurityConfig, 사용자 서비스, 활성 역할, 세션 API, 사건 기록), `control/`(제어 DataSource·Flyway `db/control`), `consultation/`(V11 신청·기업·상담 건 표, 적재 runner, repository, controller), `grant/`(제어 DB V2, 발급·검사·사용), `ai/`(AI 서비스 클라이언트), 기존 필터 2개(grant 검사 호출), `application.yml`(제어 DB·수신 토큰·require-grant), `build.gradle`(spring-boot-starter-security), 테스트; AI 서비스 `app.py`(수신 토큰, grantId), `core_client.py`(헤더), `config.py`, 테스트; README 2곳; 이 문서.
 
 구현 순서(PR 단위):
 
 1. **인증 PR**: Spring Security, 제어 DB, 합성 사용자, 세션·활성 역할 API, 기존 조회 경로 인증, `security_event`(AC-01~06, 13).
-2. **grant PR**: 상담 건 표·API, grant 발급·검사·사용, Core → AI 서비스 경로, AI 서비스 수신 토큰·헤더, 연결 검증 확장(AC-07~12, 14, 15).
+2. **grant PR**: 합성 신청·기업 적재 runner와 표(A안), 상담 건 표·API, grant 발급·검사·사용, Core → AI 서비스 경로, AI 서비스 수신 토큰·헤더, 기록 경로의 신청 해시 대조, 연결 검증 확장(AC-07~12, 14~16).
 
 위험: Spring Security 도입으로 기존 테스트의 요청 경로가 바뀜(MockMvc 설정). 제어 DB 추가로 로컬 실행 절차가 늘어남(README와 compose에 반영). 동시성 테스트의 불안정성(DB 수준 원자 갱신으로 결정적 검증).
 예상 크기: 중간~큼(PR 2개). 의존: ADR-014 승인. TASK-016과 병렬 가능(공유 파일은 `ToolAuthenticationFilter`뿐이며 017a가 먼저 병합되면 016 검색 API는 demo 모드로 영향 없음).
