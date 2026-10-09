@@ -35,7 +35,7 @@
 | AC-06 | 요약 스크립트 | 단계별·전체 p50/p95(최근접 순위), 예열 제외 수 표시, 입력 0건·버전 불일치·전부 예열 제외는 거부 | 단위 테스트 + 실행 | `test_summarize_ai_call_metrics.py` 통과, 아래 결과 |
 | AC-07 | evidence | revision, 환경, 명령, N, 결과 표, `tool_call_audit` 교차 확인, 해석과 한계 | diff 검토 | `docs/evidence/AI_CALL_METRICS_EVIDENCE.md` |
 | AC-08 | 변경 범위 | Core 코드(main), DB 스키마, 기존 계약 diff 없음. 일괄 조회·병렬화·캐시 없음 | diff 검토 | `git diff main --stat`: Core main 소스 변경 없음(test 소스와 build.gradle만) |
-| AC-09 | CI | 기존 테스트 수 유지, 새 테스트 추가, runner는 CI에서 실행되지 않음 | CI run(push 뒤) | 미실행(push 미승인). 로컬 Python 115건 통과 |
+| AC-09 | CI | 기존 테스트 수 유지, 새 테스트 추가, runner는 CI에서 실행되지 않음 | CI run(push 뒤) | PR #43 CI run [37930635662](https://github.com/hj1016/trust-agent/actions/runs/37930635662): Python contracts pass, Gradle tests pass(연결 검증 포함). runner는 속성 없이 skip |
 
 ### 완료 기준 변경 이력
 
