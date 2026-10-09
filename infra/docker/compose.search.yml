@@ -1,0 +1,31 @@
+# 근거 검색용 Elasticsearch(ADR-013, TASK-016). 로컬 개발·평가 하네스용이며 운영 compose(TASK-023)가 이 설정을 가져다 쓴다.
+# 이미지는 digest로 고정(8.19.6). 보안 활성, HTTP TLS 없음(내부 네트워크 전용), 포트는 127.0.0.1에만 연다.
+# 비밀번호는 환경변수로만 제공한다: TRUST_AGENT_ES_ELASTIC_PASSWORD(관리자, 사용자 생성용),
+# TRUST_AGENT_ES_REINDEX_PASSWORD(Core 재색인 사용자), TRUST_AGENT_ES_SEARCH_PASSWORD(AI 서비스 읽기 전용 사용자).
+# 사용자·역할은 기동 뒤 search/init-users.sh로 만든다.
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch@sha256:bfb2108076735fbfc5dcd5d49f12f5aa93fab9759034c55f7da3b4345606c903
+    container_name: trustagent-elasticsearch
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "true"
+      xpack.security.http.ssl.enabled: "false"
+      ELASTIC_PASSWORD: ${TRUST_AGENT_ES_ELASTIC_PASSWORD:?TRUST_AGENT_ES_ELASTIC_PASSWORD 환경변수가 필요합니다}
+      ES_JAVA_OPTS: -Xms1g -Xmx1g
+      cluster.routing.allocation.disk.threshold_enabled: "false"
+    ports:
+      - "127.0.0.1:9200:9200"
+    volumes:
+      - trustagent-es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      # 비밀번호를 명령행 -u 인자로 두지 않고 Authorization 헤더로 만든다(비밀 검사 규칙 curl-auth-user 회피가 아니라 프로세스 목록 노출 방지).
+      test: ["CMD-SHELL", "curl -fsS -H \"Authorization: Basic $$(printf 'elastic:%s' \"$$ELASTIC_PASSWORD\" | base64 -w0)\" http://localhost:9200/_cluster/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    mem_limit: 2g
+    restart: unless-stopped
+
+volumes:
+  trustagent-es-data:

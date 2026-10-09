@@ -27,6 +27,12 @@ trust-agent:
   preparation-record:
     service-token: ${TRUST_AGENT_PREPARATION_RECORD_TOKEN}
     service-id: ${TRUST_AGENT_TOOL_SERVICE_ID:ai-service}
+  search:
+    base-url: ${TRUST_AGENT_ES_URL}
+    username: ${TRUST_AGENT_ES_REINDEX_USERNAME}
+    password: ${TRUST_AGENT_ES_REINDEX_PASSWORD}
+    workspace-id: ${TRUST_AGENT_SEARCH_WORKSPACE_ID:main}
+    analyzer: ${TRUST_AGENT_ES_ANALYZER:standard}
   validation-policy:
     max-validation-age: ${TRUST_AGENT_VALIDATION_MAX_AGE}
     policy-version: ${TRUST_AGENT_VALIDATION_POLICY_VERSION}

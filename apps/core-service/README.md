@@ -105,6 +105,21 @@ AI 서비스가 규칙으로 조립한 상담 준비안(READY·PARTIAL·HOLD 모
 
 상품별 공문군 매핑(어떤 공문군이 필수인지)은 기록 경로가 아니라 별도 적재 경로로만 들어갑니다. 설정 `trust-agent.consultation-family-mapping.enabled=true`와 `trust-agent.consultation-family-mapping.root=<저장소 루트>`로 기동하면 `datasets/synthetic/work/consultation-family-mapping.json`(현재는 합성 시나리오의 사용자 승인 설정)을 검증해 `consultation_family_mapping`에 적재합니다. 같은 내용(해시)은 다시 넣지 않고, 가장 최근 적재된 해시가 활성 매핑입니다. 매핑 변경은 파일 버전을 올리고 Task에 기록합니다.
 
+## 근거 검색 색인 재색인 (TASK-016, ADR-013)
+
+승인된 근거만 Elasticsearch에 색인합니다. 색인 문서는 사람 결정(APPROVE)이 있는 승인 checklist의 항목이 가리키는 규칙 version 하나당 하나이며, 그 checklist가 공문군의 최신 적용 일정에 있고 공문이 철회되지 않았을 때만 들어갑니다. FIXTURE 출처 checklist, 미승인·반려 변경안, 철회 공문의 규칙은 색인에 없습니다. 문서 필드는 Tool 1·2가 내주는 범위(규칙 문장·위치·해시, 구조화 값 문장화, 공문군·공문·승인 checklist·결정 ID, 시행 기간)를 넘지 않고 공문 본문 전체는 넣지 않습니다. 색인은 업무 원장이 아니며 검색 결과는 항상 Core Tool로 다시 확인합니다.
+
+```bash
+TRUST_AGENT_ES_URL=http://127.0.0.1:9200 \
+TRUST_AGENT_ES_REINDEX_USERNAME=trustagent_reindex TRUST_AGENT_ES_REINDEX_PASSWORD='<재색인 비밀번호>' \
+./gradlew :apps:core-service:bootRun --no-daemon \
+  --args='--spring.main.web-application-type=none --trust-agent.search-reindex.enabled=true'
+```
+
+재색인은 새 색인 `trustagent-rule-evidence-<workspace>-<내용 해시 12자>`를 만들고 alias `trustagent-rule-evidence-<workspace>-current`를 바꾼 뒤 옛 색인을 지웁니다. 내용 해시가 같은 색인이 이미 alias를 가리키면 아무것도 만들지 않습니다(두 번 실행해도 문서 수와 해시 불변). 실패하면 alias를 바꾸지 않아 옛 색인이 남습니다. 분석기는 `TRUST_AGENT_ES_ANALYZER`(standard 기본, nori는 플러그인 필요)로 고르며 초기 점검용 자료로 비교해 확정합니다. ES 구성은 `infra/docker/compose.search.yml`, 사용자 분리는 `infra/docker/search/init-users.sh`입니다.
+
+**한계(수동 재색인).** 사람 결정이나 철회 적재 뒤 runner를 실행하기 전까지 새로 승인된 규정은 검색 후보에 없고, 철회된 규정은 색인에 남아 있을 수 있습니다. 남아 있는 쪽은 Core 재확인이 막지만 새 규정의 누락은 막지 못합니다. 승인 체험(TASK-027)은 승인 뒤 색인 갱신까지 검증합니다. 자동 전달은 별도 ADR입니다.
+
 ## 공개 상품 관측 상태 조회
 
 ```text

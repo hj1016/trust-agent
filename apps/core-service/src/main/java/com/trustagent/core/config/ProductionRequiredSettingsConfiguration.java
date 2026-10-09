@@ -31,6 +31,11 @@ public class ProductionRequiredSettingsConfiguration {
             "TRUST_AGENT_SYNTHETIC_IMPORT_DB_USERNAME",
             "TRUST_AGENT_SYNTHETIC_IMPORT_DB_PASSWORD");
 
+    static final List<String> REQUIRED_SEARCH_REINDEX_SETTINGS = List.of(
+            "TRUST_AGENT_ES_URL",
+            "TRUST_AGENT_ES_REINDEX_USERNAME",
+            "TRUST_AGENT_ES_REINDEX_PASSWORD");
+
     /** test/demo 전용 기능. production에서 하나라도 켜져 있으면 기동을 거부한다. */
     static final List<String> DEMO_ONLY_SETTINGS = List.of(
             "trust-agent.proposal-generation.enabled",
@@ -57,6 +62,9 @@ public class ProductionRequiredSettingsConfiguration {
         }
         if (environment.getProperty("trust-agent.synthetic-internal-import.enabled", Boolean.class, false)) {
             required.addAll(REQUIRED_SYNTHETIC_IMPORT_SETTINGS);
+        }
+        if (environment.getProperty("trust-agent.search-reindex.enabled", Boolean.class, false)) {
+            required.addAll(REQUIRED_SEARCH_REINDEX_SETTINGS);
         }
         var missing = required.stream()
                 .filter(name -> {
