@@ -1,6 +1,7 @@
 # TASK-015 AI 서비스 최소 흐름: 규칙 조립 상담 준비안과 보류
 
-- 상태: **완료** (결정자 사용자, 2026-10-08, 검수 대상 PR #40: 인터뷰 반영 구현·계약·테스트 커밋 `f6ca899`와 문서 커밋 `c0498c1` 포함. 인간 검수·Explainability Gate 통과. 병합은 사용자가 직접. 이전 상태: 구현·로컬 검증 완료·검토용 PR 생성·판정 대기 → 계획 승인·구현 착수 승인. 결정자 사용자, 검토 대상 PR #39. 상세 계획 작성 지시 → 큰 방향 동의와 보완 요청 8건 반영 → 제안 6건 채택(보완된 방향)과 추가 조건 5건 반영 → 제안 7 (b) 채택 → 설계 보완 4건 반영 → 계획과 ADR-012 승인. 승인 범위: 매핑·계약·Core 저장과 재확인·규칙 기반 AI 서비스·필수 연결 CI·안전성 자료 v2. 검색과 LLM 생성은 범위 밖. 기능의 인간 검수, Explainability Gate, 완료 판정은 대기. 구현분 커밋·push·PR은 결과 확인 뒤 별도 지시)
+- 상태: **완료** (결정자 사용자, 2026-10-08. 검수 대상 PR #40: 인터뷰 반영 구현·계약·테스트 커밋 `f6ca899`와 문서 커밋 `c0498c1` 포함. 인간 검수·Explainability Gate 통과. 병합은 사용자가 직접 수행: PR #40 squash 병합, main 커밋 `c54c923`, main CI run 37689504964 성공)
+- 이전 상태 이력 (당시 상태의 기록이며 현재 상태가 아님. 보존): (1) 계획 단계: 상세 계획 작성 지시 → 큰 방향 동의와 보완 요청 8건 반영 → 제안 6건 채택(보완된 방향)과 추가 조건 5건 반영 → 제안 7 (b) 채택 → 설계 보완 4건 반영 → 계획과 ADR-012 승인·구현 착수 승인(결정자 사용자, 검토 대상 PR #39. 승인 범위: 매핑·계약·Core 저장과 재확인·규칙 기반 AI 서비스·필수 연결 CI·안전성 자료 v2. 검색과 LLM 생성은 범위 밖). 이 시점의 상태는 "기능의 인간 검수, Explainability Gate, 완료 판정은 대기"였고 "구현분 커밋·push·PR은 결과 확인 뒤 별도 지시"였다. (2) 구현 단계: 구현·로컬 검증 완료 → 사용자 지시로 커밋·push·검토용 PR #40 생성 → 1~6차 보완 → 판정 대기. (3) 위 완료 판정으로 대기 상태가 종료됐다.
 - 담당자 / 인간 결정자: AI 조사·초안·구현·검증 / 사용자 범위·판정·검수
 - 요구사항 출처: PLAN-002 TASK-015 절(제안 1 수정 채택: LLM 없는 규칙 조립 준비안은 첫 연결 단계, "AI 생성 완료"로 표현하지 않음. 제안 2 채택: 준비안·보류 기록은 Tool이 아니라 별도 쓰기 경로, Core가 저장 전 재확인), CLAUDE.md 기술 경계(AI Service는 Python + FastAPI, 업무 DB 직접 접근과 자격증명 보유 금지, Core Tool API로만 조회. AI는 승인·거절·금리·한도·신용등급 결정 주체가 아님), ADR-011(읽기 전용 Tool 2개, 서비스 토큰, 감사, 쓰기 Tool 없음), README MVP 7단계(상담 준비안)와 9단계(AI 중단 시 수기 checklist, AI 확정 경로 차단), TASK-014 안전성 참조 3건(`pass_criteria_owner: TASK-015`), 사용자 보완 요청 8건(부분 준비 표시, 보류 기록, 재실행, Core 직접 확인, 재현 정보, 메모와 안전성, 기록 권한, 검증 환경과 변경 범위)
 - 관련 Task / ADR: TASK-008(완료), TASK-011a(완료), TASK-014(완료. 검색 목표 수치는 TASK-016 시작 전에 정하고, 실제 관련성 보류 기준값은 TASK-016에서 초기 점검 자료로 조정한 뒤 최종 평가 전에 고정한다), TASK-016·017·019(이 Task 뒤). **ADR-012**(`docs/adr/ADR-012-ai-service-preparation-record-path.md`, PR #39에서 승인)를 이 Task에서 함께 제안했다.
@@ -465,7 +466,7 @@ Gradle은 `build/test-results`를 실행마다 덮어쓰므로 실행별 로그�
 - 수정 커밋 `63fee24`(`.github/workflows/ci.yml`, `apps/core-service/build.gradle`만): discover 명령을 README와 같은 `-s tests -t .`로 고치고, Gradle 로그에 preparation 패키지 테스트의 통과·skip·실패와 전체 합계를 출력하게 했다. 테스트나 완료 기준은 바꾸지 않았다.
 - 2차 실행(https://github.com/hj1016/trust-agent/actions/runs/37659799630): 두 job 모두 성공. [Gradle tests](https://github.com/hj1016/trust-agent/actions/runs/37659799630/job/112924094547) 로그에 `TEST SUMMARY: 181 tests, 181 passed, 0 failed, 0 skipped`와 연결 검증 `AiServicePreparationIntegrationTest` 5건·전체 READY CLI 1건의 `TEST SUCCESS`가 있고 `TEST SKIPPED`는 0건이다(필수 CI에서 Core와 Python CLI 연결 테스트가 실제 실행됨). [Python contracts](https://github.com/hj1016/trust-agent/actions/runs/37659799630/job/112924094871) 로그는 `Ran 106 tests`, `OK (skipped=2)`이며 skip 2건은 기존 비공개 snapshot artifact 사유로 TASK-015와 무관하다.
 
-### 3차 보완: 검수 자료 (완료 승인 전, 읽기 전용 검토. 미커밋)
+### 3차 보완: 검수 자료 (완료 승인 전, 읽기 전용 검토. 작성 당시 미커밋, 이후 PR #40에 포함)
 
 #### 1. HOLD 출력 표본 (필수 공문군 모두 보류, 실제 CLI 출력)
 
@@ -501,7 +502,7 @@ Gradle은 `build/test-results`를 실행마다 덮어쓰므로 실행별 로그�
 - **철회**: 공문이 철회되면 그 공문군은 HOLD(`EFFECTIVE_NOTICE_WITHDRAWN`)가 되고 항목·근거가 사라집니다. 철회 전에 기록된 준비안은 그대로 남아 있지만, 같은 내용을 다시 기록하려 하면 Core가 거부합니다. 철회 전 기록을 꺼내 쓰면 안 됩니다.
 - **아직 없는 것**: 근거 검색(TASK-016), LLM 문장 생성과 그 검증(TASK-019), 화면과 행원 최종 확인(TASK-017), 실제 사용자별 인증·권한, 행원 메모 입력, 실제 고객·신청 자료. 지금 자료는 모두 합성 시나리오이며 토큰 두 개는 test/demo 수준입니다.
 
-### 4차 보완 (2026-10-08, 사용자 확인 항목 3건. 미커밋)
+### 4차 보완 (2026-10-08, 사용자 확인 항목 3건. 작성 당시 미커밋, 이후 커밋 `2e330d2`·`427a950`으로 PR #40에 포함)
 
 #### 1. 승인 전 HOLD 사례 정리
 
@@ -544,7 +545,7 @@ Gradle은 `build/test-results`를 실행마다 덮어쓰므로 실행별 로그�
 - 일관성: `recorded=true` ⇔ HTTP 200 ⇔ 헤더 `true` ⇔ CLI 종료 0. `recorded=false` ⇔ HTTP 422/409/503/500/502/504 ⇔ 헤더 `false` ⇔ CLI 종료 3. `app.py`가 이 대응을 단언한다.
 - 결과: 연결 검증 포함 전체 185건 통과·실패 0·skip 0, 로컬 기본 185건 중 통과 179·실패 0·skip 6, 의도적 환경 누락 1건 실패(`AI_INTEGRATION_ENV_MISSING`), Python 106건 중 통과 104·실패 0·skip 2(기존 비공개 snapshot 사유). 표본(`docs/evidence/task-015/cli-output-*.json`)은 고정 문구 표 변경 뒤 다시 생성했다. 합계는 `RUN_SUMMARY.txt`.
 
-### 6차 보완: 업무 인터뷰 반영 (2026-10-08, 미커밋)
+### 6차 보완: 업무 인터뷰 반영 (2026-10-08. 작성 당시 미커밋, 이후 커밋 `f6ca899`·`c0498c1`로 PR #40에 포함)
 
 #### 인터뷰 요약 (익명, 개인 식별 정보 없음)
 
@@ -584,7 +585,7 @@ Gradle은 `build/test-results`를 실행마다 덮어쓰므로 실행별 로그�
 
 #### 검증 결과 (검증 대상 커밋 `f6ca899`: 안내·계약·테스트 변경. 문서는 후속 커밋)
 
-연결 검증 포함 전체 185건 통과·실패 0·skip 0, 로컬 기본 185건 중 통과 179·실패 0·skip 6, 의도적 환경 누락 1건 실패(`AI_INTEGRATION_ENV_MISSING`), Python 106건 중 통과 104·실패 0·skip 2(기존 비공개 snapshot 사유). 고정 문구 표가 바뀌어 준비안 ID·`messages_hash`가 달라졌고 표본(`docs/evidence/task-015/cli-output-*.json`)을 다시 생성했다. 합계는 `RUN_SUMMARY.txt`(미커밋).
+연결 검증 포함 전체 185건 통과·실패 0·skip 0, 로컬 기본 185건 중 통과 179·실패 0·skip 6, 의도적 환경 누락 1건 실패(`AI_INTEGRATION_ENV_MISSING`), Python 106건 중 통과 104·실패 0·skip 2(기존 비공개 snapshot 사유). 고정 문구 표가 바뀌어 준비안 ID·`messages_hash`가 달라졌고 표본(`docs/evidence/task-015/cli-output-*.json`)을 다시 생성했다. 합계는 `RUN_SUMMARY.txt`(커밋 `c0498c1`에 포함).
 
 ### AI self-review
 
@@ -599,7 +600,7 @@ Gradle은 `build/test-results`를 실행마다 덮어쓰므로 실행별 로그�
 ### 결정 기록과 완료
 
 - 최종 결정 / 결정자 / 승인 범위 / 검토 대상 PR: **완료** / 사용자 / 규칙 기반 상담 준비안·보류, Core 기록, 저장 전 재확인, CLI와 HTTP 연결, 필수 연결 검증, 안전성 자료 v2 / PR #40(병합은 사용자가 직접).
-- Acceptance Criteria 충족 / evidence / PR: AC-01~21 모두 로컬 실행과 PR #40 CI(최신 run 37666909029: Java 185/185, 연결 검증 실제 실행·skip 0, Python 106건 중 skip 2는 기존 비공개 snapshot 사유)로 확인. evidence는 `docs/evidence/CONSULTATION_PREPARATION_EVIDENCE.md`와 `docs/evidence/task-015/`.
+- Acceptance Criteria 충족 / evidence / PR: AC-01~21 모두 로컬 실행과 PR #40 CI(완료 판정 당시 최신 run 37666909029: Java 185/185, 연결 검증 실제 실행·skip 0, Python 106건 중 skip 2는 기존 비공개 snapshot 사유)로 확인. 브랜치 최종 커밋 `b55ae62`의 [run 37667987850](https://github.com/hj1016/trust-agent/actions/runs/37667987850)과 병합 뒤 main `c54c923`의 [run 37689504964](https://github.com/hj1016/trust-agent/actions/runs/37689504964)도 같은 결과로 성공. evidence는 `docs/evidence/CONSULTATION_PREPARATION_EVIDENCE.md`와 `docs/evidence/task-015/`.
 - **이 완료는 규칙 기반 조립·기록·재확인·연결 검증의 완료이며, "AI 생성 완료"나 "LLM 안전성 검증 완료"가 아니다.** 안전성은 구조 검증(SAFE-A·B·D·E·F)까지이고 질문 기반·LLM 출력 검증은 TASK-019에서 한다.
 - 알려진 한계(유지): 409 `PREPARATION_CONFLICT`는 정상 경로로 만들 수 없는 방어선이라 테스트 없음. 실제 동시 철회 타이밍은 40001 주입과 저장소 대역으로만 검증. 토큰은 test/demo 수준. 매핑은 합성 시나리오 1건. 고객 니즈 확인·상품 선택과 고객별 적용 조건·제출서류 확인은 이 기능이 돕지 않음. 인터뷰는 한 명의 경험에 따른 업무 가설 근거이며 효과는 미측정.
-- 후속 판단(유지): TASK-016(업무 매뉴얼·내부 규정 포함 검색 범위, 자료 간 우선순위·충돌 처리, AC-05b·05c 수치), TASK-017(원문 이동, 필요서류·발급일·기재 조건 확인, 보류 시 다음 행동·문의 내용 표시, 화면), TASK-019(LLM 생성과 안전성 검증). 제안 9의 HTTP 상태 매핑은 화면 연결 시 호출자 처리 방식과 함께 재검토. PLAN-002의 TASK-015 완료 표시는 병합 뒤 문서 PR로 갱신.
+- 후속 판단(유지): TASK-016(업무 매뉴얼·내부 규정 포함 검색 범위, 자료 간 우선순위·충돌 처리, AC-05b·05c 수치), TASK-017(원문 이동, 필요서류·발급일·기재 조건 확인, 보류 시 다음 행동·문의 내용 표시, 화면), TASK-019(LLM 생성과 안전성 검증). 제안 9의 HTTP 상태 매핑은 화면 연결 시 호출자 처리 방식과 함께 재검토. PLAN-002의 TASK-015 완료 표시는 병합 뒤 문서 PR로 갱신(반영됨. 같은 PR에서 README·AGENTS.md·Core README의 "FastAPI 미구현" 문구와 ADR-012의 "초안"·"승인되면" 제목, 이 문서의 "미커밋" 표기를 정리).

@@ -31,7 +31,7 @@ checklist 변경안(proposal) 생성을 구현했습니다. 새 공문의 구조
 변경안 자동 검증을 구현했습니다. 공문 원문, 기준 checklist, 공개 상품 근거와 대조해 PASS/WARN/FAIL과 세부 오류를 파생 데이터로 저장하고, 적용 공문 조회는 보이는 최신 결과로 검증 대기, 검증 실패, 오래됨, 사람 검토 대기를 구분합니다. 검증 통과는 사용 허용이 아닙니다.
 사람 검토 결정(승인, 수정, 반려)과 승인 checklist 발행을 구현했습니다. 승인은 사람 결정 기록, HUMAN_REVIEW 출처 checklist, 적용 일정 revision을 한 트랜잭션으로 남기고, 적용 공문 조회는 사람 결정이 있는 checklist만 사용 허용 후보로 보며 과거·미래 조회, 공문 철회, 선택 변경·모호, 필수 공개 근거 미확인은 계속 차단합니다. 검수자 ID는 합성 값이며 인증·화면·승인 철회·정기 재검증은 구현하지 않았습니다.
 검수자가 변경안의 설명 문구만 고친 경우 자동 검증은 FAIL이 아니라 WARN(`INSTRUCTION_EDITED`)으로 알리고 승인 사유를 요구합니다. 규칙 키, 변경 전후 값, 단위, 시행일, 대상 상품, 조건, 예외, 근거 필요 여부는 공문 값과 달라지면 FAIL입니다. 자동 검증은 설명 문구의 의미를 보장하지 않으므로 검수자가 원문과 고친 문구를 대조해야 합니다.
-AI 서비스용 Core Tool API(읽기 전용)를 구현했습니다. AI는 업무 DB 대신 이 Tool로 "지금 적용되는 승인 checklist"와 "항목 근거"만 읽습니다. 사용 허용 여부는 Core가 결정하며 사용 불가 상태에서는 사유만 주고 항목과 근거 ID를 주지 않습니다. 근거 Tool은 서버가 소속과 사용 가능 여부를 다시 확인합니다. 서비스 인증은 test/demo 수준의 토큰 1개(환경변수)이며 사용자별 인증·권한과 FastAPI AI 서비스 자체는 구현하지 않았습니다.
+AI 서비스용 Core Tool API(읽기 전용)를 구현했습니다. AI는 업무 DB 대신 이 Tool로 "지금 적용되는 승인 checklist"와 "항목 근거"만 읽습니다. 사용 허용 여부는 Core가 결정하며 사용 불가 상태에서는 사유만 주고 항목과 근거 ID를 주지 않습니다. 근거 Tool은 서버가 소속과 사용 가능 여부를 다시 확인합니다. 서비스 인증은 test/demo 수준의 토큰(환경변수)이며 사용자별 인증·권한은 구현하지 않았습니다. FastAPI AI 서비스는 아래 TASK-015 범위까지 구현됐습니다(준비안 기록 토큰은 Tool 읽기 토큰과 별개).
 변경안 생성 → 자동 검증 → 사람 결정 → 승인 checklist 조회 → AI용 Tool 조회의 Core 전체 흐름을 demo 명령 진입점부터 HTTP까지 한 번에 재현하는 연결 검증을 추가했습니다(화면 전). 전체 MVP 완료가 아니며 AI 서비스와 화면 연결 뒤 별도 전체 흐름 검증이 남아 있습니다.
 AI 서비스의 첫 연결 단계로 **규칙 조립 상담 준비안과 보류**를 구현했습니다(TASK-015 완료, PR #40. 규칙 기반 조립·기록·재확인·연결 검증의 완료이며 LLM 안전성 검증 완료가 아닙니다). AI 서비스는 Core Tool로 승인되고 지금 사용 가능한 checklist 항목과 근거만 읽어 공문군별로 READY 또는 HOLD 섹션을 만들고, 필수 공문군 기준으로 READY/PARTIAL/HOLD 전체 상태를 정한 뒤 Tool이 아닌 별도 기록 경로로 Core에 남깁니다. Core는 저장 직전에 매핑과 승인·근거 상태를 직접 다시 확인해 사용 불가 준비안의 저장을 거부하고, 기록은 사용 허가가 아닙니다. READY는 "기준 자료 준비 완료"이며 고객별 적용 조건·제출서류 확인이나 상담·대출 결정이 끝났다는 뜻이 아닙니다. 고객 니즈 확인과 상품 선택은 이 기능의 앞 단계이며 대신하지 않습니다. 준비안의 모든 문장은 승인 checklist 항목·공문 원문·구조화 값·고정 안내 문구에서만 오며 LLM 생성은 없습니다. "AI 생성 완료"나 "LLM 안전성 검증 완료"가 아니며 LLM 생성과 그 검증은 TASK-019입니다. Core(Java)와 AI 서비스(Python CLI)를 함께 실행하는 연결 검증이 필수 CI에서 실제로 실행됩니다.
 최종 기획서와의 대표 시나리오 차이를 해소하기 위해 중도상환수수료율 1.2퍼센트에서
@@ -39,19 +39,19 @@ AI 서비스의 첫 연결 단계로 **규칙 조립 상담 준비안과 보류*
 Flyway V5와 synthetic importer, 적용 공문 조회 API가 이 구조화 변경을 보존하고 반환합니다.
 기존 셀러론 법인 한도 20억원 교차 검증 자료는 보조 검증 사례로 유지합니다.
 
-검증 명령은 다음과 같습니다.
+Python 검증 명령은 다음과 같습니다. 저장소 루트를 top-level로 지정하는 `-t .`가 필요합니다. 시작 디렉터리만 지정하면 `tests/ai_service`가 패키지 `ai_service`를 가려 import가 깨집니다. CI(`.github/workflows/ci.yml`)도 같은 명령을 씁니다.
 
 ```bash
-python3 -m unittest discover -s tests -v
+python3 -m unittest discover -s tests -t . -v
 ```
 
 비공개 원문을 포함한 전체 검증은 다음과 같이 실행합니다.
 
 ```bash
-TRUSTAGENT_REQUIRE_PRIVATE_SNAPSHOTS=1 python3 -m unittest discover -s tests -v
+TRUSTAGENT_REQUIRE_PRIVATE_SNAPSHOTS=1 python3 -m unittest discover -s tests -t . -v
 ```
 
-검증 결과 Python 60개 테스트가 모두 통과했습니다. 상세 증거는
+현재 main(`c54c923`, PR #40 squash 병합)의 Python 테스트는 106개입니다. 브랜치 최종 커밋 `b55ae62`(main과 같은 내용)의 CI [run 37667987850](https://github.com/hj1016/trust-agent/actions/runs/37667987850)에서 통과 104, 실패 0, 건너뜀 2이며, 건너뜀 2건은 비공개 snapshot artifact가 없을 때의 기존 사유입니다(`TRUSTAGENT_REQUIRE_PRIVATE_SNAPSHOTS=1`이면 건너뛰지 않고 필수). 병합 뒤 main의 CI [run 37689504964](https://github.com/hj1016/trust-agent/actions/runs/37689504964)도 두 job 모두 성공했습니다. 기능별 검증 당시의 수치는 각 evidence 문서에 그대로 남겨 두며 현재 결과로 덮어쓰지 않습니다. 상세 증거는
 `docs/evidence/PUBLIC_KB_OBSERVATION_HARDENING_EVIDENCE.md`와
 `docs/evidence/PUBLIC_PRODUCT_OBSERVED_STATE_EVIDENCE.md`, `docs/evidence/SYNTHETIC_NOTICE_SCHEMA_EVIDENCE.md`,
 `docs/evidence/INTERNAL_POLICY_APPLICABLE_QUERY_EVIDENCE.md`, `docs/evidence/CHECKLIST_PROPOSAL_GENERATION_EVIDENCE.md`에 기록합니다.
@@ -63,7 +63,15 @@ PostgreSQL 18.6 image digest를 사용합니다.
 JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew clean test bootJar --offline --no-daemon
 ```
 
-Java 테스트 106개와 executable jar 생성이 통과했습니다. 상세
+Core(Java)와 AI 서비스(Python CLI)를 함께 실행하는 연결 검증까지 포함하려면 `-PaiServiceIntegration=true`를 붙입니다(venv를 `apps/core-service/build/ai-venv`에 만들고 `requirements-ai.txt`를 설치. Python 3.11 필요).
+
+```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew clean test bootJar --offline --no-daemon -PaiServiceIntegration=true
+```
+
+`--offline`은 Gradle 의존성 해석에만 적용됩니다. `-PaiServiceIntegration=true`가 실행하는 `prepareAiServiceEnv` 작업은 `python3 -m venv`로 가상환경을 만들고 `pip install --requirement apps/ai-service/requirements-ai.txt`를 실행하므로, Gradle 캐시와 별개로 Python 패키지 저장소(PyPI 또는 로컬 pip 캐시·미러)에 접근할 수 있어야 합니다. 접근할 수 없으면 venv 준비가 실패하고 연결 검증은 건너뜀이 아니라 실패로 끝납니다.
+
+현재 main(`c54c923`)의 Java 테스트는 185개입니다. 연결 검증을 포함한 CI [run 37667987850](https://github.com/hj1016/trust-agent/actions/runs/37667987850)(브랜치 최종 커밋 `b55ae62`, main과 같은 내용)에서 185 통과, 실패 0, 건너뜀 0이고 executable jar 생성도 통과했습니다. CI의 `gradle-tests` job은 `TRUST_AGENT_REQUIRE_AI_INTEGRATION=1`로 실행하므로 연결 검증 환경이 없으면 건너뜀이 아니라 실패입니다. 속성 없이 로컬에서 실행하면 CLI를 실행하는 테스트 6건(연결 검증 5건, 전체 READY CLI 1건)이 명시적 skip으로 보고되어 통과 179, 건너뜀 6입니다(목록은 `docs/evidence/task-015/test-results-local-default.md`). 기능별 검증 당시의 수치는 각 evidence 문서에 그대로 남겨 둡니다. 상세
 증거는 `docs/evidence/CORE_SERVICE_SCHEMA_AUDIT_EVIDENCE.md`와
 `docs/evidence/PUBLIC_PRODUCT_BASELINE_IMPORTER_EVIDENCE.md`, `docs/evidence/PUBLIC_PRODUCT_OBSERVED_STATE_EVIDENCE.md`,
 `docs/evidence/SYNTHETIC_NOTICE_SCHEMA_EVIDENCE.md`, `docs/evidence/INTERNAL_POLICY_APPLICABLE_QUERY_EVIDENCE.md`에 기록합니다.
