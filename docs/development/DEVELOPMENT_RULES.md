@@ -74,7 +74,7 @@ Claude는 단순 Hybrid Retrieval을 기본 정답으로 가정하지 않고 `�
 - 기본 병합 방식은 `Squash and merge`다. 병합 커밋 메시지는 영문 Conventional Commit 타입 + 한국어 변경 설명으로 작성하고 PR 번호를 연결한다.
 - 원래 커밋 해시 보존이 필요하거나 후속 브랜치가 해당 커밋에 의존하면 `Create a merge commit`을 사용하며 이유를 PR에 기록한다. 예외는 PR별로 판단하고 다른 PR에 자동 적용하지 않는다.
 - 병합 전 필수 CI 통과, 인간 검수 및 해당 Task의 Explainability Gate를 확인한다. CI 통과만으로 인간 검수 완료를 기록하지 않는다.
-- 기존 미커밋 작업을 PR에 임의로 포함하거나 삭제하지 않는다. push 전에 변경 및 추적 파일의 secret을 점검하고 발견 시 push를 중단한다.
+- 기존 미커밋 작업을 PR에 임의로 포함하거나 삭제하지 않는다. push 전에 변경 및 추적 파일의 secret을 점검하고 발견 시 push를 중단한다. 로컬 점검은 `pre-commit install`로 설치한 gitleaks hook(`.pre-commit-config.yaml`)이 staged 변경을 검사하고, CI의 `secret-scan` Job이 전체 이력을 같은 도구로 검사한다. 탐지 시 값은 출력하지 않고 규칙과 위치만 기록한다(TASK-020).
 - force push와 기존 이력 재작성을 하지 않는다. Squash 병합은 기존 main 이력을 덮어쓰지 않고 PR 변경을 새 커밋 하나로 추가하는 방식이다.
 
 ### PR #9 예외
