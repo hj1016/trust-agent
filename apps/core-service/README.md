@@ -22,7 +22,7 @@ POST /api/v1/session/active-role {"role":"STAFF"|"REVIEWER"} → 보유하지 �
 GET  /api/v1/reviews/proposals   REVIEWER 활성만. 변경안 목록(읽기)
 ```
 
-역할은 STAFF와 REVIEWER 두 개입니다. 경로마다 **보유 역할**과 **활성 역할**을 둘 다 검사하며, 전환은 재로그인 없이 서버 호출이고 사건으로 기록됩니다. 겸임 계정의 역할 전환은 체험을 위한 단순화이며 실제 금융기관의 직무 분리와 다릅니다. CSRF는 쿠키 토큰 방식(`XSRF-TOKEN` 쿠키 값을 `X-XSRF-TOKEN` 헤더로)이고, 세션 쿠키는 HttpOnly·SameSite=Lax이며 Secure는 `TRUST_AGENT_SESSION_COOKIE_SECURE`(prod 기본 true), 유휴 만료는 `TRUST_AGENT_SESSION_IDLE_TIMEOUT`(기본 8h)입니다.
+역할은 STAFF와 REVIEWER 두 개입니다. 경로마다 **보유 역할**과 **활성 역할**을 둘 다 검사하며, 전환은 재로그인 없이 서버 호출이고 사건으로 기록됩니다. 사건 기록에 실패하면 전환되지 않고 503입니다(감사 없는 전환 없음). 겸임 계정의 역할 전환은 체험을 위한 단순화이며 실제 금융기관의 직무 분리와 다릅니다. CSRF는 쿠키 토큰 방식(`XSRF-TOKEN` 쿠키 값을 `X-XSRF-TOKEN` 헤더로)이고, 세션 쿠키는 HttpOnly·SameSite=Lax이며 Secure는 `TRUST_AGENT_SESSION_COOKIE_SECURE`(prod 기본 true), 유휴 만료는 `TRUST_AGENT_SESSION_IDLE_TIMEOUT`(기본 8h)입니다.
 
 **필터 순서.** Tool·기록 토큰 필터는 `@Order(HIGHEST_PRECEDENCE + 20·21)`로 Spring Security 필터 체인(순서 -100)보다 먼저 실행됩니다. 보안 체인의 permitAll은 세션 검사를 생략한다는 뜻일 뿐이며 토큰 없는 호출은 그 전에 401로 끝납니다(세션이 있어도 토큰을 대신하지 못함을 테스트가 확인).
 

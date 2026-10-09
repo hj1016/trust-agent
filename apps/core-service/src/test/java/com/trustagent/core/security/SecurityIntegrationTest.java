@@ -180,6 +180,27 @@ class SecurityIntegrationTest {
         assertEquals(1, count("security_event where event_type = 'ROLE_SWITCH' and principal = '" + DemoUsers.BOTH_USER + "' and active_role = 'REVIEWER'"));
     }
 
+    @Test
+    void roleSwitchIsNotAppliedWhenSecurityEventCannotBeRecorded() throws Exception {
+        // 제어 DB의 security_event 표를 잠시 다른 이름으로 바꿔 기록 실패를 주입한다. 전환은 완료되지 않고 이전 활성 역할이 유지돼야 한다.
+        SessionClient both = SessionClient.login(port, DemoUsers.BOTH_USER, BOTH_PASSWORD);
+        assertEquals("STAFF", mapper.readTree(both.get("/api/v1/session").body()).get("activeRole").stringValue());
+        control.sql("alter table security_event rename to security_event_unavailable").update();
+        try {
+            HttpResponse<String> failed = both.postJson("/api/v1/session/active-role", "{\"role\":\"REVIEWER\"}");
+            assertEquals(503, failed.statusCode());
+            assertEquals("SECURITY_EVENT_WRITE_FAILED", mapper.readTree(failed.body()).get("code").stringValue());
+            assertEquals("STAFF", mapper.readTree(both.get("/api/v1/session").body()).get("activeRole").stringValue(), "기록 없이 역할이 바뀌지 않는다");
+            assertEquals(403, both.get("/api/v1/reviews/proposals").statusCode());
+        } finally {
+            control.sql("alter table security_event_unavailable rename to security_event").update();
+        }
+        HttpResponse<String> switched = both.postJson("/api/v1/session/active-role", "{\"role\":\"REVIEWER\"}");
+        assertEquals(200, switched.statusCode());
+        assertEquals(200, both.get("/api/v1/reviews/proposals").statusCode());
+        assertEquals(1, count("security_event where event_type = 'ROLE_SWITCH' and principal = '" + DemoUsers.BOTH_USER + "' and active_role = 'REVIEWER' and path = '/api/v1/session/active-role'") >= 1 ? 1 : 0);
+    }
+
     // ---- AC-06: 본문의 actor 문자열은 쓰이지 않는다 ----
 
     @Test

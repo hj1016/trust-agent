@@ -44,8 +44,17 @@ public class SessionController {
             events.record(request, SecurityEventRecorder.ACCESS_DENIED, authentication.getName(), ActiveRole.current(request).orElse(null), "ROLE_NOT_HELD", role);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problem(HttpStatus.FORBIDDEN, "ROLE_NOT_HELD", "보유하지 않은 역할입니다.", request));
         }
-        request.getSession(true).setAttribute(ActiveRole.SESSION_ATTRIBUTE, role);
-        events.recordOrFail(request, SecurityEventRecorder.ROLE_SWITCH, authentication.getName(), role, "OK", null);
+        // 감사 기록 없이는 전환이 완료되지 않는다(fail-closed). 기록이 실패하면 이전 활성 역할로 되돌리고 503이다.
+        var session = request.getSession(true);
+        Object previous = session.getAttribute(ActiveRole.SESSION_ATTRIBUTE);
+        session.setAttribute(ActiveRole.SESSION_ATTRIBUTE, role);
+        try {
+            events.recordOrFail(request, SecurityEventRecorder.ROLE_SWITCH, authentication.getName(), role, "OK", null);
+        } catch (org.springframework.dao.DataAccessException exception) {
+            session.setAttribute(ActiveRole.SESSION_ATTRIBUTE, previous);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(problem(HttpStatus.SERVICE_UNAVAILABLE, "SECURITY_EVENT_WRITE_FAILED", "보안 사건을 기록하지 못해 역할을 전환하지 않았습니다.", request));
+        }
         return ResponseEntity.ok(summary(authentication, request));
     }
 
