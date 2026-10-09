@@ -26,12 +26,12 @@ import tools.jackson.databind.node.ObjectNode;
  * TASK-015 테스트 공통 상태: TASK-014 평가 고정 조건과 같다. 중도상환수수료 v2는 2026-10-05T04:30Z에 승인, 셀러론 v2는 변경안·검증만 있고 승인 없음.
  * 매핑은 저장소의 승인 설정 파일을 적재한다. 토큰은 실행 중 생성한 임시 값이다.
  */
-final class PreparationScenario {
+public final class PreparationScenario {
 
-    static final Instant EVALUATED_AT = Instant.parse("2026-10-06T03:00:00Z");
-    static final String PREPAYMENT = "SIN-PREPAYMENT-FEE";
-    static final String SELLER = "SIN-SELLER-CHECKLIST";
-    static final String APPLICATION = "SW-APPLICATION-001";
+    public static final Instant EVALUATED_AT = Instant.parse("2026-10-06T03:00:00Z");
+    public static final String PREPAYMENT = "SIN-PREPAYMENT-FEE";
+    public static final String SELLER = "SIN-SELLER-CHECKLIST";
+    public static final String APPLICATION = "SW-APPLICATION-001";
     static final List<String> BUSINESS_TABLES = List.of(
             "human_review_decision", "approved_checklist_version", "approved_checklist_item",
             "approved_checklist_schedule_revision", "approved_checklist_schedule_entry", "checklist_change_proposal",
@@ -39,20 +39,20 @@ final class PreparationScenario {
 
     private PreparationScenario() {}
 
-    static final class AdjustableClock extends Clock {
+    public static final class AdjustableClock extends Clock {
         private volatile Instant instant = EVALUATED_AT;
-        void set(Instant value) { instant = value; }
-        void reset() { instant = EVALUATED_AT; }
+        public void set(Instant value) { instant = value; }
+        public void reset() { instant = EVALUATED_AT; }
         @Override public ZoneId getZone() { return ZoneOffset.UTC; }
         @Override public Clock withZone(ZoneId zone) { return this; }
         @Override public Instant instant() { return instant; }
     }
 
     /** 적재 결과: 활성 매핑 해시와 셀러론 변경안 ID(전체 READY 사례에서 승인에 쓴다). */
-    record State(String mappingHash, String sellerProposalId) {}
+    public record State(String mappingHash, String sellerProposalId) {}
 
     /** 적재 → 예시 checklist → 중도상환수수료 승인(04:30) → 셀러론 변경안·검증만 → 매핑 적재. 끝나면 시계를 평가 시각으로 되돌린다. */
-    static State load(JdbcClient jdbc, ObjectMapper mapper, PlatformTransactionManager manager, AdjustableClock clock,
+    public static State load(JdbcClient jdbc, ObjectMapper mapper, PlatformTransactionManager manager, AdjustableClock clock,
             PublicProductObservedStateService publicProducts, Path root) {
         new BaselineImporter(jdbc, mapper, manager).importBaseline(root, "baseline:" + "5".repeat(32));
         new SyntheticInternalImporter(jdbc, mapper, manager, "Asia/Seoul").importBaseline(root, "synthetic-import:" + "5".repeat(32));
@@ -78,7 +78,7 @@ final class PreparationScenario {
      * 전체 READY 사례용(별도 테스트 환경에서만): 셀러론 v2 변경안을 2026-10-05T05:00Z에 승인한다. 검증은 30일 공개 근거 정책에서 PASS다.
      * 기존 PARTIAL·HOLD 사례의 고정 조건(셀러론 미승인)은 바꾸지 않는다.
      */
-    static String approveSeller(JdbcClient jdbc, ObjectMapper mapper, PlatformTransactionManager manager, AdjustableClock clock,
+    public static String approveSeller(JdbcClient jdbc, ObjectMapper mapper, PlatformTransactionManager manager, AdjustableClock clock,
             String sellerProposalId) {
         clock.set(Instant.parse("2026-10-05T05:00:00Z"));
         try {
@@ -93,7 +93,7 @@ final class PreparationScenario {
     /**
      * 연결 검증의 Python 환경. 로컬 기본은 명시적 skip(assumption), 요청·필수 조건에서는 환경 누락이 AI_INTEGRATION_ENV_MISSING 실패다.
      */
-    static Path aiServicePython(Path root) throws Exception {
+    public static Path aiServicePython(Path root) throws Exception {
         boolean requested = "true".equals(System.getProperty("trustAgent.aiServiceIntegration"));
         boolean required = "1".equals(System.getenv("TRUST_AGENT_REQUIRE_AI_INTEGRATION"));
         org.junit.jupiter.api.Assumptions.assumeTrue(requested || required,
@@ -115,7 +115,7 @@ final class PreparationScenario {
         return python;
     }
 
-    static DataSourceTransactionManager manager(javax.sql.DataSource dataSource) {
+    public static DataSourceTransactionManager manager(javax.sql.DataSource dataSource) {
         return new DataSourceTransactionManager(dataSource);
     }
 

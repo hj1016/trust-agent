@@ -80,6 +80,18 @@ trust-agent:
   consultation-family-mapping:
     # 상품별 공문군 매핑(합성 시나리오의 사용자 승인 설정) 적재 명령. root는 저장소 루트 또는 datasets 디렉터리.
     enabled: false
+  search:
+    # Elasticsearch 색인(ADR-013). 재색인 사용자 자격증명은 환경변수로만 제공한다. AI 서비스는 별도 읽기 전용 사용자를 쓴다.
+    base-url: ${TRUST_AGENT_ES_URL:http://127.0.0.1:9200}
+    username: ${TRUST_AGENT_ES_REINDEX_USERNAME:}
+    password: ${TRUST_AGENT_ES_REINDEX_PASSWORD:}
+    index-prefix: trustagent-rule-evidence
+    workspace-id: ${TRUST_AGENT_SEARCH_WORKSPACE_ID:main}
+    analyzer: ${TRUST_AGENT_ES_ANALYZER:standard}
+    timeout: ${TRUST_AGENT_ES_TIMEOUT:10s}
+  search-reindex:
+    # 수동 재색인 명령. 사람 결정·철회 적재 뒤 실행한다.
+    enabled: false
   validation-policy:
     max-validation-age: ${TRUST_AGENT_VALIDATION_MAX_AGE:24h}
     policy-version: ${TRUST_AGENT_VALIDATION_POLICY_VERSION:internal-validation-v1}
