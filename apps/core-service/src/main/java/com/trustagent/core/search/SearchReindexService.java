@@ -47,9 +47,10 @@ public class SearchReindexService {
         String targetBase = properties.indexNamePrefix() + documents.indexSuffix(built.contentHash(), settingsHash);
         Optional<String> current = elasticsearch.aliasTarget(alias);
 
-        if (current.isPresent() && current.get().equals(targetBase) && currentIsValid(current.get(), built, settingsHash)) {
-            LOGGER.info("재색인 생략: alias={} index={} documents={} (내용·설정 해시 동일)", alias, targetBase, built.documents().size());
-            return new Result(Outcome.ALREADY_CURRENT, alias, targetBase, built.documents().size(), built.contentHash(), List.of());
+        // 생략 판단은 이름이 아니라 현재 색인의 메타(내용·설정 해시, reindex 버전)와 문서 수로 한다. 복구 접미사(-r…) 색인도 유효하면 그대로 쓴다.
+        if (current.isPresent() && currentIsValid(current.get(), built, settingsHash)) {
+            LOGGER.info("재색인 생략: alias={} index={} documents={} (내용·설정 해시 동일)", alias, current.get(), built.documents().size());
+            return new Result(Outcome.ALREADY_CURRENT, alias, current.get(), built.documents().size(), built.contentHash(), List.of());
         }
         // 원칙: alias가 가리키는 현재 색인은 새 색인의 준비·검증·전환이 끝나기 전에는 절대 지우지 않는다.
         // 현재 색인 이름이 목표 이름과 같은데 내용이 어긋나면(문서 수·메타 불일치) 다른 이름으로 새로 만든다.

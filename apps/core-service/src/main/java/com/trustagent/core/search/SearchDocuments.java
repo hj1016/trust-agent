@@ -13,16 +13,19 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * 색인 문서 생성(ADR-013 결정 3). 필드는 Tool 1·2가 내줄 수 있는 범위를 넘지 않는다.
- * 같은 규칙 version이 여러 승인 checklist에 있으면 시행일이 늦은 쪽 하나만 남긴다(문서 ID = 규칙 version ID).
+ * 색인 문서 생성(ADR-013 결정 3, 개정: 문서 하나에 적용기간 여러 개).
+ * 문서 ID = 규칙 version ID. 같은 규칙 version이 여러 승인 checklist·일정 구간에 쓰이면 문서 하나에 approvals[](승인 version·결정·구간)와
+ * effective_ranges[](date_range)로 모두 담아 승인 이력과 적용기간의 대응을 잃지 않는다. 구간 시작은 포함, 종료는 제외([from, to))이며 종료가 없으면 무기한이다.
+ * 같은 규칙 version인데 문장·위치·해시·구조화 값·공문군이 다르면 병합하지 않고 SEARCH_RULE_CONFLICT로 재색인을 중단한다(fail-closed).
  * 내용 해시는 indexed_at을 뺀 문서 목록의 canonical sha256이라 같은 승인 상태면 같다.
  */
 final class SearchDocuments {
 
     static final String REINDEX_VERSION = "search-reindex-v1";
     static final List<String> FIELDS = List.of("rule_version_id", "family_id", "notice_id", "rule_key", "evidence_text", "structured_text",
-            "json_pointer", "evidence_hash", "approved_checklist_version_id", "decision_id", "effective_from", "effective_to",
-            "dataset_class", "synthetic", "source_hash", "indexed_at");
+            "json_pointer", "evidence_hash", "approvals", "effective_ranges", "dataset_class", "synthetic", "source_hash", "indexed_at");
+    /** 같은 규칙 version의 줄들이 반드시 같아야 하는 필드. 다르면 병합하지 않는다. */
+    static final List<String> MUST_MATCH = List.of("family_id", "notice_id", "rule_key", "evidence_text", "json_pointer", "evidence_hash", "structured_text");
 
     record Built(List<ObjectNode> documents, String contentHash) {}
 
@@ -35,31 +38,42 @@ final class SearchDocuments {
     }
 
     Built build(List<IndexedRule> rules, Instant indexedAt) {
-        Map<String, IndexedRule> byRule = new LinkedHashMap<>();
+        Map<String, List<IndexedRule>> byRule = new LinkedHashMap<>();
         for (IndexedRule rule : rules) {
-            IndexedRule existing = byRule.get(rule.ruleVersionId());
-            if (existing == null || rule.effectiveFrom().isAfter(existing.effectiveFrom())) {
-                byRule.put(rule.ruleVersionId(), rule);
-            }
+            byRule.computeIfAbsent(rule.ruleVersionId(), key -> new ArrayList<>()).add(rule);
         }
-        List<IndexedRule> ordered = new ArrayList<>(byRule.values());
-        ordered.sort(Comparator.comparing(IndexedRule::ruleVersionId));
+        List<String> ids = new ArrayList<>(byRule.keySet());
+        ids.sort(String::compareTo);
         ArrayNode hashSubject = mapper.createArrayNode();
         List<ObjectNode> documents = new ArrayList<>();
-        for (IndexedRule rule : ordered) {
+        for (String id : ids) {
+            List<IndexedRule> group = new ArrayList<>(byRule.get(id));
+            IndexedRule first = group.get(0);
+            rejectConflicts(id, group);
+            group.sort(Comparator.comparing(IndexedRule::effectiveFrom)
+                    .thenComparing(IndexedRule::approvedChecklistVersionId)
+                    .thenComparing(IndexedRule::decisionId));
             ObjectNode doc = mapper.createObjectNode();
-            doc.put("rule_version_id", rule.ruleVersionId());
-            doc.put("family_id", rule.familyId());
-            doc.put("notice_id", rule.noticeId());
-            doc.put("rule_key", rule.ruleKey());
-            doc.put("evidence_text", rule.evidenceText());
-            doc.put("structured_text", structuredText(rule.structuredChangeJson()));
-            doc.put("json_pointer", rule.jsonPointer());
-            doc.put("evidence_hash", rule.evidenceHash());
-            doc.put("approved_checklist_version_id", rule.approvedChecklistVersionId());
-            doc.put("decision_id", rule.decisionId());
-            doc.put("effective_from", rule.effectiveFrom().toString());
-            if (rule.effectiveTo() == null) doc.putNull("effective_to"); else doc.put("effective_to", rule.effectiveTo().toString());
+            doc.put("rule_version_id", id);
+            doc.put("family_id", first.familyId());
+            doc.put("notice_id", first.noticeId());
+            doc.put("rule_key", first.ruleKey());
+            doc.put("evidence_text", first.evidenceText());
+            doc.put("structured_text", structuredText(first.structuredChangeJson()));
+            doc.put("json_pointer", first.jsonPointer());
+            doc.put("evidence_hash", first.evidenceHash());
+            ArrayNode approvals = doc.putArray("approvals");
+            ArrayNode ranges = doc.putArray("effective_ranges");
+            for (IndexedRule rule : group) {
+                ObjectNode approval = approvals.addObject();
+                approval.put("approved_checklist_version_id", rule.approvedChecklistVersionId());
+                approval.put("decision_id", rule.decisionId());
+                approval.put("effective_from", rule.effectiveFrom().toString());
+                if (rule.effectiveTo() == null) approval.putNull("effective_to"); else approval.put("effective_to", rule.effectiveTo().toString());
+                ObjectNode range = ranges.addObject();
+                range.put("gte", rule.effectiveFrom().toString());
+                if (rule.effectiveTo() != null) range.put("lt", rule.effectiveTo().toString());
+            }
             doc.put("dataset_class", "SYNTHETIC_INTERNAL");
             doc.put("synthetic", true);
             doc.put("source_hash", hasher.canonicalize(doc).sha256());
@@ -68,6 +82,25 @@ final class SearchDocuments {
             documents.add(doc);
         }
         return new Built(documents, hasher.canonicalize(hashSubject).sha256());
+    }
+
+    /** 같은 규칙 version의 줄들이 문장·위치·해시·구조화 값·공문군에서 다르면 병합하지 않는다. 어느 필드가 다른지만 알리고 내용은 담지 않는다. */
+    private void rejectConflicts(String ruleVersionId, List<IndexedRule> group) {
+        IndexedRule first = group.get(0);
+        List<String> differing = new ArrayList<>();
+        for (IndexedRule other : group.subList(1, group.size())) {
+            if (!first.familyId().equals(other.familyId()) && !differing.contains("family_id")) differing.add("family_id");
+            if (!first.noticeId().equals(other.noticeId()) && !differing.contains("notice_id")) differing.add("notice_id");
+            if (!first.ruleKey().equals(other.ruleKey()) && !differing.contains("rule_key")) differing.add("rule_key");
+            if (!first.evidenceText().equals(other.evidenceText()) && !differing.contains("evidence_text")) differing.add("evidence_text");
+            if (!first.jsonPointer().equals(other.jsonPointer()) && !differing.contains("json_pointer")) differing.add("json_pointer");
+            if (!first.evidenceHash().equals(other.evidenceHash()) && !differing.contains("evidence_hash")) differing.add("evidence_hash");
+            if (!structuredText(first.structuredChangeJson()).equals(structuredText(other.structuredChangeJson())) && !differing.contains("structured_text")) differing.add("structured_text");
+        }
+        if (!differing.isEmpty()) {
+            throw new SearchIndexException("SEARCH_RULE_CONFLICT",
+                    "같은 규칙 version이 승인 checklist마다 다른 내용을 가집니다: " + ruleVersionId + " 필드 " + differing);
+        }
     }
 
     /** 구조화 값을 검색용 문장으로 편다. 키를 정렬해 결정적이며 값이 없으면 빈 문자열이다. */
@@ -141,14 +174,22 @@ final class SearchDocuments {
         meta.put("indexed_at", indexedAt.toString());
         ObjectNode properties = mappings.putObject("properties");
         for (String keyword : List.of("rule_version_id", "family_id", "notice_id", "rule_key", "json_pointer", "evidence_hash",
-                "approved_checklist_version_id", "decision_id", "dataset_class", "source_hash")) {
+                "dataset_class", "source_hash")) {
             properties.putObject(keyword).put("type", "keyword");
         }
         for (String fullText : List.of("evidence_text", "structured_text")) {
             properties.putObject(fullText).put("type", "text").put("analyzer", "trustagent_text");
         }
-        properties.putObject("effective_from").put("type", "date").put("format", "strict_date");
-        properties.putObject("effective_to").put("type", "date").put("format", "strict_date");
+        ObjectNode approvals = properties.putObject("approvals");
+        approvals.put("type", "object");
+        approvals.put("dynamic", "strict");
+        ObjectNode approvalFields = approvals.putObject("properties");
+        approvalFields.putObject("approved_checklist_version_id").put("type", "keyword");
+        approvalFields.putObject("decision_id").put("type", "keyword");
+        approvalFields.putObject("effective_from").put("type", "date").put("format", "strict_date");
+        approvalFields.putObject("effective_to").put("type", "date").put("format", "strict_date");
+        // 적용기간 배열. 시작 포함·종료 제외([gte, lt)), lt가 없으면 무기한. 업무일 필터는 range 질의(relation intersects)로 한다(검색 API PR).
+        properties.putObject("effective_ranges").put("type", "date_range").put("format", "strict_date");
         properties.putObject("synthetic").put("type", "boolean");
         properties.putObject("indexed_at").put("type", "date");
         return definition;

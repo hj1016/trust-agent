@@ -9,7 +9,7 @@ ADR-013에 따라 승인된 근거만 Elasticsearch에 색인하는 재색인 ru
 | 검증 대상 revision | 브랜치 `feat/search-index-reindex` 작업 트리(base `c54c923`) |
 | 명령 | `JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :apps:core-service:test -PaiServiceIntegration=true --no-daemon`(연결 검증 포함) |
 | 환경 | macOS 27.0 aarch64, Java 21, Docker 28.3.3, Testcontainers PostgreSQL(`postgres@sha256:86c951e0…`)과 Elasticsearch 8.19.6(`docker.elastic.co/elasticsearch/elasticsearch@sha256:bfb21080…`, 보안 활성, HTTP TLS 없음, 비밀번호는 실행 중 생성) |
-| 결과 | 200건 전부 통과, 실패 0, skip 0(연결 검증 실제 실행). 기존 185건 유지, 신규 15건(통합 10, 단위 5) |
+| 결과 | 201건 전부 통과, 실패 0, skip 0(연결 검증 실제 실행). 기존 185건 유지, 신규 16건(통합 10, 단위 6) |
 
 ## 신규 테스트가 보장하는 것
 
@@ -20,12 +20,12 @@ ADR-013에 따라 승인된 근거만 Elasticsearch에 색인하는 재색인 ru
 | `documentFieldsStayWithinToolScopeAndSourceHashIsDeterministic` | 문서 필드 집합이 정의된 16개와 정확히 같음(공문 본문·변경안·검수자 ID 없음), `dataset_class=SYNTHETIC_INTERNAL`, `synthetic=true`, 시행 기간이 승인 일정과 일치 |
 | `approvingAnotherFamilyAddsItsRulesAndReplacesIndex` | 셀러론 v2 승인 뒤 재색인 → 두 공문군 규칙이 모두 있고 옛 색인은 삭제, alias는 새 색인 |
 | `withdrawnNoticeRulesDisappearAfterReindex` | 중도상환수수료 v2 철회 사건 뒤 재색인 → 그 공문의 규칙이 사라지고 셀러론만 남음 |
-| `sameRuleVersionInTwoScheduleRangesIsReturnedTwiceButIndexedOnce` | 같은 승인 버전이 최신 일정의 두 구간에 있는 자료를 만들어 재현. 저장소는 규칙마다 두 줄(구간별)을 돌려주지만 문서 생성은 시행일이 늦은 구간 하나만 남겨 **과거 구간이 색인에서 사라진다(현재 한계, ADR-013 판단 대기)** |
+| `sameRuleVersionInTwoScheduleRangesKeepsBothRangesAndFiltersByDateWithGap` | 같은 승인 버전이 최신 일정의 두 구간([09-15,09-20), [10-01,∞))에 있는 자료를 만들어 재현. 문서는 규칙 version당 하나이며 `approvals[]` 둘(승인 version·결정 ID·구간)과 `effective_ranges[]` 둘을 가진다. ES date_range 질의로 날짜별 후보 수 확인: 시작 전 0, 시작일 포함 3, 종료일 제외 0, 구간 사이 공백 0, 두 번째 구간 시작 3, 무기한 종료(2027-12-31) 3 |
 | `analyzerChangeIsNotServedByTheExistingIndex` | 같은 문서에서 분석기만 nori로 바꾸면 생략하지 않고 새 색인 생성을 시도한다(이 환경에는 플러그인이 없어 `SEARCH_INDEX_CREATE_FAILED`로 끝나고 alias·색인은 그대로). standard로 돌아오면 ALREADY_CURRENT |
-| `currentIndexWithUnexpectedDocumentCountIsNeverDeletedBeforeSwap` | 현재 색인에서 문서 하나를 지워 문서 수가 어긋난 상태에서 실패를 주입 → alias와 검색 가능 상태 유지, 현재 색인 미삭제, 부분 색인 없음. 성공 재색인은 현재 이름과 다른 이름(`-r<초>`)으로 만든 뒤 전환하고 옛 색인을 지운다 |
+| `currentIndexWithUnexpectedDocumentCountIsNeverDeletedBeforeSwap` | 현재 색인에서 문서 하나를 지워 문서 수가 어긋난 상태에서 실패를 주입 → alias와 검색 가능 상태 유지, 현재 색인 미삭제, 부분 색인 없음. 성공 재색인은 현재 이름과 다른 이름(`-r<초>`)으로 만든 뒤 전환하고 옛 색인을 지운다. **그 뒤 같은 자료로 다시 실행하면 복구 접미사 이름이라도 메타·문서 수가 맞아 ALREADY_CURRENT** |
 | `failedReindexKeepsCurrentIndexAndAliasAndRemovesPartialIndex` | 내용이 바뀐 상태에서 refresh 단계 실패를 주입 → 예외, alias와 기존 색인·문서 수 그대로, 부분 색인 삭제. 이후 정상 재색인은 새 색인으로 교체 |
 | `readOnlySearchUserCannotWriteButCanSearch` | 검색 사용자(읽기 전용 역할)의 문서 쓰기 403, 색인 생성 403, 검색 200 |
-| `SearchDocumentsTest`(5건) | 분석기만 달라도 설정 해시와 색인 이름이 달라지고 `_meta.settings_hash`에 기록됨, | 구조화 값 문장화의 결정성과 null 처리, 내용 해시가 `indexed_at`과 무관하고 내용 변경에 반응, 중복 규칙 version은 시행일이 늦은 쪽 유지, 색인 정의가 strict mapping과 요청 분석기 사용 |
+| `SearchDocumentsTest`(6건) | 분석기만 달라도 설정 해시와 색인 이름이 달라지고 `_meta.settings_hash`에 기록됨, 같은 규칙 version의 구간·승인이 모두 보존되고 무기한은 `lt` 없음, 같은 규칙 version의 문장·구조화 값 충돌은 `SEARCH_RULE_CONFLICT`로 거부(내용은 메시지에 없음), | 구조화 값 문장화의 결정성과 null 처리, 내용 해시가 `indexed_at`과 무관하고 내용 변경에 반응, 중복 규칙 version은 시행일이 늦은 쪽 유지, 색인 정의가 strict mapping과 요청 분석기 사용 |
 
 ## 보장 조건 대응 (ADR-013 표)
 
@@ -39,21 +39,13 @@ Core `search/` 패키지(설정, ES 클라이언트, 색인 대상 조회, 문�
 
 ## 재색인 경계 조건 보완(검토 요청 반영)
 
-- **분석기 변경.** 색인 이름과 생략 판단에 문서 내용 해시뿐 아니라 설정 해시(분석기·mapping·reindex 버전)를 넣었다. 생략은 현재 색인의 `_meta`(content_hash, settings_hash, reindex_version)와 실제 문서 수가 예상과 모두 같을 때만 한다.
+- **분석기 변경.** 색인 이름과 생략 판단에 문서 내용 해시뿐 아니라 설정 해시(분석기·mapping·reindex 버전)를 넣었다. 생략은 **이름이 아니라** 현재 색인의 `_meta`(content_hash, settings_hash, reindex_version)와 실제 문서 수가 예상과 모두 같을 때 한다(복구 접미사 색인도 그대로 쓴다).
 - **사용 중인 색인 보호.** alias가 가리키는 현재 색인은 새 색인의 준비·검증·전환이 끝나기 전에 지우지 않는다. 현재 색인 이름이 목표 이름과 같은데 내용이 어긋나면 `-r<초>` 접미사를 붙인 다른 이름으로 만든 뒤 전환한다. 이전 실행이 남긴 잔여 색인(현재 색인이 아닌 것)만 미리 지운다.
 - **인증정보.** compose healthcheck는 비밀번호를 curl 인자(`-u`, `-H`)로 두지 않고 셸 내장 `printf`로 netrc 파일(umask 077)을 만들어 `--netrc-file`로 넘긴다. 환경변수 자체는 컨테이너 환경에 있으며 이는 ES 이미지의 `ELASTIC_PASSWORD` 방식과 같다.
 
-## 과거 승인 버전과 문서 ID 규칙의 충돌(판단 요청)
+## 과거 승인 버전: 문서 하나에 적용기간 여러 개(결정 반영, ADR-013 3-1항)
 
-재현: 같은 승인 버전이 최신 일정 revision의 두 구간에 있으면(위 `sameRuleVersion…` 테스트) 저장소는 구간마다 한 줄을 돌려주지만, ADR-013의 "문서 = 규칙 version 하나당 하나" 규칙으로 문서를 만들면 `effective_from/to`를 하나만 둘 수 있어 시행일이 늦은 구간만 남고 과거 구간은 색인에서 사라진다. 그 업무일로 검색하면 질의 시점 필터가 그 규칙을 후보에서 뺀다(Core 재확인은 통과시킬 수 있어도 검색이 찾지 못한다). 현재 합성 자료에는 이런 사례가 없고 테스트 자료로만 재현했다.
-
-| 대안 | 내용 | 장단점 |
-|---|---|---|
-| (a) 문서를 구간 단위로(ID = 규칙 version + 승인 checklist version + 구간) | 구간마다 문서. 검색 결과는 규칙 version으로 묶어 Tool 2 재확인 | 정확하지만 ADR-013 문서 ID 규칙 변경. 같은 문장이 여러 문서가 되어 점수 중복 처리 필요 |
-| (b) 문서 하나에 구간 배열(ES `date_range` 필드 `effective_ranges`) | ID 규칙 유지. 업무일 필터는 range 필드에 대한 질의 | ADR-013 유지. mapping과 필터 질의가 조금 복잡. 권장 |
-| (c) 구간을 합쳐 최소 시작일~최대 종료일 | 구현 단순 | 구간 사이 공백이 있으면 틀린 후보를 올림. 거절 |
-
-구현 전 사용자 판단을 요청한다. 선택되면 ADR-013에 "문서 하나, 구간 여러 개"로 보완하고 검색 API PR에서 필터와 함께 구현한다.
+같은 규칙 version이 여러 승인 checklist·일정 구간에 쓰이면 문서를 나누거나 구간을 합치지 않고 `approvals[]`(승인 version·결정 ID·구간)와 `effective_ranges[]`(date_range)에 모두 담는다. 구간은 시작 포함·종료 제외, 종료가 없으면 무기한이다. 같은 규칙 version인데 문장·위치·해시·구조화 값·공문군이 다르면 병합하지 않고 `SEARCH_RULE_CONFLICT`로 재색인을 중단한다(기존 alias 유지). 업무일 필터 질의(`effective_ranges` range, intersects)는 검색 API PR에서 연결하며, 위 통합 테스트가 같은 질의로 경계·공백·무기한을 확인했다. 현재 합성 자료에는 다중 구간 사례가 없어 테스트 자료로 재현했다.
 
 ## 시점별 조회 요구와의 관계(설계 확인)
 

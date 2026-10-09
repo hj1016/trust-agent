@@ -41,11 +41,35 @@ class SearchDocumentsTest {
     }
 
     @Test
-    void duplicateRuleVersionKeepsLatestEffectiveFrom() {
-        List<IndexedRule> rules = List.of(rule("a", LocalDate.of(2026, 9, 15), null), rule("a", LocalDate.of(2026, 10, 1), null));
-        SearchDocuments.Built built = documents.build(rules, Instant.parse("2026-10-06T03:00:00Z"));
-        assertEquals(1, built.documents().size());
-        assertEquals("2026-10-01", built.documents().get(0).get("effective_from").stringValue());
+    void sameRuleVersionAcrossScheduleRangesKeepsEveryApprovalAndRange() {
+        IndexedRule first = rule("a", LocalDate.of(2026, 9, 15), null);
+        IndexedRule closed = new IndexedRule(first.ruleVersionId(), first.familyId(), first.noticeId(), first.ruleKey(), first.evidenceText(), first.jsonPointer(),
+                first.evidenceHash(), null, "approved-checklist:" + "5".repeat(32), "review-decision:" + "5".repeat(32), LocalDate.of(2026, 9, 15), LocalDate.of(2026, 9, 20));
+        IndexedRule open = new IndexedRule(first.ruleVersionId(), first.familyId(), first.noticeId(), first.ruleKey(), first.evidenceText(), first.jsonPointer(),
+                first.evidenceHash(), null, "approved-checklist:" + "2".repeat(32), "review-decision:" + "3".repeat(32), LocalDate.of(2026, 10, 1), null);
+        SearchDocuments.Built built = documents.build(List.of(open, closed), Instant.parse("2026-10-06T03:00:00Z"));
+        assertEquals(1, built.documents().size(), "문서는 규칙 version당 하나");
+        var doc = built.documents().get(0);
+        assertEquals(2, doc.get("approvals").size());
+        assertEquals("approved-checklist:" + "5".repeat(32), doc.get("approvals").get(0).get("approved_checklist_version_id").stringValue(), "시행일 순");
+        assertEquals("2026-09-20", doc.get("approvals").get(0).get("effective_to").stringValue());
+        assertTrue(doc.get("approvals").get(1).get("effective_to").isNull());
+        assertEquals("2026-09-15", doc.get("effective_ranges").get(0).get("gte").stringValue());
+        assertEquals("2026-09-20", doc.get("effective_ranges").get(0).get("lt").stringValue());
+        assertEquals("2026-10-01", doc.get("effective_ranges").get(1).get("gte").stringValue());
+        assertTrue(!doc.get("effective_ranges").get(1).has("lt"), "종료일이 없으면 무기한(lt 없음)");
+    }
+
+    @Test
+    void conflictingContentForTheSameRuleVersionIsRejectedNotMerged() {
+        IndexedRule first = rule("a", LocalDate.of(2026, 9, 15), "{\"after_value\":\"0.8\"}");
+        IndexedRule different = new IndexedRule(first.ruleVersionId(), first.familyId(), first.noticeId(), first.ruleKey(), first.evidenceText(), first.jsonPointer(),
+                first.evidenceHash(), "{\"after_value\":\"0.5\"}", "approved-checklist:" + "5".repeat(32), "review-decision:" + "5".repeat(32), LocalDate.of(2026, 10, 1), null);
+        SearchIndexException error = org.junit.jupiter.api.Assertions.assertThrows(SearchIndexException.class,
+                () -> documents.build(List.of(first, different), Instant.parse("2026-10-06T03:00:00Z")));
+        assertEquals("SEARCH_RULE_CONFLICT", error.code());
+        assertTrue(error.getMessage().contains("structured_text"), error.getMessage());
+        assertTrue(!error.getMessage().contains("0.5"), "내용은 메시지에 담지 않는다");
     }
 
     @Test

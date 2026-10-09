@@ -136,8 +136,11 @@ class SearchReindexIntegrationTest {
             assertEquals(new TreeSet<>(SearchDocuments.FIELDS), fields);
             assertEquals("SYNTHETIC_INTERNAL", hit.get("_source").get("dataset_class").stringValue());
             assertTrue(hit.get("_source").get("synthetic").booleanValue());
-            assertEquals("2026-10-01", hit.get("_source").get("effective_from").stringValue());
-            assertTrue(hit.get("_source").get("effective_to").isNull());
+            assertEquals(1, hit.get("_source").get("approvals").size());
+            assertEquals("2026-10-01", hit.get("_source").get("approvals").get(0).get("effective_from").stringValue());
+            assertTrue(hit.get("_source").get("approvals").get(0).get("effective_to").isNull());
+            assertEquals("2026-10-01", hit.get("_source").get("effective_ranges").get(0).get("gte").stringValue());
+            assertTrue(!hit.get("_source").get("effective_ranges").get(0).has("lt"), "무기한");
             assertEquals("SIN-PREPAYMENT-FEE", hit.get("_source").get("family_id").stringValue());
             assertFalse(hit.get("_source").get("evidence_text").stringValue().isBlank());
         }
@@ -145,9 +148,9 @@ class SearchReindexIntegrationTest {
 
     @Test
     @Order(4)
-    void sameRuleVersionInTwoScheduleRangesIsReturnedTwiceButIndexedOnce() {
-        // 같은 승인 버전이 최신 일정 revision의 두 구간([09-15,10-01), [10-01,∞))에 있으면 저장소는 규칙마다 두 줄을 돌려주지만
-        // 현재 문서 생성(문서 ID = 규칙 version ID)은 시행일이 늦은 구간 하나만 남긴다. 과거 구간이 색인에서 사라지는 현재 한계를 고정해 둔다(ADR-013 판단 대기).
+    void sameRuleVersionInTwoScheduleRangesKeepsBothRangesAndFiltersByDateWithGap() {
+        // 같은 승인 버전이 최신 일정 revision의 두 구간([09-15,09-20), [10-01,∞))에 있으면 문서 하나에 구간 둘과 승인 대응이 들어간다.
+        // 구간 사이 공백(09-20~09-30)과 경계(시작 포함, 종료 제외), 무기한 종료를 ES date_range 질의로 확인한다.
         String versionId = jdbc.sql("""
                 select d.approved_checklist_version_id from human_review_decision d
                 join approved_checklist_version v on v.approved_checklist_version_id = d.approved_checklist_version_id
@@ -161,28 +164,55 @@ class SearchReindexIntegrationTest {
         String revision = "checklist-schedule:" + "d".repeat(32);
         jdbc.sql("insert into approved_checklist_schedule_revision values (:id, 'SYNTHETIC_INTERNAL', 'SIN-PREPAYMENT-FEE', :supersedes, '2026-10-06T02:00:00Z', :hash)")
                 .param("id", revision).param("supersedes", latest).param("hash", "sha256:" + "d".repeat(64)).update();
-        jdbc.sql("insert into approved_checklist_schedule_entry values (:id, 'SIN-PREPAYMENT-FEE', 0, :version, '2026-09-15', '2026-10-01', :hash)")
+        jdbc.sql("insert into approved_checklist_schedule_entry values (:id, 'SIN-PREPAYMENT-FEE', 0, :version, '2026-09-15', '2026-09-20', :hash)")
                 .param("id", revision).param("version", versionId).param("hash", "sha256:" + "d".repeat(64)).update();
         jdbc.sql("insert into approved_checklist_schedule_entry values (:id, 'SIN-PREPAYMENT-FEE', 1, :version, '2026-10-01', null, :hash)")
                 .param("id", revision).param("version", versionId).param("hash", "sha256:" + "d".repeat(64)).update();
 
         List<IndexedRule> rows = new RuleEvidenceIndexRepository(jdbc).loadApprovedRules();
         assertEquals(6, rows.stream().filter(rule -> rule.familyId().equals("SIN-PREPAYMENT-FEE")).count(), "규칙 3개 × 구간 2개");
-        assertTrue(rows.stream().anyMatch(rule -> rule.effectiveFrom().toString().equals("2026-09-15")));
-        SearchDocuments.Built built = new SearchDocuments(mapper).build(rows, CLOCK.instant());
-        assertEquals(3, built.documents().stream().filter(doc -> doc.get("family_id").stringValue().equals("SIN-PREPAYMENT-FEE")).count());
-        assertTrue(built.documents().stream().noneMatch(doc -> "2026-09-15".equals(doc.get("effective_from").stringValue())),
-                "현재 한계: 과거 구간은 문서에 남지 않는다(대안은 evidence 참조)");
-        assertEquals(SearchReindexService.Outcome.ALREADY_CURRENT, service.reindex().outcome(), "문서 내용은 같으므로 재색인 생략");
+        SearchReindexService.Result result = service.reindex();
+        assertEquals(SearchReindexService.Outcome.CREATED, result.outcome(), "적용기간이 바뀌었으므로 새 색인");
+        assertEquals(3, result.documentCount(), "문서는 규칙 version당 하나");
+
+        JsonNode hits = elasticsearch.search(properties.alias(), mapper.readTree("{\"size\":100,\"query\":{\"term\":{\"family_id\":\"SIN-PREPAYMENT-FEE\"}}}")).path("hits").path("hits");
+        assertEquals(3, hits.size());
+        for (JsonNode hit : hits) {
+            JsonNode approvals = hit.get("_source").get("approvals");
+            assertEquals(2, approvals.size());
+            assertEquals(versionId, approvals.get(0).get("approved_checklist_version_id").stringValue());
+            assertEquals("2026-09-15", approvals.get(0).get("effective_from").stringValue());
+            assertEquals("2026-09-20", approvals.get(0).get("effective_to").stringValue());
+            assertEquals("2026-10-01", approvals.get(1).get("effective_from").stringValue());
+            assertTrue(approvals.get(1).get("effective_to").isNull());
+            assertEquals(2, hit.get("_source").get("effective_ranges").size());
+        }
+        // 날짜별 후보 수(규칙 3개): 시작 포함, 종료 제외, 공백 없음, 무기한.
+        assertEquals(0, countOnDate("2026-09-14"), "시작 전");
+        assertEquals(3, countOnDate("2026-09-15"), "시작일 포함");
+        assertEquals(3, countOnDate("2026-09-19"));
+        assertEquals(0, countOnDate("2026-09-20"), "종료일 제외");
+        assertEquals(0, countOnDate("2026-09-25"), "구간 사이 공백");
+        assertEquals(0, countOnDate("2026-09-30"));
+        assertEquals(3, countOnDate("2026-10-01"), "두 번째 구간 시작");
+        assertEquals(3, countOnDate("2027-12-31"), "종료일 없음 = 무기한");
+    }
+
+    /** 검색 API가 쓸 업무일 필터와 같은 질의: date_range 필드에 점 하나를 intersects로 묻는다. */
+    private int countOnDate(String businessDate) {
+        JsonNode query = mapper.readTree("{\"size\":0,\"query\":{\"bool\":{\"filter\":[{\"term\":{\"family_id\":\"SIN-PREPAYMENT-FEE\"}},"
+                + "{\"range\":{\"effective_ranges\":{\"gte\":\"" + businessDate + "\",\"lte\":\"" + businessDate + "\",\"relation\":\"intersects\"}}}]}}}");
+        return elasticsearch.search(properties.alias(), query).path("hits").path("total").path("value").intValue();
     }
 
     @Test
     @Order(5)
     void approvingAnotherFamilyAddsItsRulesAndReplacesIndex() {
+        String before = elasticsearch.aliasTarget(properties.alias()).orElseThrow();
         PreparationScenario.approveSeller(jdbc, mapper, PreparationScenario.manager(dataSource), CLOCK, state.sellerProposalId());
         SearchReindexService.Result result = service.reindex();
         assertEquals(SearchReindexService.Outcome.CREATED, result.outcome());
-        assertEquals(List.of(firstIndex), result.removedIndices());
+        assertEquals(List.of(before), result.removedIndices());
         Set<String> approved = approvedRuleIds();
         assertEquals(approved, indexedIds());
         assertTrue(approved.size() > 3, "셀러론 승인 항목 규칙이 더해져야 한다");
@@ -255,6 +285,10 @@ class SearchReindexIntegrationTest {
         assertTrue(repaired.indexName().startsWith(current + "-r"), repaired.indexName());
         assertEquals(List.of(current), repaired.removedIndices());
         assertEquals(expected, elasticsearch.count(properties.alias()));
+        SearchReindexService.Result again = service.reindex();
+        assertEquals(SearchReindexService.Outcome.ALREADY_CURRENT, again.outcome(), "복구 접미사 이름이라도 내용·설정·문서 수가 맞으면 생략");
+        assertEquals(repaired.indexName(), again.indexName());
+        assertEquals(List.of(repaired.indexName()), elasticsearch.indicesWithPrefix(properties.indexNamePrefix()));
     }
 
     @Test
