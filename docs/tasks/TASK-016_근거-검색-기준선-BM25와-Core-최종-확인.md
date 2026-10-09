@@ -34,8 +34,8 @@
 
 제외 조건별 보장 방법과 지표 대응은 ADR-013 "보장 조건 대응" 표를 따르며, 평가 결과 파일은 그 표의 "보장" 열과 색인 불변식 테스트 통과 기록(revision, 테스트 이름)을 함께 적는다.
 
-- 색인 이름 `trustagent-rule-evidence-<workspace>`에 alias `…-current`. 이 Task에서는 workspace `main` 하나.
-- 문서 = HUMAN_REVIEW 승인 checklist 항목이 가리키는 규칙 version 하나. 필드: `rule_version_id`(문서 ID), `family_id`, `notice_id`, `rule_key`, `evidence_text`(규칙 문장), `structured_text`(구조화 값을 문장화: 변경 전후 값·단위·시행일·조건·예외), `approved_checklist_version_id`, `effective_from`, `effective_to`, `dataset_class`, `synthetic`, `source_hash`, `indexed_at`.
+- 색인 이름 `trustagent-rule-evidence-<workspace>-<내용 해시+설정 해시 12자>`에 alias `…-<workspace>-current`. 이 Task에서는 workspace `main` 하나. 생략 판단은 이름이 아니라 현재 색인 메타(내용·설정 해시, reindex 버전)와 문서 수로 하며, alias가 가리키는 현재 색인은 새 색인의 준비·검증·전환 전에 지우지 않는다(PR #49).
+- 문서 = HUMAN_REVIEW 승인 checklist 항목이 가리키는 규칙 version 하나(ADR-013 3-1항, PR #49 구현과 일치). 필드: `rule_version_id`(문서 ID), `family_id`, `notice_id`, `rule_key`, `evidence_text`(규칙 문장), `structured_text`(구조화 값을 문장화: 변경 전후 값·단위·시행일·조건·예외), `json_pointer`, `evidence_hash`, `approvals[]`(승인 checklist version ID, 결정 ID, 적용 시작·종료. 같은 규칙 version이 여러 승인·구간에 쓰이면 모두), `effective_ranges[]`(ES `date_range`, 시작 포함·종료 제외 `[from, to)`, 종료 없음은 무기한), `dataset_class`, `synthetic`, `source_hash`, `indexed_at`. 같은 규칙 version의 문장·위치·해시·구조화 값·공문군이 승인마다 다르면 병합하지 않고 `SEARCH_RULE_CONFLICT`로 재색인을 중단한다.
 - 재색인 runner(Core, `--trust-agent.search-reindex.enabled=true`): 업무 DB에서 현재 승인 checklist(사람 결정 있음)와 항목·규칙 근거를 읽어 새 색인을 만들고 alias를 교체한다. 두 번 실행 시 문서 수와 `source_hash` 집합이 같다(멱등). 실패 시 alias를 바꾸지 않는다.
 - 한국어 분석기: 제안 1(아래).
 
@@ -59,7 +59,7 @@ relevance_hold    {method, threshold, version}  이 응답에 적용한 관련�
 
 ### 흐름
 
-1. 입력 검증 → ES 질의(`multi_match` on `evidence_text`, `structured_text`; filter: `family_id` = 요청값, `effective_from <= businessDate`, `effective_to` null 또는 `>= businessDate`) → 원시 후보 상위 topK×2(기록용).
+1. 입력 검증 → ES 질의(`multi_match` on `evidence_text`, `structured_text`; filter: `term family_id` = 요청값, `range effective_ranges`에 `businessDate` 하나를 `gte`·`lte` 같은 값과 `relation: intersects`로. 구간 사이 공백이면 후보에서 빠지고 종료 없는 구간은 무기한) → 원시 후보 상위 topK×2(기록용).
 2. 관련성 보류 기준 적용 → Core로 전달할 후보(topK 이하).
 3. Tool 1(`familyId`, `businessDate`) → 사용 불가면 `EVIDENCE_HOLD`(후보는 진단에만).
 4. 후보마다 Tool 2 → 통과한 것만, Tool 1 항목의 구조화 값과 합쳐 순위 유지로 반환. 후보 0건이면 `NO_RELEVANT_CANDIDATE` 보류.
@@ -122,9 +122,9 @@ TASK-014의 세 단계 지표를 그대로 계산한다. 통과 기준은 다음
 
 | ID | 입력/상황 | 기대 결과(실패/경계 포함) | 검증 방법 | 결과/evidence |
 |---|---|---|---|---|
-| AC-01 | 재색인 runner 2회 실행 | 문서 수와 `source_hash` 집합 불변, alias가 최신 색인 | Java 통합 테스트(ES Testcontainer) | 미검증 |
-| AC-02 | 색인 불변식 | 색인 문서 집합 = 사람 결정 있는 승인 checklist 항목의 규칙 version 집합. 셀러론 v2(미승인)·v1 수수료율(FIXTURE)·철회 규칙 0건. 셀러론 승인 뒤 재색인 → 생김, 철회 뒤 → 사라짐 | Java 통합 테스트 | 미검증 |
-| AC-03 | 검색 단계 후보 | 요청 공문군 밖·업무일 밖 규칙 0건(골든셋 37건 전체) | 평가 결과 | 미검증 |
+| AC-01 | 재색인 runner 2회 실행 | 문서 수와 `source_hash` 집합 불변, alias가 최신 색인. 분석기만 바꾸면 새 색인, 실패 시 현재 색인·alias 유지 | Java 통합 테스트(ES Testcontainer) | PR #49에서 구현·검증(병합 뒤 결과 기록) |
+| AC-02 | 색인 불변식 | 색인 문서 집합 = 사람 결정 있는 승인 checklist 항목의 규칙 version 집합. 셀러론 v2(미승인)·v1 수수료율(FIXTURE)·철회 규칙 0건. 셀러론 승인 뒤 재색인 → 생김, 철회 뒤 → 사라짐. 같은 규칙 version의 여러 승인 구간은 한 문서의 `approvals[]`·`effective_ranges[]`에 모두 남고 내용 충돌은 거부 | Java 통합 테스트 | PR #49에서 구현·검증(병합 뒤 결과 기록) |
+| AC-03 | 검색 단계 후보 | 요청 공문군 밖·업무일 밖(`effective_ranges` 구간 밖, 구간 사이 공백 포함) 규칙 0건(골든셋 37건 전체) | 평가 결과 | 미검증 |
 | AC-04 | 응답 내용 출처 | `evidence_text`·`json_pointer`·`evidence_hash`는 Tool 2 응답과 바이트 일치, `instruction`·`structured_change`는 Tool 1 항목과 일치. ES 문서 본문이 응답에 쓰이지 않음 | Python 단위 테스트(가짜 ES·가짜 Core) | 미검증 |
 | AC-05 | Tool 1 사용 불가 | 후보가 있어도 `EVIDENCE_HOLD`, Core 사유 그대로, `evidence` 빈 배열 | Python 단위 테스트 + 평가(`fixture_period`, `unapproved`) | 미검증 |
 | AC-06 | Tool 2 403·오류·계약 위반 | 그 후보만 제거, 진단 `removed`에 사유, 응답에 없음 | Python 단위 테스트 | 미검증 |
