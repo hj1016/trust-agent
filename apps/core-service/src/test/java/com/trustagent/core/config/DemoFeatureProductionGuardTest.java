@@ -25,7 +25,10 @@ class DemoFeatureProductionGuardTest {
             Map.entry("TRUST_AGENT_VALIDATION_MAX_AGE", "24h"),
             Map.entry("TRUST_AGENT_VALIDATION_POLICY_VERSION", "internal-validation-v1"),
             Map.entry("TRUST_AGENT_TOOL_SERVICE_TOKEN", "temporary-token-for-test"),
-            Map.entry("TRUST_AGENT_PREPARATION_RECORD_TOKEN", "temporary-record-token-for-test"));
+            Map.entry("TRUST_AGENT_PREPARATION_RECORD_TOKEN", "temporary-record-token-for-test"),
+            Map.entry("TRUST_AGENT_CONTROL_DB_URL", "jdbc:postgresql://db.example.invalid:5432/trust_agent_control"),
+            Map.entry("TRUST_AGENT_CONTROL_DB_USERNAME", "control_user"),
+            Map.entry("TRUST_AGENT_CONTROL_DB_PASSWORD", "control-password-for-test"));
 
     @Test
     void proposalGenerationAloneRefusesProductionStartup() {
@@ -74,6 +77,34 @@ class DemoFeatureProductionGuardTest {
         try (var context = productionContext(Map.of("TRUST_AGENT_VALIDATION_MAX_AGE", "-1h"))) {
             assertThrows(RuntimeException.class, context::refresh);
         }
+    }
+
+    @Test
+    void demoUsersAloneRefusesProductionStartup() {
+        var error = refusal(Map.of("trust-agent.demo-users.enabled", "true"));
+        assertTrue(error.contains("DEMO_FEATURE_ENABLED_IN_PROD"));
+        assertTrue(error.contains("trust-agent.demo-users.enabled"));
+    }
+
+    @Test
+    void controlDatabaseMustDifferFromBusinessDatabaseInProduction() {
+        var error = refusal(Map.of("TRUST_AGENT_CONTROL_DB_URL", COMPLETE_PRODUCTION_SETTINGS.get("TRUST_AGENT_DB_URL")));
+        assertTrue(error.contains("CONTROL_DB_NOT_SEPARATED"), error);
+    }
+
+    @Test
+    void sameDatabaseWrittenDifferentlyIsStillRefused() {
+        // 업무 DB는 jdbc:postgresql://db/trust_agent. 포트 명시·대소문자·질의 문자열이 달라도 같은 DB다.
+        var error = refusal(Map.of("TRUST_AGENT_CONTROL_DB_URL", "jdbc:postgresql://DB:5432/trust_agent?sslmode=require"));
+        assertTrue(error.contains("CONTROL_DB_NOT_SEPARATED"), error);
+        assertTrue(ProductionRequiredSettingsConfiguration.sameDatabase("jdbc:postgresql://db/trust_agent", "jdbc:postgresql://db:5432/trust_agent/"));
+        assertTrue(!ProductionRequiredSettingsConfiguration.sameDatabase("jdbc:postgresql://db/trust_agent", "jdbc:postgresql://db/trust_agent_control"));
+    }
+
+    @Test
+    void controlDatabaseAccountMustDifferFromBusinessAccountInProduction() {
+        var error = refusal(Map.of("TRUST_AGENT_CONTROL_DB_USERNAME", COMPLETE_PRODUCTION_SETTINGS.get("TRUST_AGENT_DB_USERNAME")));
+        assertTrue(error.contains("CONTROL_DB_ACCOUNT_NOT_SEPARATED"), error);
     }
 
     @Test

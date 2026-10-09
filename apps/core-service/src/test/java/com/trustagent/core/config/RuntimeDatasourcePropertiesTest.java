@@ -89,7 +89,10 @@ class RuntimeDatasourcePropertiesTest {
                 Map.entry("TRUST_AGENT_VALIDATION_MAX_AGE", "24h"),
                 Map.entry("TRUST_AGENT_VALIDATION_POLICY_VERSION", "internal-validation-v1"),
                 Map.entry("TRUST_AGENT_TOOL_SERVICE_TOKEN", "temporary-token-for-test"),
-                Map.entry("TRUST_AGENT_PREPARATION_RECORD_TOKEN", "temporary-record-token-for-test")))) {
+                Map.entry("TRUST_AGENT_PREPARATION_RECORD_TOKEN", "temporary-record-token-for-test"),
+                Map.entry("TRUST_AGENT_CONTROL_DB_URL", "jdbc:postgresql://db/trust_agent_control"),
+                Map.entry("TRUST_AGENT_CONTROL_DB_USERNAME", "control_user"),
+                Map.entry("TRUST_AGENT_CONTROL_DB_PASSWORD", "control-password-for-test")))) {
             configuredContext.refresh();
         }
     }
@@ -109,6 +112,9 @@ class RuntimeDatasourcePropertiesTest {
         runtimeOnly.put("TRUST_AGENT_VALIDATION_POLICY_VERSION", "internal-validation-v1");
         runtimeOnly.put("TRUST_AGENT_TOOL_SERVICE_TOKEN", "temporary-token-for-test");
         runtimeOnly.put("TRUST_AGENT_PREPARATION_RECORD_TOKEN", "temporary-record-token-for-test");
+        runtimeOnly.put("TRUST_AGENT_CONTROL_DB_URL", "jdbc:postgresql://db/trust_agent_control");
+        runtimeOnly.put("TRUST_AGENT_CONTROL_DB_USERNAME", "control_user");
+        runtimeOnly.put("TRUST_AGENT_CONTROL_DB_PASSWORD", "control-password-for-test");
         runtimeOnly.put("trust-agent.baseline-import.enabled", "true");
         try (var missingImporterContext = productionContext(runtimeOnly)) {
             assertThrows(RuntimeException.class, missingImporterContext::refresh);
@@ -138,6 +144,9 @@ class RuntimeDatasourcePropertiesTest {
         settings.put("TRUST_AGENT_VALIDATION_POLICY_VERSION", "internal-validation-v1");
         settings.put("TRUST_AGENT_TOOL_SERVICE_TOKEN", "temporary-token-for-test");
         settings.put("TRUST_AGENT_PREPARATION_RECORD_TOKEN", "temporary-record-token-for-test");
+        settings.put("TRUST_AGENT_CONTROL_DB_URL", "jdbc:postgresql://db/trust_agent_control");
+        settings.put("TRUST_AGENT_CONTROL_DB_USERNAME", "control_user");
+        settings.put("TRUST_AGENT_CONTROL_DB_PASSWORD", "control-password-for-test");
         settings.put("trust-agent.synthetic-internal-import.enabled", "true");
         try (var context = productionContext(settings)) {
             assertThrows(RuntimeException.class, context::refresh);

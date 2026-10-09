@@ -1,5 +1,8 @@
 package com.trustagent.core.internalpolicy.query;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import com.trustagent.core.support.SessionClient;
+import com.trustagent.core.control.ControlDataSourceConfiguration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -309,10 +312,17 @@ class HumanReviewApplicableIntegrationTest {
         return "/api/v1/internal-policy/checklists/" + familyId + "/applicable?" + query;
     }
 
+
+    @Autowired @Qualifier(ControlDataSourceConfiguration.CONTROL_JDBC_CLIENT) private JdbcClient controlJdbc;
+    private SessionClient session;
+
+    private SessionClient session() throws Exception {
+        if (session == null) session = SessionClient.staff(port, controlJdbc);
+        return session;
+    }
+
     private HttpResponse<String> get(String path) throws Exception {
-        return HttpClient.newHttpClient().send(
-                HttpRequest.newBuilder().uri(URI.create("http://127.0.0.1:" + port + path)).GET().build(),
-                HttpResponse.BodyHandlers.ofString());
+        return session().get(path);
     }
 
     private JsonNode body(HttpResponse<String> response) {

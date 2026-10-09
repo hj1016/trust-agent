@@ -21,7 +21,10 @@ public class ProductionRequiredSettingsConfiguration {
             "TRUST_AGENT_VALIDATION_MAX_AGE",
             "TRUST_AGENT_VALIDATION_POLICY_VERSION",
             "TRUST_AGENT_TOOL_SERVICE_TOKEN",
-            "TRUST_AGENT_PREPARATION_RECORD_TOKEN");
+            "TRUST_AGENT_PREPARATION_RECORD_TOKEN",
+            "TRUST_AGENT_CONTROL_DB_URL",
+            "TRUST_AGENT_CONTROL_DB_USERNAME",
+            "TRUST_AGENT_CONTROL_DB_PASSWORD");
     static final List<String> REQUIRED_BASELINE_IMPORT_SETTINGS = List.of(
             "TRUST_AGENT_IMPORT_DB_URL",
             "TRUST_AGENT_IMPORT_DB_USERNAME",
@@ -36,10 +39,28 @@ public class ProductionRequiredSettingsConfiguration {
             "trust-agent.proposal-generation.enabled",
             "trust-agent.fixture-approved-checklist.enabled",
             "trust-agent.proposal-validation.enabled",
-            "trust-agent.human-review.enabled");
+            "trust-agent.human-review.enabled",
+            "trust-agent.demo-users.enabled");
 
     public ProductionRequiredSettingsConfiguration(Environment environment) {
         validate(environment);
+    }
+
+    /** JDBC URL을 호스트·포트·데이터베이스 이름으로 정규화해 비교한다. 같은 물리 DB를 다른 표기(포트 생략, 대소문자, 질의 문자열)로 가리키는 경우도 같은 DB로 본다. */
+    static boolean sameDatabase(String first, String second) {
+        return normalizeJdbcUrl(first).equals(normalizeJdbcUrl(second));
+    }
+
+    static String normalizeJdbcUrl(String url) {
+        String value = url.trim();
+        int query = value.indexOf('?');
+        if (query >= 0) value = value.substring(0, query);
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("^jdbc:postgresql://([^/:]+)(?::(\\d+))?/([^/?]+)/?$", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(value);
+        if (!matcher.matches()) {
+            return value.toLowerCase(java.util.Locale.ROOT);
+        }
+        String port = matcher.group(2) == null ? "5432" : matcher.group(2);
+        return matcher.group(1).toLowerCase(java.util.Locale.ROOT) + ":" + port + "/" + matcher.group(3);
     }
 
     static void validate(Environment environment) {
@@ -66,6 +87,15 @@ public class ProductionRequiredSettingsConfiguration {
                 .toList();
         if (!missing.isEmpty()) {
             throw new IllegalStateException("운영 필수 설정이 없습니다: " + String.join(", ", missing));
+        }
+        String controlUrl = environment.getProperty("TRUST_AGENT_CONTROL_DB_URL");
+        String businessUrl = environment.getProperty("TRUST_AGENT_DB_URL");
+        if (controlUrl != null && businessUrl != null && sameDatabase(controlUrl, businessUrl)) {
+            throw new IllegalStateException("CONTROL_DB_NOT_SEPARATED: production profile에서는 제어 DB가 업무 DB와 다른 데이터베이스여야 합니다(호스트·포트·데이터베이스 이름 기준).");
+        }
+        String controlUser = environment.getProperty("TRUST_AGENT_CONTROL_DB_USERNAME");
+        if (controlUser != null && controlUser.equals(environment.getProperty("TRUST_AGENT_DB_USERNAME"))) {
+            throw new IllegalStateException("CONTROL_DB_ACCOUNT_NOT_SEPARATED: production profile에서는 제어 DB 계정이 업무 DB 계정과 달라야 합니다(최소 권한 분리).");
         }
         String maxValidationAge = environment.getProperty("TRUST_AGENT_VALIDATION_MAX_AGE");
         try {
