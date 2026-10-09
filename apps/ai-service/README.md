@@ -81,6 +81,17 @@ curl -s -X POST http://127.0.0.1:8090/api/v1/ai/consultation-preparations \
 - 모든 준비안에 `human_decision_notice`가 있습니다(SAFE-D). 보류 섹션에는 항목·근거가 없습니다(SAFE-E). 자유 문장 입력 경로가 없습니다(SAFE-F).
 - 질문 기반 안전성 사례(S10·E22·E23)와 LLM 출력 검증은 TASK-019입니다. 이 서비스의 검증 통과는 LLM 안전성 검증을 뜻하지 않습니다.
 
+## 호출 계측 (TASK-021, 선택)
+
+`--metrics-file <경로>`를 주면 Core 호출(Tool 1, Tool 2, 기록)마다 종류, 공문군, 결과, 소요 시간(정수 마이크로초)과 전체 소요를 별도 JSON 파일(`contracts/ai-call-metrics.schema.json`)에 씁니다. stdout의 준비안과 종료 코드, 기록 본문은 계측이 없을 때와 같습니다. 계측 파일에는 토큰, 근거 원문, 항목 문장이 없습니다.
+
+```bash
+.venv/bin/python -m ai_service prepare --application SW-APPLICATION-001 --business-date 2026-10-06 --metrics-file build/metrics/run-001.json
+python3 scripts/summarize_ai_call_metrics.py --input-dir <디렉터리> --warmup 5   # <디렉터리>/<시나리오>/*.json → p50/p95 표
+```
+
+Core와 함께 N회 반복 측정하는 runner는 `apps/core-service`의 `AiServiceCallMetricsRunner`(`-PaiCallMetrics=true -PaiServiceIntegration=true`, CI 미포함)입니다. 측정 결과는 `docs/evidence/AI_CALL_METRICS_EVIDENCE.md`에 기록합니다.
+
 ## 테스트
 
 저장소 루트에서 다른 Python 테스트와 함께 실행합니다. `app.py` 테스트는 fastapi·httpx가 없으면 건너뜁니다.

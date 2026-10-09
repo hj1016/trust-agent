@@ -41,13 +41,16 @@ dependencies {
 def aiServiceIntegrationRequested = project.hasProperty('aiServiceIntegration')
         ? project.property('aiServiceIntegration').toString() == 'true'
         : (System.getenv('TRUST_AGENT_REQUIRE_AI_INTEGRATION') ?: '') == '1'
+// TASK-021 호출 계측 runner(AiServiceCallMetricsRunner)는 -PaiCallMetrics=true일 때만 실행하며 CI에는 넣지 않는다. 실행 수는 -PaiCallMetricsRuns=<N>(기본 30).
+def aiCallMetricsRequested = project.hasProperty('aiCallMetrics') && project.property('aiCallMetrics').toString() == 'true'
+def aiCallMetricsRuns = project.hasProperty('aiCallMetricsRuns') ? project.property('aiCallMetricsRuns').toString() : '30'
 def aiServiceVenv = layout.buildDirectory.dir('ai-venv')
 def aiServiceDir = rootProject.layout.projectDirectory.dir('apps/ai-service')
 
 tasks.register('prepareAiServiceEnv', Exec) {
     description = 'AI 서비스 연결 검증용 Python venv를 만들고 requirements-ai.txt를 설치한다.'
     group = 'verification'
-    onlyIf { aiServiceIntegrationRequested }
+    onlyIf { aiServiceIntegrationRequested || aiCallMetricsRequested }
     inputs.file(aiServiceDir.file('requirements-ai.txt'))
     inputs.file(rootProject.layout.projectDirectory.file('requirements.txt'))
     outputs.dir(aiServiceVenv)
@@ -78,8 +81,10 @@ tasks.named('test') {
     systemProperty 'trustAgent.repositoryRoot', rootProject.projectDir.absolutePath
     systemProperty 'trustAgent.aiServiceIntegration', aiServiceIntegrationRequested.toString()
     systemProperty 'trustAgent.aiServicePython', aiServiceVenv.get().file('bin/python').asFile.absolutePath
+    systemProperty 'trustAgent.aiCallMetrics', aiCallMetricsRequested.toString()
+    systemProperty 'trustAgent.aiCallMetrics.runs', aiCallMetricsRuns
     environment 'TRUST_AGENT_REQUIRE_AI_INTEGRATION', System.getenv('TRUST_AGENT_REQUIRE_AI_INTEGRATION') ?: ''
-    if (aiServiceIntegrationRequested) {
+    if (aiServiceIntegrationRequested || aiCallMetricsRequested) {
         dependsOn 'prepareAiServiceEnv'
     }
 }
