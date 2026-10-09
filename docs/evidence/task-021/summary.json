@@ -1,0 +1,104 @@
+{
+  "hold-2026-09-30": {
+    "runs_total": 30,
+    "warmup_excluded": 5,
+    "runs_measured": 25,
+    "statuses": [
+      "HOLD"
+    ],
+    "record_statuses": {
+      "ALREADY_RECORDED": 25
+    },
+    "call_outcomes": {
+      "OK": 75
+    },
+    "total": {
+      "p50_us": 33202,
+      "p95_us": 39105,
+      "min_us": 24317,
+      "max_us": 65623
+    },
+    "assembly": {
+      "p50_us": 1412,
+      "p95_us": 1585
+    },
+    "per_kind": {
+      "applicable_checklist": {
+        "calls": 50,
+        "count_per_run_min": 2,
+        "count_per_run_max": 2,
+        "p50_us": 9718,
+        "p95_us": 12557,
+        "min_us": 5031,
+        "max_us": 31893
+      },
+      "rule_evidence": {
+        "calls": 0,
+        "count_per_run_min": 0,
+        "count_per_run_max": 0
+      },
+      "record": {
+        "calls": 25,
+        "count_per_run_min": 1,
+        "count_per_run_max": 1,
+        "p50_us": 12080,
+        "p95_us": 14130,
+        "min_us": 7849,
+        "max_us": 14763
+      }
+    }
+  },
+  "partial-2026-10-06": {
+    "runs_total": 30,
+    "warmup_excluded": 5,
+    "runs_measured": 25,
+    "statuses": [
+      "PARTIAL"
+    ],
+    "record_statuses": {
+      "ALREADY_RECORDED": 25
+    },
+    "call_outcomes": {
+      "OK": 150
+    },
+    "total": {
+      "p50_us": 45453,
+      "p95_us": 49497,
+      "min_us": 32192,
+      "max_us": 71393
+    },
+    "assembly": {
+      "p50_us": 1874,
+      "p95_us": 2164
+    },
+    "per_kind": {
+      "applicable_checklist": {
+        "calls": 50,
+        "count_per_run_min": 2,
+        "count_per_run_max": 2,
+        "p50_us": 6816,
+        "p95_us": 14156,
+        "min_us": 3536,
+        "max_us": 15832
+      },
+      "rule_evidence": {
+        "calls": 75,
+        "count_per_run_min": 3,
+        "count_per_run_max": 3,
+        "p50_us": 6037,
+        "p95_us": 8442,
+        "min_us": 3456,
+        "max_us": 18611
+      },
+      "record": {
+        "calls": 25,
+        "count_per_run_min": 1,
+        "count_per_run_max": 1,
+        "p50_us": 8087,
+        "p95_us": 14468,
+        "min_us": 7039,
+        "max_us": 16230
+      }
+    }
+  }
+}

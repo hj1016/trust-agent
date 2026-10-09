@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trustagent.local/contracts/ai-call-metrics.schema.json",
+  "title": "AI 서비스 Core 호출 계측 (TASK-021)",
+  "description": "CLI --metrics-file이 쓰는 계측 문서. 준비안 출력·기록 계약과 별개이며 토큰, 근거 원문, 항목 문장을 담지 않는다. 시간은 정수 마이크로초.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["metrics_version", "run_id", "preparation_id", "application_id", "business_date", "status", "record_status", "recorded",
+               "started_at", "total_elapsed_us", "call_elapsed_us_sum", "assembly_elapsed_us", "counts", "calls"],
+  "properties": {
+    "metrics_version": {"const": "ai-call-metrics-v1"},
+    "run_id": {"type": "string", "pattern": "^consultation-preparation-run:[a-f0-9]{32}$"},
+    "preparation_id": {"type": "string", "pattern": "^consultation-preparation:sha256:[a-f0-9]{64}$"},
+    "application_id": {"type": "string", "pattern": "^SW-APPLICATION-[0-9]{3}$"},
+    "business_date": {"type": "string", "format": "date"},
+    "consultation_id": {"type": "string", "minLength": 1, "maxLength": 64},
+    "status": {"enum": ["READY", "PARTIAL", "HOLD"]},
+    "record_status": {"enum": ["RECORDED", "ALREADY_RECORDED", "REJECTED", "FAILED", "NOT_ATTEMPTED"]},
+    "recorded": {"type": "boolean"},
+    "started_at": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{6}Z$"},
+    "total_elapsed_us": {"type": "integer", "minimum": 0},
+    "call_elapsed_us_sum": {"type": "integer", "minimum": 0},
+    "assembly_elapsed_us": {"type": "integer", "minimum": 0},
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["applicable_checklist", "rule_evidence", "record", "total"],
+      "properties": {
+        "applicable_checklist": {"type": "integer", "minimum": 0},
+        "rule_evidence": {"type": "integer", "minimum": 0},
+        "record": {"type": "integer", "minimum": 0},
+        "total": {"type": "integer", "minimum": 0}
+      }
+    },
+    "calls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["seq", "kind", "family_id", "outcome", "http_status", "elapsed_us"],
+        "properties": {
+          "seq": {"type": "integer", "minimum": 1},
+          "kind": {"enum": ["applicable_checklist", "rule_evidence", "record", "unknown"]},
+          "family_id": {"type": ["string", "null"], "maxLength": 64},
+          "outcome": {"enum": ["OK", "HTTP_ERROR", "TIMEOUT", "UNAVAILABLE"]},
+          "http_status": {"type": ["integer", "null"], "minimum": 100, "maximum": 599},
+          "elapsed_us": {"type": "integer", "minimum": 0}
+        }
+      }
+    }
+  }
+}

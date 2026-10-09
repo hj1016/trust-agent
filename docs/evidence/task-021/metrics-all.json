@@ -1,0 +1,3666 @@
+{
+ "metrics_version": "ai-call-metrics-v1",
+ "note": "runner 원본 계측 파일 60개를 한 파일로 모은 것. 각 항목에 scenario와 file을 덧붙였다.",
+ "documents": [
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:95867d710aac4e2ebc62a1937e026da5",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:15.719905Z",
+   "total_elapsed_us": 117447,
+   "call_elapsed_us_sum": 114094,
+   "assembly_elapsed_us": 3353,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 62947
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11169
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6342
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6288
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8252
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 201,
+     "elapsed_us": 19096
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-001",
+   "scenario": "partial-2026-10-06",
+   "file": "001.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:0469e4405931457ea9662eea3f4d7735",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:15.925153Z",
+   "total_elapsed_us": 54595,
+   "call_elapsed_us_sum": 52505,
+   "assembly_elapsed_us": 2090,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 18286
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8092
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7005
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5203
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4387
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9532
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-002",
+   "scenario": "partial-2026-10-06",
+   "file": "002.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:bcadfd3e4c21489bae1d3eb4f19ea2a2",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:16.069004Z",
+   "total_elapsed_us": 43063,
+   "call_elapsed_us_sum": 40941,
+   "assembly_elapsed_us": 2122,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 10711
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5907
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5032
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5016
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5045
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9230
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-003",
+   "scenario": "partial-2026-10-06",
+   "file": "003.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:189b9f92e4394c07a11d10382f375dfc",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:16.199965Z",
+   "total_elapsed_us": 42681,
+   "call_elapsed_us_sum": 40726,
+   "assembly_elapsed_us": 1955,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 12099
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6477
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4422
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4522
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4357
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8849
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-004",
+   "scenario": "partial-2026-10-06",
+   "file": "004.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:9466cd4cc9a4497f9691f623f6151abe",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:16.326809Z",
+   "total_elapsed_us": 49565,
+   "call_elapsed_us_sum": 47728,
+   "assembly_elapsed_us": 1837,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 12200
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7214
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6347
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6615
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6420
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8932
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-005",
+   "scenario": "partial-2026-10-06",
+   "file": "005.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:d1c9cef7e8a64969990aef814345d75c",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:16.461122Z",
+   "total_elapsed_us": 49468,
+   "call_elapsed_us_sum": 47594,
+   "assembly_elapsed_us": 1874,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11772
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6994
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6974
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6575
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6581
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8698
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-006",
+   "scenario": "partial-2026-10-06",
+   "file": "006.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:f45084d909fb486a8c84dac868cc1098",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:16.594813Z",
+   "total_elapsed_us": 46667,
+   "call_elapsed_us_sum": 44878,
+   "assembly_elapsed_us": 1789,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 12825
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7189
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6474
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5971
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4428
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7991
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-007",
+   "scenario": "partial-2026-10-06",
+   "file": "007.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:5c26ba8207be446d97c2a872b8ddd7f7",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:16.726807Z",
+   "total_elapsed_us": 41077,
+   "call_elapsed_us_sum": 39070,
+   "assembly_elapsed_us": 2007,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9992
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6037
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5801
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4771
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4131
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8338
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-008",
+   "scenario": "partial-2026-10-06",
+   "file": "008.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:ebb0a3ccd0254d0fa85f202bb7f555d5",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:16.854947Z",
+   "total_elapsed_us": 41344,
+   "call_elapsed_us_sum": 39427,
+   "assembly_elapsed_us": 1917,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 12536
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6278
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4170
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3998
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3990
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8455
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-009",
+   "scenario": "partial-2026-10-06",
+   "file": "009.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:c824d09eb7ed4e11aca8f6a0e391c8b2",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:16.983079Z",
+   "total_elapsed_us": 48951,
+   "call_elapsed_us_sum": 47144,
+   "assembly_elapsed_us": 1807,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11965
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6730
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6403
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6455
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6411
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9180
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-010",
+   "scenario": "partial-2026-10-06",
+   "file": "010.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:cd41c2c00bee4c28b35682e0f44d1efb",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:17.134781Z",
+   "total_elapsed_us": 71393,
+   "call_elapsed_us_sum": 69229,
+   "assembly_elapsed_us": 2164,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 13029
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8198
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9022
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 18611
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5901
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 14468
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-011",
+   "scenario": "partial-2026-10-06",
+   "file": "011.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:229fa9ce725b48b59e140740f69293f9",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:17.319584Z",
+   "total_elapsed_us": 48790,
+   "call_elapsed_us_sum": 46831,
+   "assembly_elapsed_us": 1959,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 15832
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6540
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5839
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4508
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4962
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9150
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-012",
+   "scenario": "partial-2026-10-06",
+   "file": "012.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:ba307eb3bfb0487db32be2683022cde0",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:17.470630Z",
+   "total_elapsed_us": 41838,
+   "call_elapsed_us_sum": 39657,
+   "assembly_elapsed_us": 2181,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 10944
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4978
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4988
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4526
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4599
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9622
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-013",
+   "scenario": "partial-2026-10-06",
+   "file": "013.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:7e121085da254ce78c72de8823bfee45",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:17.599920Z",
+   "total_elapsed_us": 36883,
+   "call_elapsed_us_sum": 34795,
+   "assembly_elapsed_us": 2088,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9815
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4255
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4082
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4236
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4046
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8361
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-014",
+   "scenario": "partial-2026-10-06",
+   "file": "014.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:c80da81cffa042b0b9ab7f723301e0c0",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:17.727025Z",
+   "total_elapsed_us": 45634,
+   "call_elapsed_us_sum": 43500,
+   "assembly_elapsed_us": 2134,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9432
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4492
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4133
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4183
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5030
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 16230
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-015",
+   "scenario": "partial-2026-10-06",
+   "file": "015.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:484bfbb913504863aecf8d9b69f14c05",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:17.861366Z",
+   "total_elapsed_us": 34946,
+   "call_elapsed_us_sum": 33049,
+   "assembly_elapsed_us": 1897,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 10086
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4125
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3830
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3686
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3813
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7509
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-016",
+   "scenario": "partial-2026-10-06",
+   "file": "016.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:278dd47295b74ed7bdcd97fa261de5df",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:17.980750Z",
+   "total_elapsed_us": 38193,
+   "call_elapsed_us_sum": 36260,
+   "assembly_elapsed_us": 1933,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11472
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5960
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4197
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3743
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3849
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7039
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-017",
+   "scenario": "partial-2026-10-06",
+   "file": "017.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:2afaf824371e4f4288b20c930645220f",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:18.105450Z",
+   "total_elapsed_us": 34446,
+   "call_elapsed_us_sum": 32590,
+   "assembly_elapsed_us": 1856,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 10171
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3812
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3655
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3682
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3663
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7607
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-018",
+   "scenario": "partial-2026-10-06",
+   "file": "018.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:3286308397964247b6fb90c2f27c8d0a",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:18.225417Z",
+   "total_elapsed_us": 48699,
+   "call_elapsed_us_sum": 46834,
+   "assembly_elapsed_us": 1865,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 13690
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8442
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7216
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4786
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4152
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8548
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-019",
+   "scenario": "partial-2026-10-06",
+   "file": "019.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:9db8a80b6ec444f7bb5a6e7383d864c4",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:18.359156Z",
+   "total_elapsed_us": 45262,
+   "call_elapsed_us_sum": 43366,
+   "assembly_elapsed_us": 1896,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11404
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6451
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6722
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6874
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3953
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7962
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-020",
+   "scenario": "partial-2026-10-06",
+   "file": "020.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:552aa89f49bb4c0c87c56a16c086c1ab",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:18.488442Z",
+   "total_elapsed_us": 47420,
+   "call_elapsed_us_sum": 45645,
+   "assembly_elapsed_us": 1775,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 14156
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9349
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6228
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4180
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3794
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7938
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-021",
+   "scenario": "partial-2026-10-06",
+   "file": "021.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:555f9e8be5824572b033279741e96681",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:18.620043Z",
+   "total_elapsed_us": 46798,
+   "call_elapsed_us_sum": 44902,
+   "assembly_elapsed_us": 1896,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 15623
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7327
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6294
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4062
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3887
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7709
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-022",
+   "scenario": "partial-2026-10-06",
+   "file": "022.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:3183bf3296864c0fa280a7a359b53d27",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:18.752557Z",
+   "total_elapsed_us": 46144,
+   "call_elapsed_us_sum": 44322,
+   "assembly_elapsed_us": 1822,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11540
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6625
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7001
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5923
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3922
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9311
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-023",
+   "scenario": "partial-2026-10-06",
+   "file": "023.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:bff7339435b24e47bea0a9d9d4e7bb97",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:18.886139Z",
+   "total_elapsed_us": 32192,
+   "call_elapsed_us_sum": 30392,
+   "assembly_elapsed_us": 1800,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8860
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3999
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3456
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3480
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3536
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7061
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-024",
+   "scenario": "partial-2026-10-06",
+   "file": "024.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:f7f6f7847a664513a7ec1e2e8f1a98a6",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:19.002289Z",
+   "total_elapsed_us": 45453,
+   "call_elapsed_us_sum": 43674,
+   "assembly_elapsed_us": 1779,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11286
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6331
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6193
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6283
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5494
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8087
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-025",
+   "scenario": "partial-2026-10-06",
+   "file": "025.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:fe20797488764be48c6662cb4e806ed8",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:19.131176Z",
+   "total_elapsed_us": 46609,
+   "call_elapsed_us_sum": 44796,
+   "assembly_elapsed_us": 1813,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11076
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6225
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6814
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6821
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6298
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7562
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-026",
+   "scenario": "partial-2026-10-06",
+   "file": "026.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:096e549bc0c445e2852bdae3a83264d0",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:19.260498Z",
+   "total_elapsed_us": 49497,
+   "call_elapsed_us_sum": 47624,
+   "assembly_elapsed_us": 1873,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11576
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7214
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6870
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6700
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6816
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8448
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-027",
+   "scenario": "partial-2026-10-06",
+   "file": "027.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:545edae33a2548d3a82f388c7cbaa8bf",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:19.396312Z",
+   "total_elapsed_us": 41645,
+   "call_elapsed_us_sum": 39795,
+   "assembly_elapsed_us": 1850,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 12697
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6830
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5447
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3648
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3579
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7594
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-028",
+   "scenario": "partial-2026-10-06",
+   "file": "028.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:7cb80b9af7c34d94a64cd4f895cdb1dc",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:19.521680Z",
+   "total_elapsed_us": 44621,
+   "call_elapsed_us_sum": 42900,
+   "assembly_elapsed_us": 1721,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11706
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6534
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6286
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6123
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4899
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7352
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-029",
+   "scenario": "partial-2026-10-06",
+   "file": "029.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:2295003b2a6640ae8f61e2a1547ac11f",
+   "preparation_id": "consultation-preparation:sha256:f005276c2e1c96c5e3bbf33b930ecc566e860d34d1e6226ccfd2a314b7ee3c00",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-10-06",
+   "status": "PARTIAL",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:19.650412Z",
+   "total_elapsed_us": 37761,
+   "call_elapsed_us_sum": 35862,
+   "assembly_elapsed_us": 1899,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 3,
+    "record": 1,
+    "total": 6
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11424
+    },
+    {
+     "seq": 2,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5265
+    },
+    {
+     "seq": 3,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3623
+    },
+    {
+     "seq": 4,
+     "kind": "rule_evidence",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 3598
+    },
+    {
+     "seq": 5,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 4018
+    },
+    {
+     "seq": 6,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7934
+    }
+   ],
+   "consultation_id": "metrics-partial-2026-10-06-030",
+   "scenario": "partial-2026-10-06",
+   "file": "030.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:b19f6c6140204409bee7b8dc6c87b760",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:19.772810Z",
+   "total_elapsed_us": 37404,
+   "call_elapsed_us_sum": 36001,
+   "assembly_elapsed_us": 1403,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11265
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 12056
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 201,
+     "elapsed_us": 12680
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-001",
+   "scenario": "hold-2026-09-30",
+   "file": "001.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:1569a00da39146f3b5e1a4f95e8a912e",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:19.898331Z",
+   "total_elapsed_us": 26866,
+   "call_elapsed_us_sum": 25417,
+   "assembly_elapsed_us": 1449,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8686
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6638
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 10093
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-002",
+   "scenario": "hold-2026-09-30",
+   "file": "002.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:0127b4aad13b42bca07d0fb53bc1f437",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:20.010501Z",
+   "total_elapsed_us": 30876,
+   "call_elapsed_us_sum": 29491,
+   "assembly_elapsed_us": 1385,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11511
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8276
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9704
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-003",
+   "scenario": "hold-2026-09-30",
+   "file": "003.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:66c6501e8a9f4e5ea501df19dfc3d1d0",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:20.128710Z",
+   "total_elapsed_us": 27781,
+   "call_elapsed_us_sum": 26355,
+   "assembly_elapsed_us": 1426,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 10892
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6055
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9408
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-004",
+   "scenario": "hold-2026-09-30",
+   "file": "004.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:d8c887fcb167493faeb7d4bb40e6b119",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:20.240554Z",
+   "total_elapsed_us": 36636,
+   "call_elapsed_us_sum": 35234,
+   "assembly_elapsed_us": 1402,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11842
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11773
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11619
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-005",
+   "scenario": "hold-2026-09-30",
+   "file": "005.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:a86c66163a1f42229ec8c0872bf41159",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:20.363403Z",
+   "total_elapsed_us": 35218,
+   "call_elapsed_us_sum": 33886,
+   "assembly_elapsed_us": 1332,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11384
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9718
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 12784
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-006",
+   "scenario": "hold-2026-09-30",
+   "file": "006.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:d67bd459105d4666b750af28a516b8bc",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:20.483247Z",
+   "total_elapsed_us": 35360,
+   "call_elapsed_us_sum": 33919,
+   "assembly_elapsed_us": 1441,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11086
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9224
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 13609
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-007",
+   "scenario": "hold-2026-09-30",
+   "file": "007.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:0c83fe0a9ea8433f979a6e479b9da7ac",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:20.603290Z",
+   "total_elapsed_us": 33202,
+   "call_elapsed_us_sum": 31848,
+   "assembly_elapsed_us": 1354,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11037
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9692
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11119
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-008",
+   "scenario": "hold-2026-09-30",
+   "file": "008.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:0d2a94093d124c46b0c20334396a9a31",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:20.737029Z",
+   "total_elapsed_us": 65623,
+   "call_elapsed_us_sum": 63327,
+   "assembly_elapsed_us": 2296,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 31893
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 18206
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 13228
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-009",
+   "scenario": "hold-2026-09-30",
+   "file": "009.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:5de97383431c4c5499594d8b925a9247",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:20.903183Z",
+   "total_elapsed_us": 32806,
+   "call_elapsed_us_sum": 31224,
+   "assembly_elapsed_us": 1582,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11630
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7499
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 12095
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-010",
+   "scenario": "hold-2026-09-30",
+   "file": "010.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:75b636ec65e54278950f0145c586fb4f",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:21.032520Z",
+   "total_elapsed_us": 25176,
+   "call_elapsed_us_sum": 23818,
+   "assembly_elapsed_us": 1358,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9129
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5589
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9100
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-011",
+   "scenario": "hold-2026-09-30",
+   "file": "011.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:58edc7c468e34af3911a64c441c28eb3",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:21.142705Z",
+   "total_elapsed_us": 25021,
+   "call_elapsed_us_sum": 23642,
+   "assembly_elapsed_us": 1379,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8408
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5397
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9837
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-012",
+   "scenario": "hold-2026-09-30",
+   "file": "012.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:4525dda896c542d5b76f55d31771085d",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:21.253469Z",
+   "total_elapsed_us": 25372,
+   "call_elapsed_us_sum": 23845,
+   "assembly_elapsed_us": 1527,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 10429
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5031
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8385
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-013",
+   "scenario": "hold-2026-09-30",
+   "file": "013.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:9467331c9ae5456f9ab045316ae24ca4",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:21.364266Z",
+   "total_elapsed_us": 36098,
+   "call_elapsed_us_sum": 34763,
+   "assembly_elapsed_us": 1335,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11306
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 10297
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 13160
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-014",
+   "scenario": "hold-2026-09-30",
+   "file": "014.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:18e5ac3de465488c8217f26f39cafd92",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:21.485375Z",
+   "total_elapsed_us": 36150,
+   "call_elapsed_us_sum": 34771,
+   "assembly_elapsed_us": 1379,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11518
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 10121
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 13132
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-015",
+   "scenario": "hold-2026-09-30",
+   "file": "015.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:9625a093cff7469bad60f39e415e9535",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:21.606139Z",
+   "total_elapsed_us": 36676,
+   "call_elapsed_us_sum": 35334,
+   "assembly_elapsed_us": 1342,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11417
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 10167
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 13750
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-016",
+   "scenario": "hold-2026-09-30",
+   "file": "016.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:d68e97b729964c34ac25577e5119da90",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:21.727523Z",
+   "total_elapsed_us": 35064,
+   "call_elapsed_us_sum": 33740,
+   "assembly_elapsed_us": 1324,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 10927
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9372
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 13441
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-017",
+   "scenario": "hold-2026-09-30",
+   "file": "017.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:73e5576f9d874c0b98ff037c0e09b767",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:21.846493Z",
+   "total_elapsed_us": 35612,
+   "call_elapsed_us_sum": 34287,
+   "assembly_elapsed_us": 1325,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11662
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 10545
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 12080
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-018",
+   "scenario": "hold-2026-09-30",
+   "file": "018.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:a470fce017b44756ad4e023f7551880d",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:21.968046Z",
+   "total_elapsed_us": 24448,
+   "call_elapsed_us_sum": 23020,
+   "assembly_elapsed_us": 1428,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8966
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6205
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7849
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-019",
+   "scenario": "hold-2026-09-30",
+   "file": "019.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:a76e1ec3d5e44e1990709aa8fd6bdd73",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:22.079231Z",
+   "total_elapsed_us": 24504,
+   "call_elapsed_us_sum": 23109,
+   "assembly_elapsed_us": 1395,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8958
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5429
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8722
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-020",
+   "scenario": "hold-2026-09-30",
+   "file": "020.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:d35807d80ac44fc5abfc692f60f06f80",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:22.187424Z",
+   "total_elapsed_us": 32815,
+   "call_elapsed_us_sum": 31332,
+   "assembly_elapsed_us": 1483,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 12373
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9388
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9571
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-021",
+   "scenario": "hold-2026-09-30",
+   "file": "021.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:64fe3d99202a40f7a5a59347a530a945",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:22.307980Z",
+   "total_elapsed_us": 36654,
+   "call_elapsed_us_sum": 35196,
+   "assembly_elapsed_us": 1458,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11211
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9222
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 14763
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-022",
+   "scenario": "hold-2026-09-30",
+   "file": "022.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:901d5a379354428a9b917512e1afc14d",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:22.429092Z",
+   "total_elapsed_us": 39105,
+   "call_elapsed_us_sum": 37527,
+   "assembly_elapsed_us": 1578,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 12557
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11948
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 13022
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-023",
+   "scenario": "hold-2026-09-30",
+   "file": "023.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:95b47938a14d42b68681a360757f9cdb",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:22.552728Z",
+   "total_elapsed_us": 36182,
+   "call_elapsed_us_sum": 34704,
+   "assembly_elapsed_us": 1478,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11190
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9384
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 14130
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-024",
+   "scenario": "hold-2026-09-30",
+   "file": "024.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:f25739b844c74d5e8be82d1179e7c328",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:22.686928Z",
+   "total_elapsed_us": 33481,
+   "call_elapsed_us_sum": 31956,
+   "assembly_elapsed_us": 1525,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 10503
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7965
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 13488
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-025",
+   "scenario": "hold-2026-09-30",
+   "file": "025.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:d54a92e20db0424c9ed7553fad5c4a73",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:22.821599Z",
+   "total_elapsed_us": 29279,
+   "call_elapsed_us_sum": 27694,
+   "assembly_elapsed_us": 1585,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 10729
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 7082
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9883
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-026",
+   "scenario": "hold-2026-09-30",
+   "file": "026.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:1390b550f9c4409bab682261d019409d",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:22.936712Z",
+   "total_elapsed_us": 24317,
+   "call_elapsed_us_sum": 22848,
+   "assembly_elapsed_us": 1469,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8359
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5564
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8925
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-027",
+   "scenario": "hold-2026-09-30",
+   "file": "027.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:e242f2ffe74e4628b7bbfb82a04c264b",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:23.051242Z",
+   "total_elapsed_us": 24468,
+   "call_elapsed_us_sum": 23056,
+   "assembly_elapsed_us": 1412,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8882
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 5365
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8809
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-028",
+   "scenario": "hold-2026-09-30",
+   "file": "028.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:9133889207fc45f0a88c59150eec8061",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:23.162966Z",
+   "total_elapsed_us": 31146,
+   "call_elapsed_us_sum": 29795,
+   "assembly_elapsed_us": 1351,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11773
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 9072
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8950
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-029",
+   "scenario": "hold-2026-09-30",
+   "file": "029.metrics.json"
+  },
+  {
+   "metrics_version": "ai-call-metrics-v1",
+   "run_id": "consultation-preparation-run:b76f0c8c464f478784e4da0c0b970140",
+   "preparation_id": "consultation-preparation:sha256:1cc7e25a10066fee23a0648eed66ec623a4e5c46cea08c10e3a494b3fb9750f4",
+   "application_id": "SW-APPLICATION-001",
+   "business_date": "2026-09-30",
+   "status": "HOLD",
+   "record_status": "ALREADY_RECORDED",
+   "recorded": true,
+   "started_at": "2026-10-09T12:22:23.278148Z",
+   "total_elapsed_us": 28461,
+   "call_elapsed_us_sum": 27085,
+   "assembly_elapsed_us": 1376,
+   "counts": {
+    "applicable_checklist": 2,
+    "rule_evidence": 0,
+    "record": 1,
+    "total": 3
+   },
+   "calls": [
+    {
+     "seq": 1,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-PREPAYMENT-FEE",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 11643
+    },
+    {
+     "seq": 2,
+     "kind": "applicable_checklist",
+     "family_id": "SIN-SELLER-CHECKLIST",
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 6735
+    },
+    {
+     "seq": 3,
+     "kind": "record",
+     "family_id": null,
+     "outcome": "OK",
+     "http_status": 200,
+     "elapsed_us": 8707
+    }
+   ],
+   "consultation_id": "metrics-hold-2026-09-30-030",
+   "scenario": "hold-2026-09-30",
+   "file": "030.metrics.json"
+  }
+ ]
+}
