@@ -101,7 +101,27 @@ final class SearchDocuments {
         return text.toString();
     }
 
+    /** 색인 설정(분석기·mapping·reindex 버전)의 해시. 문서 내용이 같아도 설정이 다르면 새 색인을 만든다. */
+    String settingsHash(String analyzer) {
+        ObjectNode definition = (ObjectNode) indexDefinition(analyzer, "", "", 0, Instant.EPOCH);
+        ((ObjectNode) definition.get("mappings")).remove("_meta");
+        return hasher.canonicalize(definition).sha256();
+    }
+
+    /** 색인 이름 접미사: 내용 해시와 설정 해시를 합친 해시의 앞 12자. */
+    String indexSuffix(String contentHash, String settingsHash) {
+        ObjectNode subject = mapper.createObjectNode();
+        subject.put("content_hash", contentHash);
+        subject.put("settings_hash", settingsHash);
+        String digest = hasher.canonicalize(subject).sha256();
+        return digest.substring("sha256:".length(), "sha256:".length() + 12);
+    }
+
     JsonNode indexDefinition(String analyzer, String workspaceId, String contentHash, int documentCount, Instant indexedAt) {
+        return indexDefinition(analyzer, workspaceId, contentHash, null, documentCount, indexedAt);
+    }
+
+    JsonNode indexDefinition(String analyzer, String workspaceId, String contentHash, String settingsHash, int documentCount, Instant indexedAt) {
         ObjectNode definition = mapper.createObjectNode();
         ObjectNode settings = definition.putObject("settings");
         settings.putObject("index").put("number_of_shards", 1).put("number_of_replicas", 0);
@@ -115,6 +135,7 @@ final class SearchDocuments {
         meta.put("reindex_version", REINDEX_VERSION);
         meta.put("workspace_id", workspaceId);
         meta.put("content_hash", contentHash);
+        if (settingsHash != null) meta.put("settings_hash", settingsHash);
         meta.put("document_count", documentCount);
         meta.put("analyzer", analyzer);
         meta.put("indexed_at", indexedAt.toString());

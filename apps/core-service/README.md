@@ -116,7 +116,7 @@ TRUST_AGENT_ES_REINDEX_USERNAME=trustagent_reindex TRUST_AGENT_ES_REINDEX_PASSWO
   --args='--spring.main.web-application-type=none --trust-agent.search-reindex.enabled=true'
 ```
 
-재색인은 새 색인 `trustagent-rule-evidence-<workspace>-<내용 해시 12자>`를 만들고 alias `trustagent-rule-evidence-<workspace>-current`를 바꾼 뒤 옛 색인을 지웁니다. 내용 해시가 같은 색인이 이미 alias를 가리키면 아무것도 만들지 않습니다(두 번 실행해도 문서 수와 해시 불변). 실패하면 alias를 바꾸지 않아 옛 색인이 남습니다. 분석기는 `TRUST_AGENT_ES_ANALYZER`(standard 기본, nori는 플러그인 필요)로 고르며 초기 점검용 자료로 비교해 확정합니다. ES 구성은 `infra/docker/compose.search.yml`, 사용자 분리는 `infra/docker/search/init-users.sh`입니다.
+재색인은 새 색인 `trustagent-rule-evidence-<workspace>-<내용 해시 12자>`를 만들고 alias `trustagent-rule-evidence-<workspace>-current`를 바꾼 뒤 옛 색인을 지웁니다. 내용 해시와 설정 해시(분석기·mapping)가 같은 색인이 이미 alias를 가리키고 문서 수가 맞으면 아무것도 만들지 않습니다(두 번 실행해도 문서 수와 해시 불변). 분석기를 바꾸면 새 색인입니다. alias가 가리키는 현재 색인은 새 색인의 준비·검증·전환 전에는 지우지 않으며, 실패하면 alias를 바꾸지 않아 옛 색인이 그대로 남습니다. 분석기는 `TRUST_AGENT_ES_ANALYZER`(standard 기본, nori는 플러그인 필요)로 고르며 초기 점검용 자료로 비교해 확정합니다. ES 구성은 `infra/docker/compose.search.yml`, 사용자 분리는 `infra/docker/search/init-users.sh`입니다.
 
 **한계(수동 재색인).** 사람 결정이나 철회 적재 뒤 runner를 실행하기 전까지 새로 승인된 규정은 검색 후보에 없고, 철회된 규정은 색인에 남아 있을 수 있습니다. 남아 있는 쪽은 Core 재확인이 막지만 새 규정의 누락은 막지 못합니다. 승인 체험(TASK-027)은 승인 뒤 색인 갱신까지 검증합니다. 자동 전달은 별도 ADR입니다.
 

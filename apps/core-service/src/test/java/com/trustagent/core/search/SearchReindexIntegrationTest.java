@@ -2,6 +2,7 @@ package com.trustagent.core.search;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -144,6 +145,39 @@ class SearchReindexIntegrationTest {
 
     @Test
     @Order(4)
+    void sameRuleVersionInTwoScheduleRangesIsReturnedTwiceButIndexedOnce() {
+        // 같은 승인 버전이 최신 일정 revision의 두 구간([09-15,10-01), [10-01,∞))에 있으면 저장소는 규칙마다 두 줄을 돌려주지만
+        // 현재 문서 생성(문서 ID = 규칙 version ID)은 시행일이 늦은 구간 하나만 남긴다. 과거 구간이 색인에서 사라지는 현재 한계를 고정해 둔다(ADR-013 판단 대기).
+        String versionId = jdbc.sql("""
+                select d.approved_checklist_version_id from human_review_decision d
+                join approved_checklist_version v on v.approved_checklist_version_id = d.approved_checklist_version_id
+                where v.family_id = 'SIN-PREPAYMENT-FEE' and d.decision = 'APPROVE'
+                """).query(String.class).single();
+        String latest = jdbc.sql("""
+                select r.schedule_revision_id from approved_checklist_schedule_revision r
+                where r.family_id = 'SIN-PREPAYMENT-FEE' and not exists (
+                    select 1 from approved_checklist_schedule_revision s where s.supersedes_schedule_revision_id = r.schedule_revision_id)
+                """).query(String.class).single();
+        String revision = "checklist-schedule:" + "d".repeat(32);
+        jdbc.sql("insert into approved_checklist_schedule_revision values (:id, 'SYNTHETIC_INTERNAL', 'SIN-PREPAYMENT-FEE', :supersedes, '2026-10-06T02:00:00Z', :hash)")
+                .param("id", revision).param("supersedes", latest).param("hash", "sha256:" + "d".repeat(64)).update();
+        jdbc.sql("insert into approved_checklist_schedule_entry values (:id, 'SIN-PREPAYMENT-FEE', 0, :version, '2026-09-15', '2026-10-01', :hash)")
+                .param("id", revision).param("version", versionId).param("hash", "sha256:" + "d".repeat(64)).update();
+        jdbc.sql("insert into approved_checklist_schedule_entry values (:id, 'SIN-PREPAYMENT-FEE', 1, :version, '2026-10-01', null, :hash)")
+                .param("id", revision).param("version", versionId).param("hash", "sha256:" + "d".repeat(64)).update();
+
+        List<IndexedRule> rows = new RuleEvidenceIndexRepository(jdbc).loadApprovedRules();
+        assertEquals(6, rows.stream().filter(rule -> rule.familyId().equals("SIN-PREPAYMENT-FEE")).count(), "규칙 3개 × 구간 2개");
+        assertTrue(rows.stream().anyMatch(rule -> rule.effectiveFrom().toString().equals("2026-09-15")));
+        SearchDocuments.Built built = new SearchDocuments(mapper).build(rows, CLOCK.instant());
+        assertEquals(3, built.documents().stream().filter(doc -> doc.get("family_id").stringValue().equals("SIN-PREPAYMENT-FEE")).count());
+        assertTrue(built.documents().stream().noneMatch(doc -> "2026-09-15".equals(doc.get("effective_from").stringValue())),
+                "현재 한계: 과거 구간은 문서에 남지 않는다(대안은 evidence 참조)");
+        assertEquals(SearchReindexService.Outcome.ALREADY_CURRENT, service.reindex().outcome(), "문서 내용은 같으므로 재색인 생략");
+    }
+
+    @Test
+    @Order(5)
     void approvingAnotherFamilyAddsItsRulesAndReplacesIndex() {
         PreparationScenario.approveSeller(jdbc, mapper, PreparationScenario.manager(dataSource), CLOCK, state.sellerProposalId());
         SearchReindexService.Result result = service.reindex();
@@ -160,7 +194,7 @@ class SearchReindexIntegrationTest {
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     void withdrawnNoticeRulesDisappearAfterReindex() {
         jdbc.sql("""
                 insert into internal_notice_lifecycle_event values
@@ -177,7 +211,54 @@ class SearchReindexIntegrationTest {
     }
 
     @Test
-    @Order(6)
+    @Order(7)
+    void analyzerChangeIsNotServedByTheExistingIndex() {
+        // 같은 문서, 분석기만 nori로 바꾸면 생략하지 않고 새 색인을 만들려 한다. 이 환경에는 nori 플러그인이 없어 생성이 실패하고 기존 alias는 그대로다.
+        String current = elasticsearch.aliasTarget(properties.alias()).orElseThrow();
+        SearchProperties nori = new SearchProperties(properties.baseUrl(), properties.username(), properties.password(), properties.indexPrefix(),
+                properties.workspaceId(), SearchProperties.ANALYZER_NORI, properties.timeout());
+        SearchReindexService noriService = new SearchReindexService(JdbcClient.create(dataSource), elasticsearch, nori, mapper, CLOCK);
+        SearchIndexException error = assertThrows(SearchIndexException.class, noriService::reindex);
+        assertEquals("SEARCH_INDEX_CREATE_FAILED", error.code(), "생략(ALREADY_CURRENT)이 아니라 새 색인 생성을 시도했다");
+        assertTrue(error.getMessage().contains("nori"), error.getMessage());
+        assertEquals(current, elasticsearch.aliasTarget(properties.alias()).orElseThrow());
+        assertEquals(List.of(current), elasticsearch.indicesWithPrefix(properties.indexNamePrefix()));
+        assertEquals(SearchReindexService.Outcome.ALREADY_CURRENT, service.reindex().outcome(), "standard로 돌아오면 기존 색인을 그대로 쓴다");
+    }
+
+    @Test
+    @Order(8)
+    void currentIndexWithUnexpectedDocumentCountIsNeverDeletedBeforeSwap() {
+        // 현재 색인 이름은 예상과 같지만 문서가 하나 지워진 상태. 실패 주입 시 alias·검색 가능 상태가 유지되고, 성공 시 다른 이름의 새 색인으로 전환한다.
+        String current = elasticsearch.aliasTarget(properties.alias()).orElseThrow();
+        String victim = indexedIds().iterator().next();
+        ElasticsearchClient.Response deleted = elasticsearch.exchange("DELETE", "/" + current + "/_doc/" + victim + "?refresh=true", null, null);
+        assertEquals(200, deleted.status());
+        long expected = new SearchDocuments(mapper).build(new RuleEvidenceIndexRepository(jdbc).loadApprovedRules(), CLOCK.instant()).documents().size();
+        assertEquals(expected - 1, elasticsearch.count(current));
+
+        ElasticsearchClient failing = new ElasticsearchClient(ElasticsearchTestContainer.baseUrl(), ElasticsearchTestContainer.REINDEX_USER,
+                ElasticsearchTestContainer.REINDEX_PASSWORD, Duration.ofSeconds(10), mapper) {
+            @Override
+            public void refresh(String index) {
+                throw new SearchIndexException("SEARCH_REFRESH_FAILED", "주입한 실패");
+            }
+        };
+        assertThrows(SearchIndexException.class, () -> new SearchReindexService(JdbcClient.create(dataSource), failing, properties, mapper, CLOCK).reindex());
+        assertEquals(current, elasticsearch.aliasTarget(properties.alias()).orElseThrow(), "실패해도 현재 색인은 지워지지 않는다");
+        assertEquals(expected - 1, elasticsearch.count(properties.alias()), "검색 가능 상태 유지");
+        assertEquals(List.of(current), elasticsearch.indicesWithPrefix(properties.indexNamePrefix()), "부분 색인은 남지 않는다");
+
+        SearchReindexService.Result repaired = service.reindex();
+        assertEquals(SearchReindexService.Outcome.CREATED, repaired.outcome());
+        assertNotEquals(current, repaired.indexName(), "현재 이름과 다른 이름으로 만든 뒤 전환한다");
+        assertTrue(repaired.indexName().startsWith(current + "-r"), repaired.indexName());
+        assertEquals(List.of(current), repaired.removedIndices());
+        assertEquals(expected, elasticsearch.count(properties.alias()));
+    }
+
+    @Test
+    @Order(9)
     void failedReindexKeepsCurrentIndexAndAliasAndRemovesPartialIndex() {
         // 내용이 바뀐 상태(셀러론 v2도 철회 → 문서 0개)에서 refresh 단계가 실패하면 alias와 기존 색인(셀러론 3개)이 그대로 남아야 한다.
         jdbc.sql("""
@@ -209,7 +290,7 @@ class SearchReindexIntegrationTest {
     }
 
     @Test
-    @Order(7)
+    @Order(10)
     void readOnlySearchUserCannotWriteButCanSearch() {
         ElasticsearchClient searchUser = new ElasticsearchClient(ElasticsearchTestContainer.baseUrl(), ElasticsearchTestContainer.SEARCH_USER,
                 ElasticsearchTestContainer.SEARCH_PASSWORD, Duration.ofSeconds(10), mapper);

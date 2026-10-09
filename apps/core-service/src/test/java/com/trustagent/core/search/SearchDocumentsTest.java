@@ -49,6 +49,19 @@ class SearchDocumentsTest {
     }
 
     @Test
+    void settingsHashAndIndexNameChangeWhenOnlyTheAnalyzerChanges() {
+        String standard = documents.settingsHash("standard");
+        String nori = documents.settingsHash("nori");
+        assertNotEquals(standard, nori, "분석기만 달라도 설정 해시가 다르다");
+        assertEquals(standard, documents.settingsHash("standard"), "같은 설정이면 같은 해시");
+        String content = "sha256:" + "a".repeat(64);
+        assertNotEquals(documents.indexSuffix(content, standard), documents.indexSuffix(content, nori), "같은 문서라도 분석기가 다르면 색인 이름이 다르다");
+        assertEquals(12, documents.indexSuffix(content, standard).length());
+        var definition = documents.indexDefinition("standard", "main", content, standard, 1, Instant.parse("2026-10-06T03:00:00Z"));
+        assertEquals(standard, definition.path("mappings").path("_meta").path("settings_hash").stringValue());
+    }
+
+    @Test
     void indexDefinitionUsesStrictMappingAndRequestedAnalyzer() {
         var definition = documents.indexDefinition("nori", "main", "sha256:" + "0".repeat(64), 3, Instant.parse("2026-10-06T03:00:00Z"));
         assertEquals("strict", definition.path("mappings").path("dynamic").stringValue());
