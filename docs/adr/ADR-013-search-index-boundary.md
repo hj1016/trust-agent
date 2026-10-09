@@ -2,7 +2,7 @@
 
 ## 상태
 
-승인 (결정자 사용자, PR #44. 승인 범위: 승인된 근거만 색인(B), Core 최종 재확인, 행원용 응답과 진단 응답 분리. TASK-014 평가 항목은 유지하며 아래 '보장 조건 대응'이 색인 불변식과 질의 시점 필터의 책임을 명시한다)
+승인 (결정자 사용자, PR #44. 승인 범위: 승인된 근거만 색인(B), Core 최종 재확인, 행원용 응답과 진단 응답 분리. PR #49 검토로 3-1항(문서 하나에 적용기간 여러 개, 충돌 시 병합 금지)을 개정 반영. TASK-014 평가 항목은 유지하며 아래 '보장 조건 대응'이 색인 불변식과 질의 시점 필터의 책임을 명시한다)
 
 ## 배경
 
@@ -12,7 +12,8 @@ TASK-016은 Elasticsearch BM25 + metadata filter + Core Tool 재확인으로 근
 
 1. **승인 근거만 색인한다.** 색인 문서는 HUMAN_REVIEW 출처 승인 checklist 항목이 가리키는 규칙 version당 하나이며, 미승인·반려·철회·FIXTURE 규칙은 색인에 없다. 색인은 전체 재구축 뒤 alias 교체로 갱신하므로 승인 상태에서 빠진 규칙은 색인에서 사라진다. 업무일 필터는 그 승인 checklist 일정 revision의 `effective_from/to`로 적용한다.
 2. **ES는 ID와 점수만 돌려준다.** 행원에게 가는 문장, 위치, 해시, 구조화 값은 전부 Core Tool 2와 Tool 1 응답에서만 온다. ES 문서 본문은 응답에 쓰지 않는다. ES는 업무 원장이 아니며(CLAUDE.md) Core 재확인 없이 어떤 결과도 나가지 않는다.
-3. **색인 문서 필드는 Tool 2가 내줄 수 있는 범위를 넘지 않는다.** `rule_version_id`, `family_id`, `notice_id`, `rule_key`, 규칙 문장, 구조화 값을 문장화한 텍스트, `approved_checklist_version_id`, `effective_from/to`, `dataset_class`, `synthetic`, `source_hash`. 공문 본문 전체, 변경안, 검증 결과, 검수자 ID는 넣지 않는다.
+3. **색인 문서 필드는 Tool 1·2가 내줄 수 있는 범위를 넘지 않는다.** `rule_version_id`, `family_id`, `notice_id`, `rule_key`, 규칙 문장, 구조화 값을 문장화한 텍스트, 원문 위치·해시, `approvals[]`(승인 checklist version ID, 결정 ID, 적용 시작·종료), `effective_ranges[]`(date_range), `dataset_class`, `synthetic`, `source_hash`. 공문 본문 전체, 변경안, 검증 결과, 검수자 ID는 넣지 않는다.
+3-1. **문서 하나, 적용기간 여러 개(개정, PR #49 검토 반영).** 문서 ID는 규칙 version ID 하나다. 같은 규칙 version이 여러 승인 checklist나 일정 구간에 쓰이면 문서를 나누거나 구간을 합치지 않고, `approvals[]`에 승인 version·결정 ID와 구간을 각각 적고 `effective_ranges[]`에 같은 구간을 date_range로 담는다. 구간은 시작 포함·종료 제외(`[from, to)`, 승인 일정의 `daterange(from, to, '[)')`와 같음)이며 종료가 없으면 무기한이다. 업무일 필터는 `effective_ranges`에 대한 range 질의(한 날짜, `relation: intersects`)로 하고 구간 사이 공백은 후보에서 빠진다. **같은 규칙 version인데 문장·위치·해시·구조화 값·공문군이 승인 checklist마다 다르면 병합하지 않고 재색인을 `SEARCH_RULE_CONFLICT`로 중단한다**(기존 alias 유지). 원인은 사람이 확인한다.
 4. **제외 조건의 책임을 둘로 나눈다.** "승인 근거만"과 "구버전 제외"는 색인 불변식(재색인 뒤 ES 문서 집합 = 승인 checklist 항목의 규칙 version 집합)으로 보장하고 통합 테스트가 확인한다. "요청 공문군만"과 "현재 적용 공문만"은 질의 시점 필터로 적용하고 TASK-014의 검색 단계 지표로 측정한다. 평가 결과 파일에 이 구분을 적는다. TASK-014의 지표 정의는 바꾸지 않는다.
 5. **진단 정보는 행원 응답과 분리한다.** 재확인 전 후보 ID와 점수, 제거된 후보와 사유는 평가 하네스가 켜는 진단 모드(내부망 전용 설정)에서만 반환하고, 행원용 응답에는 Core를 통과한 근거만 담는다.
 6. **재색인은 Core가 소유한다.** 업무 DB를 읽어 ES에 쓰는 재색인 runner는 Core에 있고 멱등이다(두 번 실행 시 문서 수와 내용 해시 불변). AI 서비스는 ES를 읽기만 하고 ES 쓰기 자격증명을 갖지 않는다. 사람 결정과 철회 적재 뒤 재색인을 실행한다. Core 재확인이 재색인 사이의 상태 변화를 막는다.
@@ -49,7 +50,7 @@ TASK-014의 지표 정의와 계산 방법은 바꾸지 않는다. 아래 표는
 
 ## 세부 설계 (TASK-016에서 이 결정의 범위 안에서 정함)
 
-- 한국어 분석기 선택(nori 플러그인 이미지 vs standard analyzer), 구조화 값의 문장화 규칙, 색인 설정과 alias 이름.
+- 한국어 분석기 선택(nori 플러그인 이미지 vs standard analyzer), 구조화 값의 문장화 규칙, 색인 설정과 alias 이름. 색인 이름은 내용 해시와 설정 해시(분석기·mapping·reindex 버전)로 정하고, alias가 가리키는 현재 색인은 새 색인의 준비·검증·전환 전에 지우지 않는다.
 - 관련성 보류 방식과 값, 버전 표기.
 - 재색인 runner의 설정 키와 실행 시점, 체험 공간별 색인 생성·삭제의 호출 지점(ADR-014·TASK-026).
 - 진단 모드 설정 키와 응답 필드.
