@@ -27,7 +27,7 @@
 
 | ID | 입력/상황 | 기대 결과 | 검증 방법 | 결과/evidence |
 |---|---|---|---|---|
-| AC-01 | PR과 main push | `secret-scan` Job이 실행되고 기존 Job 2개의 설정 diff가 없다 | diff 검토, CI run | diff 확인(아래). CI run은 push 뒤 기록 |
+| AC-01 | PR과 main push | `secret-scan` Job이 실행되고 기존 Job 2개의 설정 diff가 없다 | diff 검토, CI run | diff 확인(아래). PR #42 CI run [37930630013](https://github.com/hj1016/trust-agent/actions/runs/37930630013): Secret scan 통과(7초), 기존 Job 2개 통과 |
 | AC-02 | 설치 단계 | 바이너리 버전 8.30.1과 sha256 고정. 체크섬 불일치면 실패 | 로컬에서 같은 아카이브를 받아 잘못된 체크섬과 올바른 체크섬으로 `shasum -a 256 -c` | 불일치 exit 1, 일치 exit 0 |
 | AC-03 | 현재 저장소 전체 이력 | 탐지 0건, Job 통과 | 로컬 `gitleaks git --redact --no-banner --exit-code 1 .` | 131 commits scanned, no leaks found, exit 0 |
 | AC-04 | 탐지 능력 | scratchpad 임시 저장소에 시험용 패턴(생성된 더미 값)을 커밋하고 같은 명령 실행 → exit 1, 출력과 보고서의 값은 전부 REDACTED | 로컬 실행 | exit 1, 규칙 `aws-access-token`·`generic-api-key` 2건, `Secret == REDACTED` 전부 true. 더미 값은 기록하지 않았고 임시 저장소는 삭제함 |
@@ -56,13 +56,13 @@
 | AC-03 | 같음 | `gitleaks git --redact --no-banner --exit-code 1 .` | gitleaks 8.30.1(darwin_arm64) | 131 commits, no leaks, exit 0 | 이 문서 |
 | AC-04 | scratchpad 임시 저장소 | 같은 명령 + json 보고서 | 같음 | exit 1, 규칙 2종, 값 전부 REDACTED | 이 문서(값 미기록) |
 | AC-05 | 이 브랜치 | `pre-commit run --all-files` | pre-commit 4.6.2 | Passed | 이 문서 |
-| CI run | push 뒤 | GitHub Actions | ubuntu-latest | 미실행(push 미승인) | 추후 링크 |
+| CI run | PR #42 커밋 `a385f13` | GitHub Actions | ubuntu-latest(linux_x64) | Secret scan pass 7s, Python contracts pass, Gradle tests pass | [run 37930630013](https://github.com/hj1016/trust-agent/actions/runs/37930630013) |
 
 ## AI self-review
 
 - 검사 범위: workflow YAML 파싱, 기존 Job 무변경, 체크섬 값이 공식 `gitleaks_8.30.1_checksums.txt`와 일치, 출력에 값이 없음.
 - 발견과 처리: 첫 탐지 시험에서 임의 문자 집합이 규칙 정규식과 맞지 않아 0건이 나왔다. 규칙이 요구하는 문자 집합으로 더미를 다시 만들어 2건 탐지를 확인했다. 시험 자료는 삭제했다.
-- 미해결 위험: CI 러너(linux_x64)에서의 실제 실행은 push 뒤 확인한다. gitleaks 버전 상향은 체크섬과 함께 수동으로 바꿔야 한다. `.private-artifacts/` HTML의 3건은 이 Task 범위 밖이며 사용자 검토가 남아 있다.
+- 미해결 위험: CI 러너(linux_x64) 실행은 PR #42 run으로 확인했다. gitleaks 버전 상향은 체크섬과 함께 수동으로 바꿔야 한다. `.private-artifacts/` HTML의 3건은 이 Task 범위 밖이며 사용자 검토가 남아 있다.
 
 ## 인간 검수와 Explainability Gate
 
