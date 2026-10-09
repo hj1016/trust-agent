@@ -86,3 +86,34 @@ jobs:
         env:
           TRUST_AGENT_REQUIRE_AI_INTEGRATION: "1"
         run: ./gradlew test bootJar --no-daemon -PaiServiceIntegration=true
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install gitleaks with pinned version and checksum
+        # TASK-020: 바이너리 버전과 sha256을 고정한다. 체크섬이 다르면 설치 단계에서 실패한다.
+        # 로컬 pre-commit hook(gitleaks-system)과 같은 `gitleaks git` 검사를 CI에서 전체 이력에 실행한다.
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="8.30.1"
+          archive="gitleaks_${version}_linux_x64.tar.gz"
+          expected_sha256="551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+          curl -fsSL --retry 3 --output "${RUNNER_TEMP}/${archive}" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${version}/${archive}"
+          echo "${expected_sha256}  ${RUNNER_TEMP}/${archive}" | sha256sum --check --strict
+          mkdir -p "${RUNNER_TEMP}/gitleaks"
+          tar -xzf "${RUNNER_TEMP}/${archive}" -C "${RUNNER_TEMP}/gitleaks" gitleaks
+          echo "${RUNNER_TEMP}/gitleaks" >> "${GITHUB_PATH}"
+
+      - name: Scan git history and tracked files
+        # 탐지 값은 --redact로 가려지고 규칙 ID, 커밋, 파일, 줄만 출력된다. allowlist 설정 파일은 두지 않는다.
+        run: gitleaks git --redact --no-banner --exit-code 1 --verbose .
