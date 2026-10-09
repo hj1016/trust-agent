@@ -10,6 +10,34 @@ baseline importer bean을 만들거나 데이터를 자동 적재하지 않습�
 
 Core 업무 DB는 PostgreSQL이며(ADR-009) 이 README의 구현 설명은 PostgreSQL 18.6 기준입니다.
 
+## 사용자 인증·역할·보안 사건 (TASK-017a 첫 PR, ADR-014)
+
+조회 API(`/api/v1/internal-policy/**`, `/api/v1/public-products/**`)와 세션 API는 Spring Security 세션 로그인이 필요합니다. 비인증 요청은 HTML 로그인 페이지나 리다이렉트가 아니라 `401 application/problem+json`(`code: UNAUTHENTICATED`)입니다. Tool 경로(`/api/v1/tools/**`)와 기록 경로(`/api/v1/consultation-preparations`)는 세션·CSRF 없이 기존 서비스 토큰 필터만으로 동작합니다(stateless). actuator도 세션이 필요 없습니다.
+
+```text
+POST /login                      form: username, password (+ 헤더 X-XSRF-TOKEN) → 200 {principal, roles, activeRole, workspaceId}
+POST /logout                     → 204
+GET  /api/v1/session             → 세션 요약
+POST /api/v1/session/active-role {"role":"STAFF"|"REVIEWER"} → 보유하지 않은 역할 403 ROLE_NOT_HELD
+GET  /api/v1/reviews/proposals   REVIEWER 활성만. 변경안 목록(읽기)
+```
+
+역할은 STAFF와 REVIEWER 두 개입니다. 경로마다 **보유 역할**과 **활성 역할**을 둘 다 검사하며, 전환은 재로그인 없이 서버 호출이고 사건으로 기록됩니다. 겸임 계정의 역할 전환은 체험을 위한 단순화이며 실제 금융기관의 직무 분리와 다릅니다. CSRF는 쿠키 토큰 방식(`XSRF-TOKEN` 쿠키 값을 `X-XSRF-TOKEN` 헤더로)이고, 세션 쿠키는 HttpOnly·SameSite=Lax이며 Secure는 `TRUST_AGENT_SESSION_COOKIE_SECURE`(prod 기본 true), 유휴 만료는 `TRUST_AGENT_SESSION_IDLE_TIMEOUT`(기본 8h)입니다.
+
+**필터 순서.** Tool·기록 토큰 필터는 `@Order(HIGHEST_PRECEDENCE + 20·21)`로 Spring Security 필터 체인(순서 -100)보다 먼저 실행됩니다. 보안 체인의 permitAll은 세션 검사를 생략한다는 뜻일 뿐이며 토큰 없는 호출은 그 전에 401로 끝납니다(세션이 있어도 토큰을 대신하지 못함을 테스트가 확인).
+
+**제어 DB.** 사용자·역할·보안 사건은 업무 DB와 분리된 제어 DB(`TRUST_AGENT_CONTROL_DB_URL/USERNAME/PASSWORD`, 별도 Flyway history `flyway_control_schema_history`, migration `db/control`)에 둡니다. 로컬 기본값은 업무 DB 설정으로 대체되지만 이는 **개발 편의용**이며 운영 환경의 분리·격리 검증을 대신하지 않습니다. `prod` profile은 세 설정을 요구하고, 호스트·포트·데이터베이스 이름을 정규화해 업무 DB와 같은 DB를 가리키면(`CONTROL_DB_NOT_SEPARATED`) 또는 같은 계정이면(`CONTROL_DB_ACCOUNT_NOT_SEPARATED`) 기동을 거부합니다. 체험 공간 템플릿(TASK-026)은 제어 표가 없는 업무 DB에서 만들어야 하며 로컬 단일 DB를 템플릿으로 쓰지 않습니다. `security_event`는 append-only이며 본문·토큰·비밀번호를 기록하지 않습니다.
+
+**합성 직원 3명(demo 전용, production 기동 거부).** `SYN-STAFF-01`(STAFF), `SYN-REVIEWER-01`(REVIEWER), `SYN-STAFF-REVIEWER-01`(겸임). 비밀번호는 환경변수 `TRUST_AGENT_DEMO_PASSWORD_SYN_STAFF_01` 등으로만 받아 bcrypt 해시로 저장합니다. 가입·재설정·관리 화면은 없습니다.
+
+```bash
+TRUST_AGENT_DEMO_PASSWORD_SYN_STAFF_01='<값>' TRUST_AGENT_DEMO_PASSWORD_SYN_REVIEWER_01='<값>' TRUST_AGENT_DEMO_PASSWORD_SYN_STAFF_REVIEWER_01='<값>' \
+TRUST_AGENT_CONTROL_FLYWAY_ENABLED=true ./gradlew :apps:core-service:bootRun --no-daemon \
+  --args='--spring.main.web-application-type=none --trust-agent.demo-users.enabled=true'
+```
+
+아직 없는 것: 상담 건 표와 객체 권한 검사, AI 요청 승인(grant), Core → AI 서비스 호출(TASK-017a 두 번째 PR), 화면(017b), 체험 코드·workspace 복제(026). 이 PR의 인증은 합성 계정 기반이며 실제 행원 인증이 아닙니다.
+
 ## 합성 내부 공문 기준일 조회
 
 ```text

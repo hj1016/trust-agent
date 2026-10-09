@@ -1,5 +1,7 @@
 package com.trustagent.core;
 
+import com.trustagent.core.support.SessionClient;
+import com.trustagent.core.control.ControlDataSourceConfiguration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -247,6 +249,7 @@ class CoreEndToEndFlowIntegrationTest {
     void applicableQueryAndToolReturnTheIssuedChecklistsAndEditedInstruction() throws Exception {
         try (ConfigurableApplicationContext context = runWeb()) {
             int port = Integer.parseInt(context.getEnvironment().getRequiredProperty("local.server.port"));
+            session(port, context);
 
             JsonNode core = json(get(port, "/api/v1/internal-policy/checklists/" + PREPAYMENT + "/applicable?businessDate=2026-10-01"));
             assertTrue(core.get("internalChecklistUseAllowed").booleanValue(), core.toString());
@@ -364,9 +367,13 @@ class CoreEndToEndFlowIntegrationTest {
     }
 
     private ConfigurableApplicationContext runWeb() {
-        return new SpringApplicationBuilder(TrustAgentCoreApplication.class, FixedClockConfiguration.class)
+        Map<String, Object> props = baseProperties();
+        props.put("trust-agent.control-datasource.flyway-enabled", "true");
+        ConfigurableApplicationContext context = new SpringApplicationBuilder(TrustAgentCoreApplication.class, FixedClockConfiguration.class)
                 .web(WebApplicationType.SERVLET)
-                .run(arguments(baseProperties()));
+                .run(arguments(props));
+        session = null;
+        return context;
     }
 
     private static String[] arguments(Map<String, Object> props) {
@@ -400,8 +407,18 @@ class CoreEndToEndFlowIntegrationTest {
         return String.valueOf(cause.getMessage());
     }
 
+    private SessionClient session;
+
+    /** 조회 경로는 세션 인증이 필요하다(TASK-017a). web 컨텍스트마다 합성 STAFF로 로그인한다. */
+    private SessionClient session(int port, ConfigurableApplicationContext context) throws Exception {
+        if (session == null || !session.sessionId().isPresent()) {
+            session = SessionClient.staff(port, context.getBean(ControlDataSourceConfiguration.CONTROL_JDBC_CLIENT, JdbcClient.class));
+        }
+        return session;
+    }
+
     private HttpResponse<String> get(int port, String path) throws Exception {
-        return HttpClient.newHttpClient().send(HttpRequest.newBuilder().uri(URI.create("http://127.0.0.1:" + port + path)).GET().build(), HttpResponse.BodyHandlers.ofString());
+        return session.get(path);
     }
 
     private HttpResponse<String> tool(int port, String name, Map<String, String> body) throws Exception {

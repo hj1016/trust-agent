@@ -9,7 +9,28 @@ spring:
     enabled: ${TRUST_AGENT_FLYWAY_ENABLED:false}
     clean-disabled: true
 
+server:
+  servlet:
+    session:
+      # 세션 만료(ADR-014 13항): 유휴 8시간(설정값). 절대 만료 24시간은 TASK-026에서 다룬다.
+      timeout: ${TRUST_AGENT_SESSION_IDLE_TIMEOUT:8h}
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: ${TRUST_AGENT_SESSION_COOKIE_SECURE:false}
+
 trust-agent:
+  control-datasource:
+    # 제어 DB(ADR-014): 사용자·역할·보안 사건·AI 요청 승인. cloud/prod는 업무 DB와 다른 데이터베이스를 요구한다.
+    # 로컬 기본값은 업무 DB 설정으로 대체되며 같은 DB 안에 별도 Flyway history(flyway_control_schema_history)로 만들어진다.
+    url: ${TRUST_AGENT_CONTROL_DB_URL:${spring.datasource.url}}
+    username: ${TRUST_AGENT_CONTROL_DB_USERNAME:${spring.datasource.username}}
+    password: ${TRUST_AGENT_CONTROL_DB_PASSWORD:${spring.datasource.password}}
+    flyway-enabled: ${TRUST_AGENT_CONTROL_FLYWAY_ENABLED:${spring.flyway.enabled}}
+    maximum-pool-size: ${TRUST_AGENT_CONTROL_DB_MAX_POOL_SIZE:2}
+  demo-users:
+    # 합성 직원 3명 적재 명령(demo 전용). 비밀번호는 TRUST_AGENT_DEMO_PASSWORD_<사용자 ID>(- 대신 _) 환경변수로만 받는다.
+    enabled: false
   public-evidence:
     freshness-policy-version: ${TRUST_AGENT_FRESHNESS_POLICY_VERSION:public-evidence-confirmation-v1}
     max-confirmation-age: ${TRUST_AGENT_MAX_CONFIRMATION_AGE:24h}
