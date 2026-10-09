@@ -1,6 +1,6 @@
 # TASK-017a 사용자 인증·객체 권한·AI 요청 승인(grant) 기반
 
-- 상태: 계획 검토 대기 (결정자 사용자: 합성 사용자 3명(STAFF, REVIEWER, 겸임) 구성, 역할 보유와 활성 역할 검사 구분, 상담 건별 권한과 AI grant 검증 포함. ADR-014는 보완 2건 반영 뒤 승인 대기(PR #45). 구현 착수는 계획·ADR 검수 뒤 별도 승인)
+- 상태: **계획 승인**, 첫 구현 PR(Spring Security, 제어 DB, 합성 사용자, 세션·역할 권한, 기존 조회 API 인증, 보안 사건 기록) 착수 승인 (결정자 사용자, PR #47. 채택: 제어 DB 별도 데이터베이스, 합성 사용자 3명, 보유·활성 역할 모두 검사, 담당자 아니면 404와 내부 감사, 읽기 상한 50 설정값, Core가 사용자·상담 건·workspace 범위 소유, AI 서비스는 서비스 토큰과 grant 함께 검증, cloud/prod에서 require-grant 강제, TASK-015 흐름·계약 보존. 이전 상태: 합성 사용자 3명(STAFF, REVIEWER, 겸임) 구성, 역할 보유와 활성 역할 검사 구분, 상담 건별 권한과 AI grant 검증 포함. ADR-014는 보완 2건 반영 뒤 승인 대기(PR #45). 구현 착수는 계획·ADR 검수 뒤 별도 승인)
 - 담당자 / 인간 결정자: AI 계획·구현·검증 / 사용자 범위·판정·검수
 - 요구사항 출처: ADR-014(초안), 사용자 지시(브라우저 → Core → FastAPI 단일 진입, Spring Security 세션, 역할별 권한, 상담 건별 객체 권한, AI 요청 Grant에 workspace 범위, 서비스 토큰 우회 방지, 합성 직원으로 STAFF·REVIEWER를 각각 검증하되 불필요한 사용자 관리 기능 금지, TASK-017을 017a·017b·017c로 분할), DEVELOPMENT_RULES(API/Tool마다 권한 검사, 클라이언트 actor 불신, fail-closed), ADR-011·012
 - 관련 Task / ADR: TASK-015(완료), TASK-017b(화면·최종 확인 기록, 이 Task 뒤), TASK-017c(검색 패널), TASK-026(체험 코드·workspace 복제, 이 기반 위), TASK-027(검수자 HTTP 경로), ADR-013·014
@@ -75,14 +75,32 @@
 
 인증 없음 401(본문에 경로 정보 외 없음). 역할 불일치 403. 담당자 아님 404. CSRF 실패 403. AI 서비스 연결 실패·시간 초과 → 준비안 경로 502·504(TASK-015 표). AI 서비스 수신 토큰 없음·불일치 401(AI 서비스). 모든 거부는 `security_event`에 principal, 경로, 코드, trace ID로 남기고 본문·토큰은 남기지 않는다.
 
+### 추가 검증 항목 (사용자 요청)
+
+- **서비스 인증과 Spring Security의 공존.** Tool 경로(`/api/v1/tools/**`)와 기록 경로(`/api/v1/consultation-preparations`)는 세션·CSRF 없이 기존 서비스 토큰 필터만으로 동작해야 한다. Spring Security 설정에서 두 경로를 stateless·CSRF 제외로 두고, 토큰 없는 호출은 기존대로 401(JSON problem)이며 로그인 페이지로 가지 않는다. TASK-015 연결 검증(필수 CI)이 그대로 통과하는 것이 증거다(AC-11).
+- **API 비인증 응답은 401 JSON.** `/api/**`의 인증 진입점은 HTML 로그인 리다이렉트가 아니라 `401 {"code":"UNAUTHENTICATED"}`다. 302나 `text/html`이 나오면 실패다(AC-01).
+- **CSRF.** 쿠키 토큰 방식(`XSRF-TOKEN` 쿠키 + `X-XSRF-TOKEN` 헤더). 토큰 없는 상태 변경 요청은 403이고 사건으로 기록한다. 서비스 토큰 경로는 제외.
+
+### 상담 건 생성 시 신청 존재 검증 (제안 5)
+
+계획 초안은 "신청 ID 형식만 검사"였다. 그러면 존재하지 않는 신청으로 상담 건이 만들어지고, 준비안 요청이 AI 서비스에서 `APPLICATION_NOT_FOUND`로 끝나며, Core는 기록 시 신청 자료 해시를 검증하지 못한다(TASK-015 한계). 대안은 다음과 같다.
+
+| 방법 | 내용 | 장단점 |
+|---|---|---|
+| (a) Core에 합성 신청·기업 자료 등록(권장) | 기존 매핑 적재와 같은 방식으로 `datasets/synthetic/work/applications`·`companies`를 bootstrap runner가 업무 DB 표 `synthetic_work_application`(append-only, `application_id`, `company_id`, `product_key`, `source_hash`, `dataset_class`)에 적재한다. 상담 건 생성은 이 표에 있는 신청만 허용(없으면 422 `APPLICATION_NOT_REGISTERED`)하고 상품 키로 허용 공문군(grant의 `allowed_family_ids`)을 매핑에서 뽑는다. 기록 경로는 AI 서비스가 보낸 `application.source_hash`를 이 표와 대조한다 | Core가 신청의 존재·상품·해시를 직접 검증. 표 1개와 runner 1개 추가. AI 서비스의 파일 읽기는 그대로(이중 출처이지만 해시로 대조) |
+| (b) 상담 건 생성 시 AI 서비스에 조회 | Core → AI 서비스 `GET /api/v1/ai/applications/{id}` | 생성 경로가 AI 서비스 가동에 의존하고 Core가 자료를 소유하지 않음 |
+| (c) 형식 검사만(초안) | | 존재하지 않는 신청의 상담 건 허용. 거절 |
+
+(a)를 채택하면 TASK-017a 두 번째 PR(상담 건·grant)에 표 V12와 runner가 추가되고, 체험 템플릿 DB(TASK-026)에도 같은 적재가 들어간다. **판단 대기(사용자).**
+
 ## Acceptance Criteria (구현 전 고정)
 
 결정자 / 판단 근거 / 검토 대상: 사용자 / 이 계획 PR
 
 | ID | 입력/상황 | 기대 결과 | 검증 방법 | 결과/evidence |
 |---|---|---|---|---|
-| AC-01 | 세션 없이 `/api/v1/**`(Tool·기록 제외) 호출 | 전부 401, 업무 데이터 없음 | Java 통합 테스트(MockMvc 또는 RANDOM_PORT) | 미검증 |
-| AC-02 | `SYN-STAFF-01` 로그인 | 200, 세션 ID가 로그인 전과 다름, 쿠키 HttpOnly·SameSite=Lax(Secure는 cloud profile) | 통합 테스트 | 미검증 |
+| AC-01 | 세션 없이 `/api/v1/**`(Tool·기록 제외) 호출 | 전부 401 JSON(`UNAUTHENTICATED`), 302·HTML 없음, 업무 데이터 없음 | Java 통합 테스트(MockMvc 또는 RANDOM_PORT) | 미검증 |
+| AC-02 | `SYN-STAFF-01` 로그인 | 200, 세션 ID가 로그인 전과 다름, 쿠키 HttpOnly·SameSite=Lax(Secure는 cloud profile). CSRF 토큰 없는 상태 변경 요청 403 | 통합 테스트 | 미검증 |
 | AC-03 | STAFF 활성으로 `GET /api/v1/reviews/proposals` | 403. `SYN-STAFF-REVIEWER-01`이 활성 역할을 REVIEWER로 바꾼 뒤 200, `security_event`에 전환 기록 | 통합 테스트 | 미검증 |
 | AC-04 | `SYN-REVIEWER-01`로 `POST /api/v1/consultations` | 403(STAFF 활성 아님) | 통합 테스트 | 미검증 |
 | AC-05 | 사용자 A의 상담 건을 B 세션으로 조회·준비안 요청 | 404, 거부 사건 기록 | 통합 테스트 | 미검증 |
@@ -91,7 +109,7 @@
 | AC-08 | grant 수용 기준 8항 | 각각 지정된 상태 코드, 동시 기록은 하나만 201 | 통합 테스트(동시 요청은 스레드 2개) | 미검증 |
 | AC-09 | 준비안 경로 전체 | STAFF 세션 → grant → AI 서비스(수신 토큰) → Tool·기록(grant 헤더) → 준비안 응답. `ai_request_grant_use`에 Tool 5회·기록 1회, grant `CONSUMED` | Java + Python 연결 검증(기존 하네스 확장, 필수 CI) | 미검증 |
 | AC-10 | AI 서비스 수신 토큰 없음·불일치 | 401, Tool 호출 없음 | Python 테스트 | 미검증 |
-| AC-11 | require-grant=false(로컬 CLI) | TASK-015·021 흐름이 그대로 동작(기존 테스트 유지) | 기존 테스트 | 미검증 |
+| AC-11 | require-grant=false(로컬 CLI)와 서비스 토큰 경로 | TASK-015·021 흐름이 그대로 동작. Tool·기록 경로는 세션·CSRF 없이 토큰만으로 동작하고 토큰 없으면 401 JSON(리다이렉트 없음) | 기존 테스트 + 연결 검증(필수 CI) | 미검증 |
 | AC-12 | 정합성 기본 사례(ADR-014 9-1항) | 기록 커밋 뒤 `CONSUMED` 갱신 실패 주입 → 업무 기록 1건, 같은 run_id 재전송 409 `RUN_ID_CONFLICT`, 새 run_id·새 grant 재전송 `ALREADY_RECORDED`, 대조 runner가 `CONSUMING` 만료 grant 1건을 사후 정리. TTL 설정값이 grant 행에 기록 | 통합 테스트(제어 DB 실패 주입) | 미검증 |
 | AC-13 | 비밀 | 비밀번호·토큰 값이 저장소·로그·응답에 없음. cloud profile에서 require-grant·수신 토큰 누락 시 기동 거부 | 테스트 + grep | 미검증 |
 | AC-14 | 변경 범위 | 기존 승인·일정·변경안·검증 로직과 `tool_call_audit` 구조 변경 없음 | diff 검토 | 미검증 |
@@ -119,7 +137,7 @@
 
 내용 / 대안 / 위험: 같은 DB의 별도 스키마로 두면 설정이 하나로 줄지만, TASK-026의 workspace 복제가 업무 DB 전체를 복제하므로 제어 표가 함께 복제돼 혼란을 준다. 별도 DB는 DataSource 하나가 늘고 compose에 DB 생성 단계가 는다.
 
-**판단** - [ ] 채택 [ ] 수정 [ ] 거절 / 판단자: 판단 대기
+**판단** - [x] 채택 [ ] 수정 [ ] 거절 / 판단자 / 검토 대상: 사용자 / PR #47(제어 DB는 별도 PostgreSQL 데이터베이스)
 
 ### 제안 2: 활성 역할은 세션 속성으로 두고 모든 역할 경로가 "보유 + 활성" 둘 다 검사한다
 
@@ -131,13 +149,13 @@
 
 내용 / 대안 / 위험: 403은 "존재하지만 권한 없음"을 알려 상담 ID 열거의 단서가 된다. 404는 존재 여부를 숨긴다. 감사에는 거부로 남긴다.
 
-**판단** - [ ] 채택 [ ] 수정 [ ] 거절 / 판단자: 판단 대기
+**판단** - [x] 채택 [ ] 수정 [ ] 거절 / 판단자 / 검토 대상: 사용자 / PR #47(외부 404, 내부 감사 기록)
 
 ### 제안 4: grant 읽기 호출 상한 50은 설정값으로 두고 초기값을 유지한다
 
 내용: 현재 준비안 1건은 Tool 호출 5회다. 상한은 유출 토큰의 대량 조회를 막는 장치이며 정상 흐름의 10배다. 검색(017c)은 후보 수만큼 Tool 2를 부르므로 topK 10 기준으로도 여유가 있다.
 
-**판단** - [ ] 채택 [ ] 수정 [ ] 거절 / 판단자: 판단 대기
+**판단** - [x] 채택 [ ] 수정 [ ] 거절 / 판단자 / 검토 대상: 사용자 / PR #47(설정 가능한 초기값)
 
 ## Implementation Result (구현 결과와 자동 검증)
 
