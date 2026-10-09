@@ -10,7 +10,7 @@ TASK-016은 Elasticsearch BM25 + metadata filter + Core Tool 재확인으로 근
 
 ## 결정
 
-1. **승인 근거만 색인한다.** 색인 문서는 HUMAN_REVIEW 출처 승인 checklist 항목이 가리키는 규칙 version당 하나이며, 미승인·반려·철회·FIXTURE 규칙은 색인에 없다. 색인은 전체 재구축 뒤 alias 교체로 갱신하므로 승인 상태에서 빠진 규칙은 색인에서 사라진다. 업무일 필터는 그 승인 checklist 일정 revision의 `effective_from/to`로 적용한다.
+1. **승인 근거만 색인한다.** 색인 문서는 HUMAN_REVIEW 출처 승인 checklist 항목이 가리키는 규칙 version당 하나이며, 미승인·반려·철회·FIXTURE 규칙은 색인에 없다. 색인은 전체 재구축 뒤 alias 교체로 갱신하므로 승인 상태에서 빠진 규칙은 색인에서 사라진다. 업무일 필터는 그 승인 checklist 일정 revision의 구간(`effective_ranges[]`, `[from, to)`)으로 적용한다.
 2. **ES는 ID와 점수만 돌려준다.** 행원에게 가는 문장, 위치, 해시, 구조화 값은 전부 Core Tool 2와 Tool 1 응답에서만 온다. ES 문서 본문은 응답에 쓰지 않는다. ES는 업무 원장이 아니며(CLAUDE.md) Core 재확인 없이 어떤 결과도 나가지 않는다.
 3. **색인 문서 필드는 Tool 1·2가 내줄 수 있는 범위를 넘지 않는다.** `rule_version_id`, `family_id`, `notice_id`, `rule_key`, 규칙 문장, 구조화 값을 문장화한 텍스트, 원문 위치·해시, `approvals[]`(승인 checklist version ID, 결정 ID, 적용 시작·종료), `effective_ranges[]`(date_range), `dataset_class`, `synthetic`, `source_hash`. 공문 본문 전체, 변경안, 검증 결과, 검수자 ID는 넣지 않는다.
 3-1. **문서 하나, 적용기간 여러 개(개정, PR #49 검토 반영).** 문서 ID는 규칙 version ID 하나다. 같은 규칙 version이 여러 승인 checklist나 일정 구간에 쓰이면 문서를 나누거나 구간을 합치지 않고, `approvals[]`에 승인 version·결정 ID와 구간을 각각 적고 `effective_ranges[]`에 같은 구간을 date_range로 담는다. 구간은 시작 포함·종료 제외(`[from, to)`, 승인 일정의 `daterange(from, to, '[)')`와 같음)이며 종료가 없으면 무기한이다. 업무일 필터는 `effective_ranges`에 대한 range 질의(한 날짜, `relation: intersects`)로 하고 구간 사이 공백은 후보에서 빠진다. **같은 규칙 version인데 문장·위치·해시·구조화 값·공문군이 승인 checklist마다 다르면 병합하지 않고 재색인을 `SEARCH_RULE_CONFLICT`로 중단한다**(기존 alias 유지). 원인은 사람이 확인한다.
@@ -29,7 +29,7 @@ TASK-014의 지표 정의와 계산 방법은 바꾸지 않는다. 아래 표는
 | 승인 항목 근거만(미승인·반려·검토 대기 규칙 제외) | 색인 불변식 | 재색인은 사람 결정이 있는 승인 checklist 항목의 규칙 version만 넣는다. 통합 테스트가 "색인 문서 집합 = 승인 항목 규칙 집합"과 음성 사례(미승인 상태 재색인 → 없음, 승인 뒤 → 생김)를 확인 | 검색 단계 "제외 조건 준수"(이 조건은 색인에 해당 문서가 없어 0건이어야 하며, 0건이 아니면 재색인 결함), 최종 노출 |
 | 구버전·FIXTURE 근거 제외 | 색인 불변식 | 위와 같음(FIXTURE 출처 checklist 항목은 승인 항목이 아니다). 철회·반려 뒤 재색인하면 사라짐(전체 재구축 + alias 교체) | 같음 |
 | 요청 공문군만 | 질의 시점 필터 | ES filter `family_id = 요청값`. 단위 테스트와 골든셋 `other_family`(반대 사례 포함) | 검색 단계 "제외 조건 준수", "보류 질의 후보 유출(a)" |
-| 현재 적용 공문만(질의 업무일 기준) | 질의 시점 필터 | ES filter `effective_from <= business_date <= effective_to`(승인 checklist 일정 revision 기준). 골든셋 `fixture_period` | 같음 |
+| 현재 적용 공문만(질의 업무일 기준) | 질의 시점 필터 | ES range 질의 `effective_ranges`에 업무일 하나를 `relation: intersects`로 묻는다(승인 checklist 일정 revision의 구간, 시작 포함·종료 제외 `[from, to)`, 종료 없음은 무기한). 구간 사이 공백은 후보에서 빠진다. 골든셋 `fixture_period` | 같음 |
 | 재색인 사이의 상태 변화(승인 뒤 철회 등) | Core 재확인 | Tool 1(사용 가능 여부)과 Tool 2(소속·상태)가 매 질의 때 현재 상태로 막는다. 색인은 원장이 아니다 | Core 재확인 단계 "제거 수와 이유", 최종 노출, 놓친 보류 |
 | 범위 안 사용 가능 근거의 무관 혼입 | 관련성 보류 기준 | 구성별 고정값(AC-05c). Core는 막지 않는다 | "보류 질의 후보 유출(b)", 무관 근거 혼입률, Precision(반환 수 기준) |
 
