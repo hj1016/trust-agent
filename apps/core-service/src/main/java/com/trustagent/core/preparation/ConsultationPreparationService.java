@@ -383,6 +383,12 @@ public class ConsultationPreparationService {
         String companyId = requireText(application, "company_id", COMPANY_ID);
         String productKey = requireText(application, "product_key", PRODUCT_KEY);
         String sourceHash = requireText(application, "source_hash", SHA256);
+        // A안(TASK-017a): 신청은 업무 DB에 등록된 합성 신청이어야 하고 AI 서비스가 보낸 원본 해시가 등록된 해시와 같아야 한다.
+        String registeredHash = repository.applicationSourceHash(applicationId)
+                .orElseThrow(() -> new ConsultationPreparationException("APPLICATION_NOT_REGISTERED", "업무 DB에 등록된 합성 신청이 아닙니다: " + applicationId));
+        if (!registeredHash.equals(sourceHash)) {
+            throw new ConsultationPreparationException("APPLICATION_SOURCE_MISMATCH", "AI 서비스가 읽은 신청 자료의 해시가 Core에 등록된 해시와 다릅니다.");
+        }
         LocalDate businessDate;
         try {
             businessDate = LocalDate.parse(requireText(body, "business_date", null));

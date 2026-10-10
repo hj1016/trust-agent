@@ -70,6 +70,7 @@ public final class PreparationScenario {
                 prepayment, pass.validationResultId(), HumanReviewService.Decision.APPROVE, "SYN-REVIEWER-01", null, List.of(),
                 "review-run:" + "3".repeat(32)));
         clock.reset();
+        new com.trustagent.core.consultation.SyntheticWorkLoader(jdbc, mapper, manager, clock).load(root); // A안: 합성 신청·기업을 업무 DB에 등록
         String mappingHash = new ConsultationFamilyMappingLoader(jdbc, mapper, manager, clock).load(root).mappingHash();
         return new State(mappingHash, seller);
     }
@@ -120,7 +121,7 @@ public final class PreparationScenario {
     }
 
     /** AI 서비스(ids.py)와 같은 규칙: preparation_id, run_id, consultation_id, sections[].evaluated_at, sections[].tool_response_hash를 빼고 canonical sha256. */
-    static String preparationId(ObjectMapper mapper, JsonNode body) {
+    public static String preparationId(ObjectMapper mapper, JsonNode body) {
         ObjectNode subject = (ObjectNode) body.deepCopy();
         subject.remove("preparation_id");
         subject.remove("run_id");

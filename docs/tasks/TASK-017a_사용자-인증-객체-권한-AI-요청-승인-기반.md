@@ -102,19 +102,19 @@
 | AC-01 | 세션 없이 `/api/v1/**`(Tool·기록 제외) 호출 | 전부 401 JSON(`UNAUTHENTICATED`), 302·HTML 없음, 업무 데이터 없음 | Java 통합 테스트(MockMvc 또는 RANDOM_PORT) | 미검증 |
 | AC-02 | `SYN-STAFF-01` 로그인 | 200, 세션 ID가 로그인 전과 다름, 쿠키 HttpOnly·SameSite=Lax(Secure는 cloud profile). CSRF 토큰 없는 상태 변경 요청 403 | 통합 테스트 | 미검증 |
 | AC-03 | STAFF 활성으로 `GET /api/v1/reviews/proposals` | 403. `SYN-STAFF-REVIEWER-01`이 활성 역할을 REVIEWER로 바꾼 뒤 200, `security_event`에 전환 기록 | 통합 테스트 | 미검증 |
-| AC-04 | `SYN-REVIEWER-01`로 `POST /api/v1/consultations` | 403(STAFF 활성 아님) | 통합 테스트 | 미검증 |
-| AC-05 | 사용자 A의 상담 건을 B 세션으로 조회·준비안 요청 | 404, 거부 사건 기록 | 통합 테스트 | 미검증 |
+| AC-04 | `SYN-REVIEWER-01`로 `POST /api/v1/consultations` | 403(STAFF 활성 아님) | 통합 테스트 | 검증. `ConsultationGrantIntegrationTest`(REVIEWER의 상담 건 생성 403) |
+| AC-05 | 사용자 A의 상담 건을 B 세션으로 조회·준비안 요청 | 404, 거부 사건 기록 | 통합 테스트 | 검증. 같은 테스트(타 사용자 404 `CONSULTATION_NOT_FOUND`, `security_event` CONSULTATION_NOT_OWNED) |
 | AC-06 | 본문에 다른 사용자 ID·역할 문자열 | 무시되고 principal·활성 역할만 쓰임 | 통합 테스트 | 미검증 |
-| AC-07 | require-grant=true에서 서비스 토큰만으로 Tool·기록 | 401 `GRANT_REQUIRED`, 감사에 거부 | 통합 테스트 | 미검증 |
-| AC-08 | grant 수용 기준 8항 | 각각 지정된 상태 코드, 동시 기록은 하나만 201 | 통합 테스트(동시 요청은 스레드 2개) | 미검증 |
-| AC-09 | 준비안 경로 전체 | STAFF 세션 → grant → AI 서비스(수신 토큰) → Tool·기록(grant 헤더) → 준비안 응답. `ai_request_grant_use`에 Tool 5회·기록 1회, grant `CONSUMED` | Java + Python 연결 검증(기존 하네스 확장, 필수 CI) | 미검증 |
-| AC-16 | 신청 존재·일치 검증(A안) | 등록되지 않은 신청 ID로 상담 건 생성 422 `APPLICATION_NOT_REGISTERED`. 등록된 신청은 상품 키로 허용 공문군이 정해짐. 기록 경로에서 `application.source_hash`가 등록된 해시와 다르면 422 `APPLICATION_SOURCE_MISMATCH`. 적재 runner 재실행 멱등, 같은 ID 다른 내용 거부 | Java 통합 테스트 | 미검증 |
-| AC-10 | AI 서비스 수신 토큰 없음·불일치 | 401, Tool 호출 없음 | Python 테스트 | 미검증 |
-| AC-11 | require-grant=false(로컬 CLI)와 서비스 토큰 경로 | TASK-015·021 흐름이 그대로 동작. Tool·기록 경로는 세션·CSRF 없이 토큰만으로 동작하고 토큰 없으면 401 JSON(리다이렉트 없음) | 기존 테스트 + 연결 검증(필수 CI) | 미검증 |
-| AC-12 | 정합성 기본 사례(ADR-014 9-1항) | 기록 커밋 뒤 `CONSUMED` 갱신 실패 주입 → 업무 기록 1건, 같은 run_id 재전송 409 `RUN_ID_CONFLICT`, 새 run_id·새 grant 재전송 `ALREADY_RECORDED`, 대조 runner가 `CONSUMING` 만료 grant 1건을 사후 정리. TTL 설정값이 grant 행에 기록 | 통합 테스트(제어 DB 실패 주입) | 미검증 |
-| AC-13 | 비밀 | 비밀번호·토큰 값이 저장소·로그·응답에 없음. cloud profile에서 require-grant·수신 토큰 누락 시 기동 거부 | 테스트 + grep | 미검증 |
-| AC-14 | 변경 범위 | 기존 승인·일정·변경안·검증 로직과 `tool_call_audit` 구조 변경 없음 | diff 검토 | 미검증 |
-| AC-15 | 테스트 수 | 기존 Python·Java 유지, 새 테스트 추가, CI 통과 | CI run | 미검증 |
+| AC-07 | require-grant=true에서 서비스 토큰만으로 Tool·기록 | 401 `GRANT_REQUIRED`, 감사에 거부 | 통합 테스트 | 검증. 토큰만 401 `GRANT_REQUIRED`, grant만 401, `tool_call_audit`·`ai_request_grant_use`에 거부 기록 |
+| AC-08 | grant 수용 기준 8항 | 각각 지정된 상태 코드, 동시 기록은 하나만 201 | 통합 테스트(동시 요청은 스레드 2개) | 검증. 범위(공문군·상담 ID·신청 ID) 403, 모르는 grant 403, 만료 403(고정 시계 61초), 읽기 상한 403 `GRANT_EXHAUSTED`, 재사용 409 `GRANT_CONSUMED`, 동시 기록 2건 중 1건만 통과 |
+| AC-09 | 준비안 경로 전체 | STAFF 세션 → grant → AI 서비스(수신 토큰) → Tool·기록(grant 헤더) → 준비안 응답. `ai_request_grant_use`에 Tool 5회·기록 1회, grant `CONSUMED` | Java + Python 연결 검증(기존 하네스 확장, 필수 CI) | 검증. `AiGrantEndToEndIntegrationTest`(uvicorn 실제 기동): Tool 5회·기록 1회 헤더 전달, grant CONSUMED, 재요청은 새 grant + ALREADY_RECORDED |
+| AC-16 | 신청 존재·일치 검증(A안) | 등록되지 않은 신청 ID로 상담 건 생성 422 `APPLICATION_NOT_REGISTERED`. 등록된 신청은 상품 키로 허용 공문군이 정해짐. 기록 경로에서 `application.source_hash`가 등록된 해시와 다르면 422 `APPLICATION_SOURCE_MISMATCH`. 적재 runner 재실행 멱등, 같은 ID 다른 내용 거부 | Java 통합 테스트 | 검증. 미등록 신청 422 `APPLICATION_NOT_REGISTERED`, 해시 불일치 422 `APPLICATION_SOURCE_MISMATCH`(grant는 ISSUED 복귀), 적재 멱등·충돌 거부 |
+| AC-10 | AI 서비스 수신 토큰 없음·불일치 | 401, Tool 호출 없음 | Python 테스트 | 검증. Python `test_inbound_token_is_required_when_configured_and_grant_id_is_forwarded` + Java 직접 호출 401 |
+| AC-11 | require-grant=false(로컬 CLI)와 서비스 토큰 경로 | TASK-015·021 흐름이 그대로 동작. Tool·기록 경로는 세션·CSRF 없이 토큰만으로 동작하고 토큰 없으면 401 JSON(리다이렉트 없음) | 기존 테스트 + 연결 검증(필수 CI) | 검증. 기존 연결 검증(`AiServicePreparationIntegrationTest`)과 TASK-021 runner 경로 유지(require=false, 헤더 없음) |
+| AC-12 | 정합성 기본 사례(ADR-014 9-1항) | 기록 커밋 뒤 `CONSUMED` 갱신 실패 주입 → 업무 기록 1건, 같은 run_id 재전송 409 `RUN_ID_CONFLICT`, 새 run_id·새 grant 재전송 `ALREADY_RECORDED`, 대조 runner가 `CONSUMING` 만료 grant 1건을 사후 정리. TTL 설정값이 grant 행에 기록 | 통합 테스트(제어 DB 실패 주입) | 검증(기본 사례). 제어 DB 트리거로 커밋 뒤 CONSUMED 갱신 실패를 실제 주입: 업무 기록 1건, 같은 run_id 재전송 409 `RUN_ID_CONFLICT`, 새 run_id·새 grant `ALREADY_RECORDED`, 만료 뒤 대조 1건 CONSUMED. 실행 기록 쓰기 실패 주입에서도 grant ISSUED 복귀 없음. 대조는 메서드 + 수동 runner이며 주기 실행 없음(TASK-026) |
+| AC-13 | 비밀 | 비밀번호·토큰 값이 저장소·로그·응답에 없음. cloud profile에서 require-grant·수신 토큰 누락 시 기동 거부 | 테스트 + grep | 검증. 토큰·비밀번호는 실행 중 생성, 응답에 없음(E2E 테스트 확인). prod는 `TRUST_AGENT_AI_SERVICE_BASE_URL`·`TRUST_AGENT_AI_INBOUND_TOKEN` 필수, require=false면 `GRANT_NOT_REQUIRED_IN_PROD` 기동 거부 |
+| AC-14 | 변경 범위 | 기존 승인·일정·변경안·검증 로직과 `tool_call_audit` 구조 변경 없음 | diff 검토 | 검증. 승인·일정·변경안·검증 로직과 `tool_call_audit` 구조 변경 없음(기록 컨트롤러·Tool 서비스에 grant 검사만 추가) |
+| AC-15 | 테스트 수 | 기존 Python·Java 유지, 새 테스트 추가, CI 통과 | CI run | Java 233건 중 232 통과·1 skip(계측 runner), Python 117 통과. CI는 PR 생성 뒤 |
 
 ### 완료 기준 변경 이력
 
@@ -160,11 +160,22 @@
 
 ## Implementation Result (구현 결과와 자동 검증)
 
-미착수.
+두 번째 PR(grant PR, 계획 2단계)의 결과다. 첫 PR(#48)은 인증 기반이었다.
+
+- 업무 DB V11: `synthetic_work_company`, `synthetic_work_application`(canonical `source_hash`), `consultation`(append-only, 보호 목록). 제어 DB V2: `ai_request_grant`, `ai_request_grant_use`(append-only). schema expected-version 11.
+- Core: `consultation/`(적재기·runner `--trust-agent.synthetic-work-import.enabled=true`, 상담 건 API, 404 비노출), `grant/`(발급·Tool 검사·기록 CONSUMING/CONSUMED, 커밋 전 거부만 ISSUED 복귀, 불확실 실패는 CONSUMING 유지, 대조 메서드와 수동 runner, 설정 TTL 60초·읽기 50회·require), `ai/`(Core → AI 서비스 호출, 502/504), Tool 서비스·기록 컨트롤러의 grant 검사, 기록 경로 신청 해시 대조, prod 필수 설정·require 강제, `/api/v1/consultations/**` STAFF 활성.
+- AI 서비스: 수신 토큰(`TRUST_AGENT_AI_INBOUND_TOKEN`) 검사, `grantId` 수신과 `X-TrustAgent-Grant` 헤더 전달, CLI `--grant-id`.
+- 테스트: `ConsultationGrantIntegrationTest`(12, 실제 장애 주입 2건 포함), `AiGrantEndToEndIntegrationTest`(2, uvicorn), 기존 기록 테스트의 신청 해시를 등록 해시로, 운영 기동 거부 1건, Python 1건. 전체 Java 233건 중 232 통과·1 skip, Python 117 통과.
+- 병합 전 보완(사용자 검토): grant 업무일과 Tool 조회·준비안 기록 업무일 대조, 브라우저 응답의 grant ID 헤더 제거, Tool·기록 경로 workspace null 우회 차단. 부정 테스트 2건 추가.
+- 결과 기록: `docs/evidence/CONSULTATION_GRANT_EVIDENCE.md`.
+- 하지 않은 것: 화면(017b), 체험 코드·workspace(026), 대조의 주기 실행(수동 runner만 있음), AI 서비스가 Core API로 신청을 받는 구조(현재는 JSON 직접 읽기 + 해시 대조).
 
 ## AI self-review
 
-미착수.
+- grant 검사는 토큰 필터 뒤 서비스·컨트롤러 계층에 있다. 범위 검사에 본문(상담 ID·공문군·신청 ID)이 필요하기 때문이며, 거부 사유가 감사 표 두 곳에 남는다.
+- 첫 구현은 기록 서비스의 모든 예외에서 grant를 ISSUED로 되돌려, 커밋 뒤 실행 기록 쓰기 실패 시 grant가 재사용 가능해지는 결함이 있었다(사용자 검토 지적). 허용 목록 방식(커밋 전 거부만 반환)과 업무 DB 조회로 고쳤고, 수정 전 동작을 되살리면 주입 테스트가 실패함을 확인했다.
+- 커밋 결과를 알 수 없는 연결 단절과 업무 DB 조회 실패 분기는 코드 경로만 있고 재현 테스트는 없다.
+- 상담 건 조회는 담당자·workspace가 모두 같아야 보이며, workspace는 현재 `main` 하나다(026에서 라우팅).
 
 ## 인간 검수와 Explainability Gate
 

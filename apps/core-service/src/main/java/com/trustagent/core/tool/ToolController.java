@@ -12,6 +12,8 @@ import tools.jackson.databind.JsonNode;
 @RestController
 public class ToolController {
 
+    public static final String GRANT_HEADER = "X-TrustAgent-Grant";
+
     private final ToolService service;
 
     ToolController(ToolService service) {
@@ -23,6 +25,6 @@ public class ToolController {
         Object serviceId = request.getAttribute(ToolAuthenticationFilter.SERVICE_ID_ATTRIBUTE);
         Object traceId = request.getAttribute(RequestTraceFilter.TRACE_ID_ATTRIBUTE);
         return service.call(toolName, body, serviceId == null ? "UNKNOWN" : serviceId.toString(),
-                traceId == null ? "unavailable" : traceId.toString());
+                traceId == null ? "unavailable" : traceId.toString(), request.getHeader(GRANT_HEADER));
     }
 }

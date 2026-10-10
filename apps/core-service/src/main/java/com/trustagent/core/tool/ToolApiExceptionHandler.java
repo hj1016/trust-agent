@@ -15,13 +15,20 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 class ToolApiExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ToolApiExceptionHandler.class);
-    private static final Map<String, HttpStatus> STATUS_BY_CODE = Map.of(
-            "TOOL_NOT_FOUND", HttpStatus.NOT_FOUND,
-            "POLICY_FAMILY_NOT_FOUND", HttpStatus.NOT_FOUND,
-            "INVALID_REQUEST", HttpStatus.BAD_REQUEST,
-            "INVALID_BUSINESS_DATE", HttpStatus.BAD_REQUEST,
-            "EVIDENCE_NOT_AVAILABLE", HttpStatus.FORBIDDEN,
-            "AUDIT_WRITE_FAILED", HttpStatus.INTERNAL_SERVER_ERROR);
+    private static final Map<String, HttpStatus> STATUS_BY_CODE = Map.ofEntries(
+            Map.entry("TOOL_NOT_FOUND", HttpStatus.NOT_FOUND),
+            Map.entry("POLICY_FAMILY_NOT_FOUND", HttpStatus.NOT_FOUND),
+            Map.entry("INVALID_REQUEST", HttpStatus.BAD_REQUEST),
+            Map.entry("INVALID_BUSINESS_DATE", HttpStatus.BAD_REQUEST),
+            Map.entry("EVIDENCE_NOT_AVAILABLE", HttpStatus.FORBIDDEN),
+            Map.entry("AUDIT_WRITE_FAILED", HttpStatus.INTERNAL_SERVER_ERROR),
+            Map.entry("GRANT_REQUIRED", HttpStatus.UNAUTHORIZED),
+            Map.entry("GRANT_NOT_FOUND", HttpStatus.FORBIDDEN),
+            Map.entry("GRANT_EXPIRED", HttpStatus.FORBIDDEN),
+            Map.entry("GRANT_SCOPE_MISMATCH", HttpStatus.FORBIDDEN),
+            Map.entry("GRANT_EXHAUSTED", HttpStatus.FORBIDDEN),
+            Map.entry("WORKSPACE_UNAVAILABLE", HttpStatus.FORBIDDEN),
+            Map.entry("GRANT_CONSUMED", HttpStatus.CONFLICT));
 
     @ExceptionHandler(ToolApiException.class)
     ProblemDetail handle(ToolApiException exception, HttpServletRequest request) {

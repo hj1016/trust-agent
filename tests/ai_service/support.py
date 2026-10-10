@@ -81,6 +81,7 @@ class FakeTransport:
             201, json.dumps({"preparationId": body["preparation_id"], "runId": body["run_id"], "status": "RECORDED",
                              "recordedAt": "2026-10-06T03:00:05Z"}).encode("utf-8"))
         self.calls: list[tuple[str, dict, str]] = []
+        self.headers_seen: list[dict] = []
 
     def usable(self, family_id: str, checklist: dict) -> "FakeTransport":
         self.checklist[family_id] = lambda: ok(checklist)
@@ -97,6 +98,7 @@ class FakeTransport:
         payload = json.loads(body.decode("utf-8")) if body else {}
         token = headers.get("Authorization", "")
         self.calls.append((url, payload, token))
+        self.headers_seen.append(dict(headers))
         if url.endswith("/api/v1/tools/applicable_checklist"):
             handler = self.checklist.get(payload["familyId"])
             if handler is None:

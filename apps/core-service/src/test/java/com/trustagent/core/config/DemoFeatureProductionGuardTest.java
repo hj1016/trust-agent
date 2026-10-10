@@ -17,7 +17,7 @@ class DemoFeatureProductionGuardTest {
             Map.entry("TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent"),
             Map.entry("TRUST_AGENT_DB_USERNAME", "runtime"),
             Map.entry("TRUST_AGENT_DB_PASSWORD", "runtime-secret"),
-            Map.entry("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "10"),
+            Map.entry("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "11"),
             Map.entry("TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1"),
             Map.entry("TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h"),
             Map.entry("TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE", "Asia/Seoul"),
@@ -28,7 +28,9 @@ class DemoFeatureProductionGuardTest {
             Map.entry("TRUST_AGENT_PREPARATION_RECORD_TOKEN", "temporary-record-token-for-test"),
             Map.entry("TRUST_AGENT_CONTROL_DB_URL", "jdbc:postgresql://db.example.invalid:5432/trust_agent_control"),
             Map.entry("TRUST_AGENT_CONTROL_DB_USERNAME", "control_user"),
-            Map.entry("TRUST_AGENT_CONTROL_DB_PASSWORD", "control-password-for-test"));
+            Map.entry("TRUST_AGENT_CONTROL_DB_PASSWORD", "control-password-for-test"),
+            Map.entry("TRUST_AGENT_AI_SERVICE_BASE_URL", "http://ai-service:8090"),
+            Map.entry("TRUST_AGENT_AI_INBOUND_TOKEN", "inbound-token-for-test"));
 
     @Test
     void proposalGenerationAloneRefusesProductionStartup() {
@@ -99,6 +101,12 @@ class DemoFeatureProductionGuardTest {
         assertTrue(error.contains("CONTROL_DB_NOT_SEPARATED"), error);
         assertTrue(ProductionRequiredSettingsConfiguration.sameDatabase("jdbc:postgresql://db/trust_agent", "jdbc:postgresql://db:5432/trust_agent/"));
         assertTrue(!ProductionRequiredSettingsConfiguration.sameDatabase("jdbc:postgresql://db/trust_agent", "jdbc:postgresql://db/trust_agent_control"));
+    }
+
+    @Test
+    void grantMustBeRequiredInProduction() {
+        var error = refusal(Map.of("trust-agent.ai-grant.require", "false"));
+        assertTrue(error.contains("GRANT_NOT_REQUIRED_IN_PROD"), error);
     }
 
     @Test

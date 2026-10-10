@@ -24,7 +24,9 @@ public class ProductionRequiredSettingsConfiguration {
             "TRUST_AGENT_PREPARATION_RECORD_TOKEN",
             "TRUST_AGENT_CONTROL_DB_URL",
             "TRUST_AGENT_CONTROL_DB_USERNAME",
-            "TRUST_AGENT_CONTROL_DB_PASSWORD");
+            "TRUST_AGENT_CONTROL_DB_PASSWORD",
+            "TRUST_AGENT_AI_SERVICE_BASE_URL",
+            "TRUST_AGENT_AI_INBOUND_TOKEN");
     static final List<String> REQUIRED_BASELINE_IMPORT_SETTINGS = List.of(
             "TRUST_AGENT_IMPORT_DB_URL",
             "TRUST_AGENT_IMPORT_DB_USERNAME",
@@ -95,6 +97,9 @@ public class ProductionRequiredSettingsConfiguration {
                 .toList();
         if (!missing.isEmpty()) {
             throw new IllegalStateException("운영 필수 설정이 없습니다: " + String.join(", ", missing));
+        }
+        if (!environment.getProperty("trust-agent.ai-grant.require", Boolean.class, true)) {
+            throw new IllegalStateException("GRANT_NOT_REQUIRED_IN_PROD: production profile에서는 trust-agent.ai-grant.require가 true여야 합니다.");
         }
         String controlUrl = environment.getProperty("TRUST_AGENT_CONTROL_DB_URL");
         String businessUrl = environment.getProperty("TRUST_AGENT_DB_URL");

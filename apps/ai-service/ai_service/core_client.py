@@ -13,6 +13,7 @@ from typing import Any, Mapping, Optional, Protocol
 
 TOOL_PATH = "/api/v1/tools/"
 RECORD_PATH = "/api/v1/consultation-preparations"
+GRANT_HEADER = "X-TrustAgent-Grant"
 
 
 class TransportTimeout(Exception):
@@ -68,8 +69,9 @@ class CoreResponse:
 
 class CoreClient:
     def __init__(self, base_url: str, tool_token: str, record_token: Optional[str], timeout_seconds: float,
-                 transport: Optional[HttpTransport] = None) -> None:
+                 transport: Optional[HttpTransport] = None, grant_id: Optional[str] = None) -> None:
         self._base_url = base_url.rstrip("/")
+        self._grant_id = grant_id  # Core가 발급한 AI 요청 승인(ADR-014). 있으면 모든 Tool·기록 호출에 헤더로 보낸다
         self._tool_token = tool_token
         self._record_token = record_token
         self._timeout = timeout_seconds
@@ -101,6 +103,8 @@ class CoreClient:
         self.call_count += 1
         payload = json.dumps(body, ensure_ascii=False).encode("utf-8")
         headers = {"Content-Type": "application/json", "Accept": "application/json", "Authorization": "Bearer " + token}
+        if self._grant_id:
+            headers[GRANT_HEADER] = self._grant_id
         response = self._transport.send("POST", self._base_url + path, headers, payload, self._timeout)
         return CoreResponse(response.status, response.body, _parse_json(response.body))
 
