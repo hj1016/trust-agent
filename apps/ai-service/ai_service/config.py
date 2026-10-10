@@ -86,8 +86,10 @@ ENV_SEARCH_HOLD_MIN_RATIO = "TRUST_AGENT_SEARCH_HOLD_MIN_RATIO"
 ENV_SEARCH_HOLD_VERSION = "TRUST_AGENT_SEARCH_HOLD_VERSION"
 ENV_SEARCH_DIAGNOSTICS = "TRUST_AGENT_SEARCH_DIAGNOSTICS"
 ENV_SEARCH_FUZZINESS = "TRUST_AGENT_SEARCH_FUZZINESS"
+ENV_SEARCH_DECISION_GUARD = "TRUST_AGENT_SEARCH_DECISION_GUARD"
+ENV_SEARCH_MIN_SHOULD_MATCH = "TRUST_AGENT_SEARCH_MIN_SHOULD_MATCH"
 SEARCH_ENV_NAMES = (ENV_ES_URL, ENV_ES_SEARCH_USERNAME, ENV_ES_SEARCH_PASSWORD, ENV_ES_TIMEOUT_SECONDS, ENV_SEARCH_INDEX_ALIAS,
-                    ENV_SEARCH_HOLD_METHOD, ENV_SEARCH_HOLD_MIN_SCORE, ENV_SEARCH_HOLD_MIN_RATIO, ENV_SEARCH_HOLD_VERSION, ENV_SEARCH_DIAGNOSTICS, ENV_SEARCH_FUZZINESS)
+                    ENV_SEARCH_HOLD_METHOD, ENV_SEARCH_HOLD_MIN_SCORE, ENV_SEARCH_HOLD_MIN_RATIO, ENV_SEARCH_HOLD_VERSION, ENV_SEARCH_DIAGNOSTICS, ENV_SEARCH_FUZZINESS, ENV_SEARCH_DECISION_GUARD, ENV_SEARCH_MIN_SHOULD_MATCH)
 DEFAULT_SEARCH_INDEX_ALIAS = "trustagent-rule-evidence-main-current"
 
 
@@ -137,7 +139,28 @@ def load_search_settings(environ: Optional[Mapping[str, str]] = None):
         hold=RelevanceHold(method=method, min_score=min_score, min_ratio=min_ratio, version=(env.get(ENV_SEARCH_HOLD_VERSION) or "untuned").strip()),
         diagnostics=(env.get(ENV_SEARCH_DIAGNOSTICS) or "").strip() == "1",
         fuzziness=_fuzziness(env.get(ENV_SEARCH_FUZZINESS)),
+        decision_guard=_on_off(env.get(ENV_SEARCH_DECISION_GUARD), default=True),
+        min_should_match=_percent(env.get(ENV_SEARCH_MIN_SHOULD_MATCH)),
     )
+
+
+def _percent(value: Optional[str]) -> Optional[str]:
+    text = (value or "").strip()
+    if not text:
+        return None
+    import re as _re
+    if not _re.fullmatch(r"(100|[1-9]?[0-9])%", text):
+        raise SettingsError("SETTINGS_INVALID", f"{ENV_SEARCH_MIN_SHOULD_MATCH}는 0%~100% 형식이어야 합니다.")
+    return text
+
+
+def _on_off(value: Optional[str], default: bool) -> bool:
+    text = (value or "").strip().lower()
+    if not text:
+        return default
+    if text not in ("on", "off"):
+        raise SettingsError("SETTINGS_INVALID", f"{ENV_SEARCH_DECISION_GUARD}는 on 또는 off여야 합니다.")
+    return text == "on"
 
 
 def _fuzziness(value: Optional[str]) -> Optional[str]:

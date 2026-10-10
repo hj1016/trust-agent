@@ -64,9 +64,16 @@ class SearchEvaluationRunner {
     private static final String ANALYZER = System.getProperty("trustAgent.searchAnalyzer", "standard");
     private static final String HOLD_VERSION = System.getProperty("trustAgent.searchHoldVersion", "bm25-hold-v1");
     private static final String FUZZINESS = System.getProperty("trustAgent.searchFuzziness", "");
-    private static final String CONFIGURATION = "bm25-" + ANALYZER + (FUZZINESS.isBlank() ? "" : "-fuzzy" + FUZZINESS.toLowerCase());
-    private static final String SMOKE = "datasets/synthetic/search-goldenset/prepayment-fee-smoke-v1.json";
-    private static final String EVAL = "datasets/synthetic/search-goldenset/prepayment-fee-eval-v1.json";
+    private static final String GUARD = System.getProperty("trustAgent.searchDecisionGuard", "off");
+    private static final String MIN_SHOULD_MATCH = System.getProperty("trustAgent.searchMinShouldMatch", "");
+    /** true면 조정 자료만 실행하고 최종 평가용은 실행하지 않는다(구성 탐색이 최종 평가 자료를 보지 않게). */
+    private static final boolean TUNING_ONLY = "true".equals(System.getProperty("trustAgent.searchTuningOnly", "false"));
+    private static final String CONFIGURATION = "bm25-" + ANALYZER + (FUZZINESS.isBlank() ? "" : "-fuzzy" + FUZZINESS.toLowerCase())
+            + ("on".equals(GUARD) ? "-guard" : "") + (MIN_SHOULD_MATCH.isBlank() ? "" : "-msm" + MIN_SHOULD_MATCH.replace("%", ""));
+    /** 보류 기준을 정하는 자료. 최종 평가용(eval)은 넣을 수 없다(스크립트가 거부). 쉼표로 구분한 이름, 기본은 초기 점검용만. */
+    private static final List<String> TUNING_SETS = List.of(System.getProperty("trustAgent.searchTuningSets", "prepayment-fee-smoke-v1").split(","));
+    private static final String GOLDENSETS = "datasets/synthetic/search-goldenset/";
+    private static final String EVAL = GOLDENSETS + "prepayment-fee-eval-v1.json";
 
     static {
         if ("true".equals(System.getProperty("trustAgent.searchEvaluation"))) {
@@ -120,7 +127,7 @@ class SearchEvaluationRunner {
         SearchReindexService.Result result = reindex.reindex();
         assertEquals(SearchReindexService.Outcome.CREATED, result.outcome());
         Files.writeString(output.resolve("reindex.json"), mapper.writeValueAsString(Map.of(
-                "analyzer", ANALYZER, "configuration", CONFIGURATION, "index", result.indexName(), "alias", result.alias(), "documents", result.documentCount(), "contentHash", result.contentHash())));
+                "analyzer", ANALYZER, "configuration", CONFIGURATION, "tuningSets", TUNING_SETS, "index", result.indexName(), "alias", result.alias(), "documents", result.documentCount(), "contentHash", result.contentHash())));
     }
 
     @AfterAll
@@ -130,17 +137,27 @@ class SearchEvaluationRunner {
 
     @Test
     void tuneOnSmokeSetThenEvaluate() throws Exception {
-        // (1) 보류 없음으로 초기 점검용 실행 → 원시 후보와 점수 기록
+        Files.writeString(output.resolve("es-plugins.txt"), ElasticsearchTestContainer.verifyVersions() + "\n");
+        // (1) 보류 없음으로 조정 자료(초기 점검용·조정용)를 실행해 원시 후보와 점수를 기록한다
         startAiService(Map.of(), "untuned");
-        Path untuned = runScript("run", "--goldenset", SMOKE, "--search-url", "http://127.0.0.1:" + aiPort, "--configuration", CONFIGURATION,
-                "--out-dir", output.toString(), "--allow-untuned", "--repository-root", root.toString());
-        Path untunedResult = output.resolve("prepayment-fee-smoke-v1." + CONFIGURATION + ".untuned.result.json");
-        assertTrue(Files.isRegularFile(untunedResult), untuned.toString());
-        // (2) 세 방식 비교
+        List<String> tuneArguments = new ArrayList<>(List.of("tune"));
+        for (String name : TUNING_SETS) {
+            runScript("run", "--goldenset", GOLDENSETS + name + ".json", "--search-url", "http://127.0.0.1:" + aiPort, "--configuration", CONFIGURATION,
+                    "--out-dir", output.toString(), "--allow-untuned", "--repository-root", root.toString());
+            Path untunedResult = output.resolve(name + "." + CONFIGURATION + ".untuned.result.json");
+            assertTrue(Files.isRegularFile(untunedResult), untunedResult.toString());
+            tuneArguments.addAll(List.of("--result", untunedResult.toString(), "--goldenset", GOLDENSETS + name + ".json"));
+        }
+        // (2) 세 방식 비교(조정 자료 전체로)
         Path tuning = output.resolve("hold-tuning.json");
-        runScript("tune", "--result", untunedResult.toString(), "--goldenset", SMOKE, "--out", tuning.toString());
+        tuneArguments.addAll(List.of("--out", tuning.toString()));
+        runScript(tuneArguments.toArray(String[]::new));
         JsonNode chosen = mapper.readTree(Files.readString(tuning)).get("chosen");
-        assertEquals(0, chosen.get("leaks").intValue(), "초기 점검용에서 보류 질의 후보 유출 0건을 만족하는 값이 없다: " + chosen);
+        if (TUNING_ONLY) {
+            System.out.println("SEARCH_TUNING configuration=" + CONFIGURATION + " chosen=" + chosen);
+            return;
+        }
+        assertEquals(0, chosen.get("leaks").intValue(), "조정 자료에서 보류 질의 후보 유출 0건을 만족하는 값이 없다: " + chosen);
         // (3) 선택값으로 고정해 재기동
         stopAiService();
         Map<String, String> hold = Map.of(
@@ -149,9 +166,11 @@ class SearchEvaluationRunner {
                 "TRUST_AGENT_SEARCH_HOLD_MIN_RATIO", chosen.get("min_ratio").stringValue(),
                 "TRUST_AGENT_SEARCH_HOLD_VERSION", HOLD_VERSION);
         startAiService(hold, HOLD_VERSION);
-        // (4) 고정값으로 초기 점검용 재실행과 최종 평가용 실행
-        runScript("run", "--goldenset", SMOKE, "--search-url", "http://127.0.0.1:" + aiPort, "--configuration", CONFIGURATION,
-                "--out-dir", output.toString(), "--repository-root", root.toString());
+        // (4) 고정값으로 조정 자료를 다시 실행(고정값 확인)하고, 최종 평가용은 한 번만 실행한다
+        for (String name : TUNING_SETS) {
+            runScript("run", "--goldenset", GOLDENSETS + name + ".json", "--search-url", "http://127.0.0.1:" + aiPort, "--configuration", CONFIGURATION,
+                    "--out-dir", output.toString(), "--repository-root", root.toString());
+        }
         runScript("run", "--goldenset", EVAL, "--search-url", "http://127.0.0.1:" + aiPort, "--configuration", CONFIGURATION,
                 "--out-dir", output.toString(), "--repository-root", root.toString());
         Path evalResult = output.resolve("prepayment-fee-eval-v1." + CONFIGURATION + "." + HOLD_VERSION + ".result.json");
@@ -190,6 +209,8 @@ class SearchEvaluationRunner {
         environment.put("TRUST_AGENT_SEARCH_INDEX_ALIAS", properties.alias());
         environment.put("TRUST_AGENT_SEARCH_DIAGNOSTICS", "1");
         if (!FUZZINESS.isBlank()) environment.put("TRUST_AGENT_SEARCH_FUZZINESS", FUZZINESS);
+        environment.put("TRUST_AGENT_SEARCH_DECISION_GUARD", "on".equals(GUARD) ? "on" : "off");
+        if (!MIN_SHOULD_MATCH.isBlank()) environment.put("TRUST_AGENT_SEARCH_MIN_SHOULD_MATCH", MIN_SHOULD_MATCH);
         environment.put("PYTHONIOENCODING", "utf-8");
         environment.putAll(extra);
         builder.redirectOutput(output.resolve("uvicorn-" + label + ".out.txt").toFile()).redirectError(output.resolve("uvicorn-" + label + ".err.txt").toFile());

@@ -1,0 +1,1224 @@
+{
+  "goldenset_id": "prepayment-fee-tuning",
+  "goldenset_version": "v1",
+  "kind": "tuning",
+  "query_count": 24,
+  "configuration": "bm25-nori-guard",
+  "search_version": "search-bm25-v1",
+  "relevance_hold": {
+    "method": "combined",
+    "min_score": "4.812111",
+    "min_ratio": "0.00",
+    "version": "bm25-hold-v2"
+  },
+  "final_evaluation": false,
+  "targets": {
+    "recall_at_5": 0.8,
+    "mrr": 0.7,
+    "precision_returned": 0.7,
+    "irrelevant_rate_max": 0.25
+  },
+  "search_stage": {
+    "exclusion_violations": 0,
+    "exclusion_violation_queries": [],
+    "hold_query_leaks": 0,
+    "hold_query_leak_detail": [],
+    "forwarded_candidates_total": 4,
+    "raw_candidates_total": 47
+  },
+  "core_recheck_stage": {
+    "removed_by_reason": {},
+    "holds_by_kind": {
+      "DECISION_REQUEST": 7,
+      "NO_CANDIDATE": 13
+    },
+    "tool_calls": {
+      "applicable_checklist": 17,
+      "rule_evidence": 4
+    }
+  },
+  "final_stage": {
+    "queries_scored": 8,
+    "recall_at_5": 0.375,
+    "mrr": 0.375,
+    "precision_returned": 0.375,
+    "irrelevant_count": 1,
+    "irrelevant_rate": 0.25,
+    "average_returned": 0.5,
+    "exposed": 0,
+    "exposed_queries": [],
+    "false_holds": [
+      "T18",
+      "T20",
+      "T22",
+      "T24"
+    ],
+    "false_hold_rate": 0.5,
+    "missed_holds": [],
+    "missed_hold_rate": 0.0,
+    "fields_provided_rate": 0.75,
+    "fields_missing": [
+      {
+        "query_id": "T18",
+        "expected": 1,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "exceptions",
+            "expected_value": [
+              "별도 약정으로 수수료 면제가 확인된 경우"
+            ]
+          }
+        ],
+        "ok": false
+      }
+    ]
+  },
+  "verdict": {
+    "required_all_zero": true,
+    "recall_at_5": false,
+    "mrr": false,
+    "precision_returned": false,
+    "irrelevant_rate": true,
+    "all_targets_met": false
+  },
+  "latency_us": {
+    "p50": 11749,
+    "p95": 32303,
+    "count": 24
+  },
+  "failed_queries": [
+    "T18",
+    "T19",
+    "T20",
+    "T22",
+    "T24"
+  ],
+  "queries": [
+    {
+      "query_id": "T01",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 158
+      }
+    },
+    {
+      "query_id": "T02",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 117
+      }
+    },
+    {
+      "query_id": "T03",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "1.326306"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "0.454755"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 6523,
+        "tool_1": 5176,
+        "total": 12047
+      }
+    },
+    {
+      "query_id": "T04",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 164
+      }
+    },
+    {
+      "query_id": "T05",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 105
+      }
+    },
+    {
+      "query_id": "T06",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 115
+      }
+    },
+    {
+      "query_id": "T07",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 103
+      }
+    },
+    {
+      "query_id": "T08",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 136
+      }
+    },
+    {
+      "query_id": "T09",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "2.774683"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "1.543733"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "0.691669"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 6087,
+        "tool_1": 5540,
+        "total": 11956
+      }
+    },
+    {
+      "query_id": "T10",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "1.793287"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "0.949007"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5100,
+        "tool_1": 5215,
+        "total": 10720
+      }
+    },
+    {
+      "query_id": "T11",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "1.277090"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "0.179468"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "0.122070"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 4943,
+        "tool_1": 5228,
+        "total": 10576
+      }
+    },
+    {
+      "query_id": "T12",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "1.309751"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "1.088978"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "0.153031"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5869,
+        "tool_1": 5470,
+        "total": 11749
+      }
+    },
+    {
+      "query_id": "T13",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "3.119594"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "0.538638"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "0.198930"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 6985,
+        "tool_1": 5955,
+        "total": 13375
+      }
+    },
+    {
+      "query_id": "T14",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "1.124059"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "0.896644"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "0.756288"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 6621,
+        "tool_1": 4930,
+        "total": 11965
+      }
+    },
+    {
+      "query_id": "T15",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "2.222950"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "0.454755"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 6672,
+        "tool_1": 5287,
+        "total": 12377
+      }
+    },
+    {
+      "query_id": "T16",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "4.484710"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "1.964626"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "0.306062"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5409,
+        "tool_1": 4530,
+        "total": 10356
+      }
+    },
+    {
+      "query_id": "T17",
+      "category": "current_value",
+      "expected_hold": false,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "5.342544"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "1.910436"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "1.124059"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "5.342544"
+        }
+      ],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "precision_returned": 1.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 1,
+        "missing": [],
+        "ok": true
+      },
+      "timings_us": {
+        "es": 4933,
+        "tool_1": 5553,
+        "tool_2": 4135,
+        "total": 15017
+      }
+    },
+    {
+      "query_id": "T18",
+      "category": "paraphrase",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "3.618886"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "0.909510"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 1,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "exceptions",
+            "expected_value": [
+              "별도 약정으로 수수료 면제가 확인된 경우"
+            ]
+          }
+        ],
+        "ok": false
+      },
+      "timings_us": {
+        "es": 5108,
+        "tool_1": 4651,
+        "total": 10171
+      }
+    },
+    {
+      "query_id": "T19",
+      "category": "paraphrase",
+      "expected_hold": false,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "4.812111"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "2.308295"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "1.536368"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "4.812111"
+        }
+      ],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5670,
+        "tool_1": 5818,
+        "tool_2": 6197,
+        "total": 18083
+      }
+    },
+    {
+      "query_id": "T20",
+      "category": "direct",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "4.369907"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "1.225536"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "0.955218"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 13296,
+        "tool_1": 18524,
+        "total": 32303
+      }
+    },
+    {
+      "query_id": "T21",
+      "category": "numeric",
+      "expected_hold": false,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "6.361258"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "1.987716"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "0.153031"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "6.361258"
+        }
+      ],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "precision_returned": 1.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 1,
+        "missing": [],
+        "ok": true
+      },
+      "timings_us": {
+        "es": 18357,
+        "tool_1": 23430,
+        "tool_2": 8742,
+        "total": 51440
+      }
+    },
+    {
+      "query_id": "T22",
+      "category": "direct",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "2.554179"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "0.955218"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "0.244141"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 6527,
+        "tool_1": 5280,
+        "total": 12227
+      }
+    },
+    {
+      "query_id": "T23",
+      "category": "numeric",
+      "expected_hold": false,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "6.790920"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "2.442470"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "0.153031"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "6.790920"
+        }
+      ],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "precision_returned": 1.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 1,
+        "missing": [],
+        "ok": true
+      },
+      "timings_us": {
+        "es": 5684,
+        "tool_1": 5314,
+        "tool_2": 5095,
+        "total": 16508
+      }
+    },
+    {
+      "query_id": "T24",
+      "category": "old_value_apply",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "3.708645"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "2.532237"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "1.815728"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 7500,
+        "tool_1": 5540,
+        "total": 13461
+      }
+    }
+  ],
+  "decision_guard": {
+    "enabled": true,
+    "version": "decision-guard-v1"
+  }
+}

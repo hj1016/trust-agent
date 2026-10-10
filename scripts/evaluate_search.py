@@ -231,7 +231,11 @@ def summarize(goldenset: dict, results: Sequence[QueryResult], configuration: st
         "forwarded_candidates_total": sum(len(r.forwarded) for r in results),
         "raw_candidates_total": sum(len(r.raw) for r in results),
     }
-    core_stage = {"removed_by_reason": removed_by_reason, "tool_calls": {
+    holds_by_kind: dict[str, int] = {}
+    for r in results:
+        if r.status == "EVIDENCE_HOLD":
+            holds_by_kind[r.hold_kind or "NONE"] = holds_by_kind.get(r.hold_kind or "NONE", 0) + 1
+    core_stage = {"removed_by_reason": removed_by_reason, "holds_by_kind": holds_by_kind, "tool_calls": {
         "applicable_checklist": sum(r.tool_calls.get("applicable_checklist", 0) for r in results),
         "rule_evidence": sum(r.tool_calls.get("rule_evidence", 0) for r in results)}}
     final_stage = {
@@ -289,6 +293,7 @@ def run(goldenset: dict, fetch: Callable[[dict], dict], configuration: str, root
     results: list[QueryResult] = []
     relevance_hold = None
     search_version = None
+    guard = None
     for query in goldenset["queries"]:
         body = {"query": query["query"], "familyId": query["family_id"], "businessDate": query["business_date"], "topK": top_k,
                 "consultationId": "eval-" + goldenset["goldenset_id"] + "-" + query["query_id"]}
@@ -297,6 +302,10 @@ def run(goldenset: dict, fetch: Callable[[dict], dict], configuration: str, root
         if relevance_hold is not None and hold != relevance_hold:
             raise EvaluationRejected("RELEVANCE_HOLD_CHANGED", "평가 도중 관련성 보류 기준이 바뀌었습니다.")
         relevance_hold = hold
+        current_guard = response.get("decision_guard")
+        if guard is not None and current_guard != guard:
+            raise EvaluationRejected("DECISION_GUARD_CHANGED", "평가 도중 결정 요청 판별 설정이 바뀌었습니다.")
+        guard = current_guard
         search_version = response.get("search_version")
         results.append(to_result(query, response))
     if relevance_hold is None:
@@ -306,7 +315,9 @@ def run(goldenset: dict, fetch: Callable[[dict], dict], configuration: str, root
     check_context(goldenset, results)
     evaluated = {r.tool_1.get("usable") and r.query_id for r in results if r.tool_1}
     final = goldenset["kind"] == "eval" and relevance_hold.get("version") != "untuned"
-    return summarize(goldenset, results, configuration, relevance_hold, search_version, final)
+    summary = summarize(goldenset, results, configuration, relevance_hold, search_version, final)
+    summary["decision_guard"] = guard
+    return summary
 
 
 # ---- 관련성 보류 기준 조정(초기 점검용 자료로만) ----
@@ -322,12 +333,19 @@ def apply_hold(raw: Sequence[dict], method: str, min_score: float, min_ratio: fl
     return kept[:top_k]
 
 
-def tune(result: dict) -> dict:
-    """원시 후보 점수로 세 방식을 비교한다. 조건: 보류 질의 후보 유출(b) 0건 → 그중 잘못된 보류(비보류 질의에서 relevant가 전달 후보에 하나도 없음) 최소 → 전달 후보 수 최대."""
-    if result["kind"] == "eval":
-        raise EvaluationRejected("TUNING_ON_EVAL_SET", "최종 평가용 자료로는 관련성 보류 기준을 조정하지 않는다.")
-    queries = result["queries"]
-    goldenset_by_id = result.get("_goldenset_queries") or {}
+def tune(result: dict, extra: Sequence[dict] = ()) -> dict:
+    """원시 후보 점수로 세 방식을 비교한다. 조건: 보류 질의 후보 유출(b) 0건 → 그중 잘못된 보류(비보류 질의에서 relevant가 전달 후보에 하나도 없음) 최소 → 전달 후보 수 최대.
+    extra는 같은 구성으로 실행한 다른 조정 자료(초기 점검용·조정용)의 결과다. 최종 평가용(kind eval)은 어느 쪽에도 들어갈 수 없다."""
+    results = [result, *extra]
+    for item in results:
+        if item["kind"] == "eval":
+            raise EvaluationRejected("TUNING_ON_EVAL_SET", "최종 평가용 자료로는 관련성 보류 기준을 조정하지 않는다.")
+    if len({(item.get("configuration"), json.dumps(item.get("decision_guard"), sort_keys=True)) for item in results}) > 1:
+        raise EvaluationRejected("TUNING_CONFIGURATION_MISMATCH", "조정 자료들의 검색 구성이 서로 다릅니다.")
+    queries = [q for item in results for q in item["queries"]]
+    goldenset_by_id = {}
+    for item in results:
+        goldenset_by_id.update(item.get("_goldenset_queries") or {})
     scores = sorted({float(c["score"]) for q in queries for c in q["raw_top5"]} | {0.0})
     ratios = [round(x / 100, 2) for x in range(0, 101, 5)]
     table = []
@@ -353,7 +371,8 @@ def tune(result: dict) -> dict:
     table.sort(key=rank)
     best_by_method = {m: next((row for row in table if row["method"] == m), None) for m in ("absolute", "ratio", "combined")}
     chosen = best_by_method["combined"] if best_by_method["combined"] and best_by_method["combined"]["leaks"] == 0 else table[0]
-    return {"grid_size": len(table), "best_by_method": best_by_method, "chosen": chosen, "top": table[:15]}
+    sources = [f"{item['goldenset_id']}-{item['goldenset_version']}({item['kind']}, {item['query_count']}건)" for item in results]
+    return {"grid_size": len(table), "sources": sources, "best_by_method": best_by_method, "chosen": chosen, "top": table[:15]}
 
 
 # ---- Markdown ----
@@ -368,12 +387,13 @@ def fmt(value) -> str:
 def markdown(summary: dict) -> str:
     s = summary["search_stage"]; c = summary["core_recheck_stage"]; f = summary["final_stage"]; v = summary["verdict"]
     lines = [f"# 검색 평가 결과 {summary['configuration']} / {summary['goldenset_id']} {summary['goldenset_version']} ({summary['kind']}, {summary['query_count']}건)", "",
-             f"- search_version: `{summary['search_version']}`, relevance_hold: `{json.dumps(summary['relevance_hold'])}`, 최종 평가 기록: {'예' if summary['final_evaluation'] else '아니오(초기 점검·조정)'}",
+             f"- search_version: `{summary['search_version']}`, relevance_hold: `{json.dumps(summary['relevance_hold'])}`, decision_guard: `{json.dumps(summary.get('decision_guard'))}`, 최종 평가 기록: {'예' if summary['final_evaluation'] else '아니오(초기 점검·조정)'}",
              f"- 지연(us, 질의 전체 처리): p50 {fmt(summary['latency_us']['p50'])}, p95 {fmt(summary['latency_us']['p95'])}, n={summary['latency_us']['count']}", "",
              "## 세 단계 지표", "", "| 단계 | 지표 | 값 | 기준 | 충족 |", "|---|---|---|---|---|",
              f"| 검색 단계 | 제외 조건 위반(전달 후보) | {s['exclusion_violations']} | 0(필수) | {'예' if s['exclusion_violations'] == 0 else '아니오'} |",
              f"| 검색 단계 | 보류 질의 후보 유출 | {s['hold_query_leaks']} | 0(필수) | {'예' if s['hold_query_leaks'] == 0 else '아니오'} |",
              f"| Core 재확인 | 제거 사유별 건수 | {json.dumps(c['removed_by_reason'], ensure_ascii=False)} | 기록 | - |",
+             f"| 전체 | 보류 종류별 건수 | {json.dumps(c.get('holds_by_kind', {}), ensure_ascii=False)} | 기록 | - |",
              f"| Core 재확인 | Tool 호출 수 | Tool 1 {c['tool_calls']['applicable_checklist']}, Tool 2 {c['tool_calls']['rule_evidence']} | 기록 | - |",
              f"| 재확인 후 | Recall@5 | {fmt(f['recall_at_5'])} | ≥ {TARGETS['recall_at_5']} | {fmt(v['recall_at_5'])} |",
              f"| 재확인 후 | MRR | {fmt(f['mrr'])} | ≥ {TARGETS['mrr']} | {fmt(v['mrr'])} |",
@@ -410,7 +430,8 @@ def tune_markdown(tuning: dict) -> str:
         if row:
             lines.append(f"| {m} | {row['min_score']} | {row['min_ratio']} | {row['leaks']} | {row['false_holds']} | {row['forwarded']} |")
     c = tuning["chosen"]
-    lines += ["", f"선택: `{c['method']}` min_score {c['min_score']}, min_ratio {c['min_ratio']} (유출 {c['leaks']}, 잘못된 보류 {c['false_holds']}, 격자 {tuning['grid_size']}개 중)", ""]
+    lines += ["", f"조정 자료: {', '.join(tuning.get('sources', []))}",
+              f"선택: `{c['method']}` min_score {c['min_score']}, min_ratio {c['min_ratio']} (유출 {c['leaks']}, 잘못된 보류 {c['false_holds']}, 격자 {tuning['grid_size']}개 중)", ""]
     return "\n".join(lines)
 
 
@@ -426,8 +447,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     run_cmd.add_argument("--timeout", type=float, default=30.0)
     run_cmd.add_argument("--repository-root", type=Path, default=ROOT)
     tune_cmd = commands.add_parser("tune")
-    tune_cmd.add_argument("--result", required=True, type=Path)
-    tune_cmd.add_argument("--goldenset", required=True, type=Path)
+    tune_cmd.add_argument("--result", required=True, type=Path, action="append", help="조정 자료 실행 결과(여러 번 지정 가능)")
+    tune_cmd.add_argument("--goldenset", required=True, type=Path, action="append", help="--result와 같은 순서의 골든셋")
     tune_cmd.add_argument("--out", required=True, type=Path)
     args = parser.parse_args(argv)
     try:
@@ -440,10 +461,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             (args.out_dir / (stem + ".md")).write_text(markdown(summary), encoding="utf-8")
             print(json.dumps({"result": str(args.out_dir / (stem + ".result.json")), "verdict": summary["verdict"], "final_evaluation": summary["final_evaluation"]}, ensure_ascii=False))
             return 0
-        result = load_json(args.result)
-        goldenset = load_json(args.goldenset)
-        result["_goldenset_queries"] = {q["query_id"]: q for q in goldenset["queries"]}
-        tuning = tune(result)
+        if len(args.result) != len(args.goldenset):
+            raise EvaluationRejected("TUNING_ARGUMENTS", "--result와 --goldenset 개수가 다릅니다.")
+        loaded = []
+        for result_path, goldenset_path in zip(args.result, args.goldenset):
+            result = load_json(result_path)
+            goldenset = load_json(goldenset_path)
+            if goldenset["kind"] == "eval":
+                raise EvaluationRejected("TUNING_ON_EVAL_SET", "최종 평가용 자료로는 관련성 보류 기준을 조정하지 않는다.")
+            result["_goldenset_queries"] = {q["query_id"]: q for q in goldenset["queries"]}
+            loaded.append(result)
+        tuning = tune(loaded[0], loaded[1:])
         args.out.write_text(json.dumps(tuning, ensure_ascii=False, indent=2), encoding="utf-8")
         args.out.with_suffix(".md").write_text(tune_markdown(tuning), encoding="utf-8")
         print(json.dumps(tuning["chosen"], ensure_ascii=False))

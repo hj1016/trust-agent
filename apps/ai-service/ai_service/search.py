@@ -17,7 +17,7 @@ from zoneinfo import ZoneInfo
 
 from jsonschema import Draft202012Validator, FormatChecker
 
-from . import search_messages
+from . import decision_guard, search_messages
 from .config import Settings
 from .core_client import CoreClient, CoreResponse, HttpTransport, TransportTimeout, TransportUnavailable
 from .es_client import EsTransport, SearchUnavailable
@@ -70,6 +70,8 @@ class SearchSettings:
     hold: RelevanceHold
     diagnostics: bool
     fuzziness: Optional[str] = None  # multi_match fuzziness(예: AUTO). standard 분석기 비교용(TASK-016 제안 1). 없으면 정확 일치
+    decision_guard: bool = True  # 결정 요청 판별(decision_guard.py). 평가에서 효과를 분리하려고 끌 수 있다
+    min_should_match: Optional[str] = None  # multi_match minimum_should_match(예: 60%). 질의어 일치 비율 조건(관련성 확인 검토용). 없으면 조건 없음
 
 
 def validate_request(query: Any, family_id: Any, business_date: Any, consultation_id: Any, top_k: Any, now: datetime) -> tuple[str, str, str, Optional[str], int]:
@@ -97,11 +99,14 @@ def validate_request(query: Any, family_id: Any, business_date: Any, consultatio
     return query, family_id, effective, consultation_id, top_k
 
 
-def es_query(query: str, family_id: str, business_date: str, size: int, fuzziness: Optional[str] = None) -> dict:
+def es_query(query: str, family_id: str, business_date: str, size: int, fuzziness: Optional[str] = None,
+             min_should_match: Optional[str] = None) -> dict:
     """BM25 질의 + metadata filter. 업무일은 effective_ranges(date_range)에 한 날짜를 intersects로 묻는다(ADR-013 3-1항)."""
     match: dict[str, Any] = {"query": query, "fields": ["evidence_text", "structured_text"], "operator": "or"}
     if fuzziness:
         match["fuzziness"] = fuzziness
+    if min_should_match:
+        match["minimum_should_match"] = min_should_match
     return {
         "size": size,
         "_source": False,
@@ -128,7 +133,7 @@ def search(query: Any, family_id: Any, business_date: Any = None, consultation_i
     evidence_validator = _validator(root / EVIDENCE_SCHEMA_PATH)
     client = CoreClient(settings.core_base_url, settings.tool_token, None, settings.timeout_seconds, transport)
     hold = search_settings.hold
-    diagnostics: dict[str, Any] = {"raw_candidates": [], "forwarded_candidates": [], "removed": [], "tool_1": None,
+    diagnostics: dict[str, Any] = {"raw_candidates": [], "forwarded_candidates": [], "removed": [], "tool_1": None, "decision_guard_match": None,
                                    "tool_calls": {"applicable_checklist": 0, "rule_evidence": 0}, "timings_us": {}}
 
     def finish(status: str, hold_kind: Optional[str], reasons: list[str], evidence: list[dict], evaluated_at: Optional[str]) -> dict:
@@ -154,6 +159,7 @@ def search(query: Any, family_id: Any, business_date: Any = None, consultation_i
                 "hold_notice": search_messages.SEARCH_NOTICES["hold_notice"] if status == "EVIDENCE_HOLD" else None,
             },
             "relevance_hold": hold.as_dict(),
+            "decision_guard": {"enabled": search_settings.decision_guard, "version": decision_guard.VERSION},
         }
         if consultation_id:
             output["consultation_id"] = consultation_id
@@ -161,10 +167,17 @@ def search(query: Any, family_id: Any, business_date: Any = None, consultation_i
             output["diagnostics"] = diagnostics
         return output
 
+    # 0) 결정 요청 판별: 근거를 찾을 질문이 아니므로 ES·Core를 부르지 않고 보류한다.
+    if search_settings.decision_guard:
+        matched = decision_guard.detect(query)
+        if matched is not None:
+            diagnostics["decision_guard_match"] = matched
+            return finish("EVIDENCE_HOLD", "DECISION_REQUEST", ["DECISION_REQUEST_NOT_SUPPORTED"], [], None)
+
     # 1) 검색 단계: ES 후보(ID·점수만). 원시 후보는 기록용, 전달 후보는 관련성 보류 뒤.
     es_started = time.perf_counter()
     try:
-        response = es.search(search_settings.index_alias, es_query(query, family_id, business_date, top_k * 2, search_settings.fuzziness))
+        response = es.search(search_settings.index_alias, es_query(query, family_id, business_date, top_k * 2, search_settings.fuzziness, search_settings.min_should_match))
     except SearchUnavailable as error:
         diagnostics["timings_us"]["es"] = int((time.perf_counter() - es_started) * 1_000_000)
         return finish("EVIDENCE_HOLD", "UNVERIFIED", [error.code], [], None)

@@ -13,6 +13,7 @@ SEARCH_REASON_MESSAGES: dict[str, str] = {
     "SEARCH_UNAVAILABLE": "검색 엔진에 연결하지 못해 근거를 찾지 못했습니다. 잠시 뒤 다시 시도하세요.",
     "SEARCH_TIMEOUT": "검색 엔진 응답이 시간 안에 오지 않았습니다. 잠시 뒤 다시 시도하세요.",
     "NO_RELEVANT_CANDIDATE": "질문과 관련된 승인 근거 후보가 없습니다.",
+    "DECISION_REQUEST_NOT_SUPPORTED": "대출 승인·거절, 금리·한도 확정, 신용등급 결정은 AI가 하지 않으며 담당자와 결재 절차가 정합니다. 확인할 규정이 있으면 규정 내용을 묻는 질문으로 다시 검색하세요.",
 }
 
 

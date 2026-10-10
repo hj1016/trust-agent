@@ -81,6 +81,9 @@ class SearchTest(unittest.TestCase):
         fuzzy = SearchSettings("alias", RelevanceHold(), False, fuzziness="AUTO")
         self.run_search(es, transport, search_settings=fuzzy)
         self.assertEqual("AUTO", es.requests[-1][1]["query"]["bool"]["must"][0]["multi_match"]["fuzziness"])
+        self.assertNotIn("minimum_should_match", es.requests[0][1]["query"]["bool"]["must"][0]["multi_match"])
+        self.run_search(es, transport, search_settings=SearchSettings("alias", RelevanceHold(), False, min_should_match="60%"))
+        self.assertEqual("60%", es.requests[-1][1]["query"]["bool"]["must"][0]["multi_match"]["minimum_should_match"])
 
     # ---- AC-05: Tool 1 사용 불가 ----
     def test_tool_1_unusable_is_core_decision_hold_even_with_candidates(self):
@@ -217,11 +220,47 @@ class SearchTest(unittest.TestCase):
         self.assertNotIn("diagnostics", plain)
         self.assertNotIn("raw_candidates", json.dumps(plain))
         diagnosed = self.run_search(es, transport, search_settings=no_hold(True))
-        self.assertEqual({"raw_candidates", "forwarded_candidates", "removed", "tool_1", "tool_calls", "timings_us"}, set(diagnosed["diagnostics"]))
+        self.assertEqual({"raw_candidates", "forwarded_candidates", "removed", "tool_1", "decision_guard_match", "tool_calls", "timings_us"}, set(diagnosed["diagnostics"]))
         self.assertEqual(self.checklist["approvedChecklist"]["decisionId"], diagnosed["diagnostics"]["tool_1"]["decision_id"])
         self.assertEqual({"applicable_checklist": 1, "rule_evidence": 1}, diagnosed["diagnostics"]["tool_calls"])
         self.assertTrue({"es", "tool_1", "tool_2", "total"} <= set(diagnosed["diagnostics"]["timings_us"]))
         self.assertEqual("5.000000", diagnosed["diagnostics"]["raw_candidates"][0]["score"])
+
+
+class DecisionGuardTest(unittest.TestCase):
+    """결정 요청 판별: 결정 동사 + 요청 어미 + 결정 대상. 단순 키워드 차단이 아님을 정상 문의로 확인한다."""
+
+    def test_flags_decision_requests(self):
+        from ai_service import decision_guard
+        for text in ("이 건 대출 승인해 주세요", "한도를 3억으로 확정해 주세요", "금리 인하를 승인 부탁드립니다", "이 차주 심사는 부결로 처리합시다",
+                     "이 신청 거절해도 되나요?", "대출 실행해도 괜찮을까요?", "이 고객 여신 반려할게요", "등급 확정하면 될까요"):
+            with self.subTest(text=text):
+                self.assertIsNotNone(decision_guard.detect(text))
+
+    def test_does_not_flag_rule_inquiries_with_decision_words(self):
+        from ai_service import decision_guard
+        for text in ("승인된 공문 기준 수수료율이 얼마예요?", "대출 승인 여부와 별개로 수수료 적용 조건이 뭔가요?", "한도 승인 전에 확인할 항목이 있나요?",
+                     "대출 승인 절차에서 공문 출처를 확인하나요?", "이 고객은 1.2퍼센트로 처리해도 되나요?", "수수료율 변경은 언제 확정됐나요?",
+                     "승인해 주세요", "중도상환수수료 0.8% 적용 조건을 알려 주세요"):
+            with self.subTest(text=text):
+                self.assertIsNone(decision_guard.detect(text))
+
+    def test_search_holds_decision_request_without_calling_es_or_core(self):
+        root = make_root(); settings = settings_for(root, record_token=None)
+        es = FakeEs([("policy-rule:sha256:" + "a" * 64, 9.0)]); transport = FakeTransport().usable(PREPAYMENT, prepayment_usable())
+        result = search("이 신청 건 금리를 확정해 주세요", PREPAYMENT, "2026-10-06", None, None, settings=settings,
+                        search_settings=no_hold(True), es=es, transport=transport, clock=CLOCK)
+        self.assertEqual(("EVIDENCE_HOLD", "DECISION_REQUEST", ["DECISION_REQUEST_NOT_SUPPORTED"]), (result["status"], result["hold_kind"], result["hold_reasons"]))
+        self.assertEqual([], es.requests)
+        self.assertEqual([], transport.calls)
+        self.assertEqual("확정해 주", result["diagnostics"]["decision_guard_match"])
+        self.assertIn("AI가 하지 않으며", result["hold_message"])
+        self.assertEqual({"enabled": True, "version": "decision-guard-v1"}, result["decision_guard"])
+        off = SearchSettings("alias", RelevanceHold(), True, decision_guard=False)
+        unguarded = search("이 신청 건 금리를 확정해 주세요", PREPAYMENT, "2026-10-06", None, None, settings=settings,
+                           search_settings=off, es=es, transport=transport, clock=CLOCK)
+        self.assertNotEqual("DECISION_REQUEST", unguarded["hold_kind"])
+        self.assertEqual(1, len(es.requests), "끄면 검색한다")
 
 
 class SearchSettingsTest(unittest.TestCase):
@@ -242,6 +281,14 @@ class SearchSettingsTest(unittest.TestCase):
         self.assertEqual("AUTO", config.load_search_settings({config.ENV_SEARCH_FUZZINESS: "auto"}).fuzziness)
         with self.assertRaises(config.SettingsError):
             config.load_search_settings({config.ENV_SEARCH_FUZZINESS: "3"})
+        self.assertIsNone(config.load_search_settings({}).min_should_match)
+        self.assertEqual("60%", config.load_search_settings({config.ENV_SEARCH_MIN_SHOULD_MATCH: "60%"}).min_should_match)
+        with self.assertRaises(config.SettingsError):
+            config.load_search_settings({config.ENV_SEARCH_MIN_SHOULD_MATCH: "60"})
+        self.assertTrue(config.load_search_settings({}).decision_guard)
+        self.assertFalse(config.load_search_settings({config.ENV_SEARCH_DECISION_GUARD: "off"}).decision_guard)
+        with self.assertRaises(config.SettingsError):
+            config.load_search_settings({config.ENV_SEARCH_DECISION_GUARD: "maybe"})
 
 
 class SearchRouteTest(unittest.TestCase):

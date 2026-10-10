@@ -112,6 +112,8 @@ export TRUST_AGENT_SEARCH_DIAGNOSTICS=1   # 평가 하네스 전용. 응답에 d
 .venv/bin/python -m uvicorn ai_service.app:app --host 127.0.0.1 --port 8090
 ```
 
+**결정 요청 판별(`decision_guard.py`, `decision-guard-v1`).** AI는 대출 승인·거절, 금리·한도 확정, 신용등급 결정 주체가 아니다. 결정 동사(승인·거절·부결·가결·반려·확정·실행·증액·감액) 바로 뒤에 요청·허락·통보 어미가 붙고 같은 문장에 결정 대상(대출·여신·한도·금리·신용등급·심사·신청·차주·건)이 있으면, ES·Core를 부르지 않고 `hold_kind: DECISION_REQUEST`, 사유 `DECISION_REQUEST_NOT_SUPPORTED`로 보류한다. "승인된 공문", "대출 승인 여부와 별개로", "한도 승인 전에"처럼 어미가 붙지 않은 표현은 해당하지 않는다. 규칙 기반이라 놓치는 표현이 있으며 그 경우는 관련성 보류가 맡는다. `TRUST_AGENT_SEARCH_DECISION_GUARD=off`로 끌 수 있다(평가에서 효과 분리용, 기본 on).
+
 관련성 보류 기준은 `absolute`(최소 점수), `ratio`(상위 점수 대비 비율), `combined`(둘 다) 중 하나이며, 값이 없으면 보류 없음(`version: untuned`)입니다. 평가 스크립트 `scripts/evaluate_search.py`는 `untuned`를 최종 평가로 받지 않습니다(`run --allow-untuned`는 초기 점검용 조정에만, `tune`은 초기 점검용 결과로 세 방식을 비교). 고정값과 측정 결과는 `docs/evidence/SEARCH_EVALUATION_bm25_v1.md`에 있습니다. 행원용 Core 경로(세션·grant)는 TASK-017c이며, 이 API는 내부망의 Core에서만 호출하는 전제입니다.
 
 ## 테스트

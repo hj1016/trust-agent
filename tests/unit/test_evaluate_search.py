@@ -27,7 +27,7 @@ def response_for(query: dict, returned: list[str], hold: dict, raw: list[tuple[s
     evidence = [{"rank": i + 1, "rule_version_id": r, "rule_key": "K", "score": "1.000000", "instruction": "x", "evidence_required": True,
                  "structured_change": FIELDS_BY_RULE.get(r),
                  "evidence": {"notice_id": "N", "evidence_text": "t", "json_pointer": "/rules/0", "evidence_hash": "sha256:" + "0" * 64}} for i, r in enumerate(returned)]
-    return {"search_version": "search-bm25-v1", "status": "EVIDENCE" if evidence else "EVIDENCE_HOLD", "hold_kind": None if evidence else "NO_CANDIDATE",
+    return {"search_version": "search-bm25-v1", "decision_guard": {"enabled": True, "version": "decision-guard-v1"}, "status": "EVIDENCE" if evidence else "EVIDENCE_HOLD", "hold_kind": None if evidence else "NO_CANDIDATE",
             "hold_reasons": [] if evidence else ["NO_RELEVANT_CANDIDATE"], "evidence": evidence, "relevance_hold": hold,
             "diagnostics": {"raw_candidates": [{"rule_version_id": r, "score": f"{s:.6f}"} for r, s in raw], "forwarded_candidates": forwarded,
                             "removed": [], "tool_1": {"usable": usable, "decision_id": DECISION if usable else None, "blocking_reasons": []},
@@ -154,6 +154,24 @@ class EvaluateSearchTest(unittest.TestCase):
         self.assertEqual(["policy" in r for r in in_scope], [True] * len(in_scope))
         with self.assertRaises(ev.EvaluationRejected):
             ev.tune({"kind": "eval", "queries": []})
+
+    def test_tuning_combines_smoke_and_tuning_sets_but_never_eval(self):
+        tuning_set = ev.load_json(ROOT / "datasets/synthetic/search-goldenset/prepayment-fee-tuning-v1.json")
+        untuned = dict(self.hold, version="untuned")
+        smoke = ev.run(self.smoke, self.perfect_fetch(self.smoke, untuned), "x", allow_untuned=True)
+        tuning = ev.run(tuning_set, self.perfect_fetch(tuning_set, untuned), "x", allow_untuned=True)
+        self.assertFalse(tuning["final_evaluation"], "조정용 자료는 최종 평가로 기록하지 않는다")
+        smoke["_goldenset_queries"] = {q["query_id"]: q for q in self.smoke["queries"]}
+        tuning["_goldenset_queries"] = {q["query_id"]: q for q in tuning_set["queries"]}
+        combined = ev.tune(smoke, [tuning])
+        self.assertEqual(2, len(combined["sources"]))
+        evaluated = ev.run(self.eval, self.perfect_fetch(self.eval), "x")
+        with self.assertRaises(ev.EvaluationRejected):
+            ev.tune(smoke, [evaluated])
+        other = dict(tuning, configuration="y")
+        with self.assertRaises(ev.EvaluationRejected) as rejected:
+            ev.tune(smoke, [other])
+        self.assertEqual("TUNING_CONFIGURATION_MISMATCH", rejected.exception.code)
 
     def test_apply_hold_methods(self):
         raw = [{"rule_version_id": "a", "score": "10"}, {"rule_version_id": "b", "score": "4"}, {"rule_version_id": "c", "score": "1"}]

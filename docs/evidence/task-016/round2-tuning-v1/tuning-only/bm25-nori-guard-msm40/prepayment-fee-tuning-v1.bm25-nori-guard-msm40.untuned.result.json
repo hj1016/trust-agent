@@ -1,0 +1,886 @@
+{
+  "goldenset_id": "prepayment-fee-tuning",
+  "goldenset_version": "v1",
+  "kind": "tuning",
+  "query_count": 24,
+  "configuration": "bm25-nori-guard-msm40",
+  "search_version": "search-bm25-v1",
+  "relevance_hold": {
+    "method": "combined",
+    "min_score": "0",
+    "min_ratio": "0",
+    "version": "untuned"
+  },
+  "final_evaluation": false,
+  "targets": {
+    "recall_at_5": 0.8,
+    "mrr": 0.7,
+    "precision_returned": 0.7,
+    "irrelevant_rate_max": 0.25
+  },
+  "search_stage": {
+    "exclusion_violations": 0,
+    "exclusion_violation_queries": [],
+    "hold_query_leaks": 3,
+    "hold_query_leak_detail": [
+      {
+        "query_id": "T09",
+        "a_filter_defect": [],
+        "b_relevance_defect": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+        ]
+      },
+      {
+        "query_id": "T13",
+        "a_filter_defect": [],
+        "b_relevance_defect": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+        ]
+      },
+      {
+        "query_id": "T16",
+        "a_filter_defect": [],
+        "b_relevance_defect": [
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ]
+      }
+    ],
+    "forwarded_candidates_total": 9,
+    "raw_candidates_total": 9
+  },
+  "core_recheck_stage": {
+    "removed_by_reason": {},
+    "holds_by_kind": {
+      "DECISION_REQUEST": 7,
+      "NO_CANDIDATE": 8
+    },
+    "tool_calls": {
+      "applicable_checklist": 17,
+      "rule_evidence": 9
+    }
+  },
+  "final_stage": {
+    "queries_scored": 8,
+    "recall_at_5": 0.75,
+    "mrr": 0.75,
+    "precision_returned": 0.75,
+    "irrelevant_count": 0,
+    "irrelevant_rate": 0.0,
+    "average_returned": 0.75,
+    "exposed": 3,
+    "exposed_queries": [
+      "T09",
+      "T13",
+      "T16"
+    ],
+    "false_holds": [
+      "T19",
+      "T22"
+    ],
+    "false_hold_rate": 0.25,
+    "missed_holds": [
+      "T09",
+      "T13",
+      "T16"
+    ],
+    "missed_hold_rate": 0.1875,
+    "fields_provided_rate": 1.0,
+    "fields_missing": []
+  },
+  "verdict": {
+    "required_all_zero": false,
+    "recall_at_5": false,
+    "mrr": true,
+    "precision_returned": true,
+    "irrelevant_rate": true,
+    "all_targets_met": false
+  },
+  "latency_us": {
+    "p50": 11409,
+    "p95": 18506,
+    "count": 24
+  },
+  "failed_queries": [
+    "T09",
+    "T13",
+    "T16",
+    "T19",
+    "T22"
+  ],
+  "queries": [
+    {
+      "query_id": "T01",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 158
+      }
+    },
+    {
+      "query_id": "T02",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 107
+      }
+    },
+    {
+      "query_id": "T03",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 6832,
+        "tool_1": 5926,
+        "total": 13103
+      }
+    },
+    {
+      "query_id": "T04",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 149
+      }
+    },
+    {
+      "query_id": "T05",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 105
+      }
+    },
+    {
+      "query_id": "T06",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 132
+      }
+    },
+    {
+      "query_id": "T07",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 110
+      }
+    },
+    {
+      "query_id": "T08",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 97
+      }
+    },
+    {
+      "query_id": "T09",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "2.774683"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "2.774683"
+        }
+      ],
+      "removed": [],
+      "returned": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "exclusion_violations": [],
+      "leak": {
+        "a_filter_defect": [],
+        "b_relevance_defect": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+        ]
+      },
+      "fields": null,
+      "timings_us": {
+        "es": 6057,
+        "tool_1": 5951,
+        "tool_2": 5563,
+        "total": 17944
+      }
+    },
+    {
+      "query_id": "T10",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5558,
+        "tool_1": 5691,
+        "total": 11624
+      }
+    },
+    {
+      "query_id": "T11",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5376,
+        "tool_1": 5567,
+        "total": 11340
+      }
+    },
+    {
+      "query_id": "T12",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5279,
+        "tool_1": 5745,
+        "total": 11409
+      }
+    },
+    {
+      "query_id": "T13",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "3.119594"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "3.119594"
+        }
+      ],
+      "removed": [],
+      "returned": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "exclusion_violations": [],
+      "leak": {
+        "a_filter_defect": [],
+        "b_relevance_defect": [
+          "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+        ]
+      },
+      "fields": null,
+      "timings_us": {
+        "es": 5777,
+        "tool_1": 5671,
+        "tool_2": 5545,
+        "total": 17395
+      }
+    },
+    {
+      "query_id": "T14",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5028,
+        "tool_1": 5955,
+        "total": 11370
+      }
+    },
+    {
+      "query_id": "T15",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5630,
+        "tool_1": 5843,
+        "total": 11890
+      }
+    },
+    {
+      "query_id": "T16",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "4.484710"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "4.484710"
+        }
+      ],
+      "removed": [],
+      "returned": [
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+      ],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+      ],
+      "exclusion_violations": [],
+      "leak": {
+        "a_filter_defect": [],
+        "b_relevance_defect": [
+          "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+        ]
+      },
+      "fields": null,
+      "timings_us": {
+        "es": 5955,
+        "tool_1": 5792,
+        "tool_2": 6356,
+        "total": 18506
+      }
+    },
+    {
+      "query_id": "T17",
+      "category": "current_value",
+      "expected_hold": false,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "5.342544"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "5.342544"
+        }
+      ],
+      "removed": [],
+      "returned": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "precision_returned": 1.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 1,
+        "missing": [],
+        "ok": true
+      },
+      "timings_us": {
+        "es": 7598,
+        "tool_1": 6503,
+        "tool_2": 6263,
+        "total": 20829
+      }
+    },
+    {
+      "query_id": "T18",
+      "category": "paraphrase",
+      "expected_hold": false,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "3.618886"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "3.618886"
+        }
+      ],
+      "removed": [],
+      "returned": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "precision_returned": 1.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 1,
+        "missing": [],
+        "ok": true
+      },
+      "timings_us": {
+        "es": 6656,
+        "tool_1": 6020,
+        "tool_2": 4563,
+        "total": 17697
+      }
+    },
+    {
+      "query_id": "T19",
+      "category": "paraphrase",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5152,
+        "tool_1": 5235,
+        "total": 10770
+      }
+    },
+    {
+      "query_id": "T20",
+      "category": "direct",
+      "expected_hold": false,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "4.369907"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "4.369907"
+        }
+      ],
+      "removed": [],
+      "returned": [
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c"
+      ],
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "precision_returned": 1.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5384,
+        "tool_1": 5411,
+        "tool_2": 4657,
+        "total": 15856
+      }
+    },
+    {
+      "query_id": "T21",
+      "category": "numeric",
+      "expected_hold": false,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "6.361258"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "6.361258"
+        }
+      ],
+      "removed": [],
+      "returned": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "precision_returned": 1.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 1,
+        "missing": [],
+        "ok": true
+      },
+      "timings_us": {
+        "es": 5833,
+        "tool_1": 5245,
+        "tool_2": 4819,
+        "total": 16289
+      }
+    },
+    {
+      "query_id": "T22",
+      "category": "direct",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 4742,
+        "tool_1": 5379,
+        "total": 10513
+      }
+    },
+    {
+      "query_id": "T23",
+      "category": "numeric",
+      "expected_hold": false,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "6.790920"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "6.790920"
+        }
+      ],
+      "removed": [],
+      "returned": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "precision_returned": 1.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 1,
+        "missing": [],
+        "ok": true
+      },
+      "timings_us": {
+        "es": 5463,
+        "tool_1": 5361,
+        "tool_2": 4636,
+        "total": 15854
+      }
+    },
+    {
+      "query_id": "T24",
+      "category": "old_value_apply",
+      "expected_hold": false,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "3.618886"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "3.618886"
+        }
+      ],
+      "removed": [],
+      "returned": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "precision_returned": 1.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5315,
+        "tool_1": 5327,
+        "tool_2": 4922,
+        "total": 15970
+      }
+    }
+  ],
+  "decision_guard": {
+    "enabled": true,
+    "version": "decision-guard-v1"
+  }
+}

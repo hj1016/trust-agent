@@ -51,6 +51,10 @@ def searchEvaluationRequested = project.hasProperty('searchEvaluation') && proje
 def searchAnalyzer = project.hasProperty('searchAnalyzer') ? project.property('searchAnalyzer').toString() : 'standard'
 def searchHoldVersion = project.hasProperty('searchHoldVersion') ? project.property('searchHoldVersion').toString() : 'bm25-hold-v1'
 def searchFuzziness = project.hasProperty('searchFuzziness') ? project.property('searchFuzziness').toString() : ''
+def searchDecisionGuard = project.hasProperty('searchDecisionGuard') ? project.property('searchDecisionGuard').toString() : 'off'
+def searchMinShouldMatch = project.hasProperty('searchMinShouldMatch') ? project.property('searchMinShouldMatch').toString() : ''
+def searchTuningOnly = project.hasProperty('searchTuningOnly') ? project.property('searchTuningOnly').toString() : 'false'
+def searchTuningSets = project.hasProperty('searchTuningSets') ? project.property('searchTuningSets').toString() : 'prepayment-fee-smoke-v1'
 def aiServiceVenv = layout.buildDirectory.dir('ai-venv')
 def aiServiceDir = rootProject.layout.projectDirectory.dir('apps/ai-service')
 
@@ -94,6 +98,10 @@ tasks.named('test') {
     systemProperty 'trustAgent.searchAnalyzer', searchAnalyzer
     systemProperty 'trustAgent.searchHoldVersion', searchHoldVersion
     systemProperty 'trustAgent.searchFuzziness', searchFuzziness
+    systemProperty 'trustAgent.searchDecisionGuard', searchDecisionGuard
+    systemProperty 'trustAgent.searchTuningSets', searchTuningSets
+    systemProperty 'trustAgent.searchMinShouldMatch', searchMinShouldMatch
+    systemProperty 'trustAgent.searchTuningOnly', searchTuningOnly
     environment 'TRUST_AGENT_REQUIRE_AI_INTEGRATION', System.getenv('TRUST_AGENT_REQUIRE_AI_INTEGRATION') ?: ''
     if (aiServiceIntegrationRequested || aiCallMetricsRequested || searchEvaluationRequested) {
         dependsOn 'prepareAiServiceEnv'

@@ -1,0 +1,828 @@
+{
+  "goldenset_id": "prepayment-fee-tuning",
+  "goldenset_version": "v1",
+  "kind": "tuning",
+  "query_count": 24,
+  "configuration": "bm25-nori-guard-msm80",
+  "search_version": "search-bm25-v1",
+  "relevance_hold": {
+    "method": "combined",
+    "min_score": "0",
+    "min_ratio": "0",
+    "version": "untuned"
+  },
+  "final_evaluation": false,
+  "targets": {
+    "recall_at_5": 0.8,
+    "mrr": 0.7,
+    "precision_returned": 0.7,
+    "irrelevant_rate_max": 0.25
+  },
+  "search_stage": {
+    "exclusion_violations": 0,
+    "exclusion_violation_queries": [],
+    "hold_query_leaks": 0,
+    "hold_query_leak_detail": [],
+    "forwarded_candidates_total": 0,
+    "raw_candidates_total": 0
+  },
+  "core_recheck_stage": {
+    "removed_by_reason": {},
+    "holds_by_kind": {
+      "DECISION_REQUEST": 7,
+      "NO_CANDIDATE": 17
+    },
+    "tool_calls": {
+      "applicable_checklist": 17,
+      "rule_evidence": 0
+    }
+  },
+  "final_stage": {
+    "queries_scored": 8,
+    "recall_at_5": 0.0,
+    "mrr": 0.0,
+    "precision_returned": 0.0,
+    "irrelevant_count": 0,
+    "irrelevant_rate": 0.0,
+    "average_returned": 0.0,
+    "exposed": 0,
+    "exposed_queries": [],
+    "false_holds": [
+      "T17",
+      "T18",
+      "T19",
+      "T20",
+      "T21",
+      "T22",
+      "T23",
+      "T24"
+    ],
+    "false_hold_rate": 1.0,
+    "missed_holds": [],
+    "missed_hold_rate": 0.0,
+    "fields_provided_rate": 0.0,
+    "fields_missing": [
+      {
+        "query_id": "T17",
+        "expected": 1,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "after_value",
+            "expected_value": "0.8"
+          }
+        ],
+        "ok": false
+      },
+      {
+        "query_id": "T18",
+        "expected": 1,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "exceptions",
+            "expected_value": [
+              "별도 약정으로 수수료 면제가 확인된 경우"
+            ]
+          }
+        ],
+        "ok": false
+      },
+      {
+        "query_id": "T21",
+        "expected": 1,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "conditions",
+            "expected_value": [
+              "기업 고객의 기업여신 상담 건",
+              "2026-10-01 이후 중도상환"
+            ]
+          }
+        ],
+        "ok": false
+      },
+      {
+        "query_id": "T23",
+        "expected": 1,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "effective_on",
+            "expected_value": "2026-10-01"
+          }
+        ],
+        "ok": false
+      }
+    ]
+  },
+  "verdict": {
+    "required_all_zero": true,
+    "recall_at_5": false,
+    "mrr": false,
+    "precision_returned": false,
+    "irrelevant_rate": true,
+    "all_targets_met": false
+  },
+  "latency_us": {
+    "p50": 11018,
+    "p95": 13568,
+    "count": 24
+  },
+  "failed_queries": [
+    "T17",
+    "T18",
+    "T19",
+    "T20",
+    "T21",
+    "T22",
+    "T23",
+    "T24"
+  ],
+  "queries": [
+    {
+      "query_id": "T01",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 157
+      }
+    },
+    {
+      "query_id": "T02",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 130
+      }
+    },
+    {
+      "query_id": "T03",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 6541,
+        "tool_1": 6693,
+        "total": 13568
+      }
+    },
+    {
+      "query_id": "T04",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 170
+      }
+    },
+    {
+      "query_id": "T05",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 124
+      }
+    },
+    {
+      "query_id": "T06",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 136
+      }
+    },
+    {
+      "query_id": "T07",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 107
+      }
+    },
+    {
+      "query_id": "T08",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "DECISION_REQUEST",
+      "hold_reasons": [
+        "DECISION_REQUEST_NOT_SUPPORTED"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "total": 116
+      }
+    },
+    {
+      "query_id": "T09",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 7384,
+        "tool_1": 7258,
+        "total": 14978
+      }
+    },
+    {
+      "query_id": "T10",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5618,
+        "tool_1": 6215,
+        "total": 12247
+      }
+    },
+    {
+      "query_id": "T11",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 6270,
+        "tool_1": 6166,
+        "total": 12809
+      }
+    },
+    {
+      "query_id": "T12",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5302,
+        "tool_1": 6129,
+        "total": 11860
+      }
+    },
+    {
+      "query_id": "T13",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5189,
+        "tool_1": 5759,
+        "total": 11367
+      }
+    },
+    {
+      "query_id": "T14",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5305,
+        "tool_1": 6340,
+        "total": 12027
+      }
+    },
+    {
+      "query_id": "T15",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 4811,
+        "tool_1": 5439,
+        "total": 10642
+      }
+    },
+    {
+      "query_id": "T16",
+      "category": "hold",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 4991,
+        "tool_1": 5476,
+        "total": 10865
+      }
+    },
+    {
+      "query_id": "T17",
+      "category": "current_value",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 1,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "after_value",
+            "expected_value": "0.8"
+          }
+        ],
+        "ok": false
+      },
+      "timings_us": {
+        "es": 5123,
+        "tool_1": 5442,
+        "total": 10949
+      }
+    },
+    {
+      "query_id": "T18",
+      "category": "paraphrase",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 1,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "exceptions",
+            "expected_value": [
+              "별도 약정으로 수수료 면제가 확인된 경우"
+            ]
+          }
+        ],
+        "ok": false
+      },
+      "timings_us": {
+        "es": 4944,
+        "tool_1": 5767,
+        "total": 11102
+      }
+    },
+    {
+      "query_id": "T19",
+      "category": "paraphrase",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 4996,
+        "tool_1": 5632,
+        "total": 11022
+      }
+    },
+    {
+      "query_id": "T20",
+      "category": "direct",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5251,
+        "tool_1": 6730,
+        "total": 12357
+      }
+    },
+    {
+      "query_id": "T21",
+      "category": "numeric",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 1,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "conditions",
+            "expected_value": [
+              "기업 고객의 기업여신 상담 건",
+              "2026-10-01 이후 중도상환"
+            ]
+          }
+        ],
+        "ok": false
+      },
+      "timings_us": {
+        "es": 5391,
+        "tool_1": 5505,
+        "total": 11303
+      }
+    },
+    {
+      "query_id": "T22",
+      "category": "direct",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5070,
+        "tool_1": 5676,
+        "total": 11122
+      }
+    },
+    {
+      "query_id": "T23",
+      "category": "numeric",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 1,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "effective_on",
+            "expected_value": "2026-10-01"
+          }
+        ],
+        "ok": false
+      },
+      "timings_us": {
+        "es": 5096,
+        "tool_1": 5527,
+        "total": 11018
+      }
+    },
+    {
+      "query_id": "T24",
+      "category": "old_value_apply",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 5032,
+        "tool_1": 5426,
+        "total": 10833
+      }
+    }
+  ],
+  "decision_guard": {
+    "enabled": true,
+    "version": "decision-guard-v1"
+  }
+}
