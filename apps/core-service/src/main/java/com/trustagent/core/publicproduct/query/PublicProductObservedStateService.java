@@ -24,10 +24,20 @@ public class PublicProductObservedStateService {
         this.clock = clock;
     }
 
-    /** TASK-006 변경안 검증이 공개 근거 교차 검증에 같은 조회 경로를 쓴다. 동작 변경 없음. */
+    /** HTTP 조회: 평가 시각은 이 요청에서 한 번 읽은 현재 시각이다. asOf를 생략하면 그 시각이다. */
     public PublicProductObservedState get(String productKey, String requestedAsOf) {
         Instant evaluatedAt = clock.instant();
         Instant asOf = parseAsOf(requestedAsOf, evaluatedAt);
+        return evaluateAt(productKey, asOf, evaluatedAt);
+    }
+
+    /**
+     * 다른 작업(변경안 검증, 적용 checklist 조회)이 자기 기준 시각으로 평가할 때 쓴다. 그 작업이 정한 evaluatedAt을 그대로 쓰고
+     * 시계를 다시 읽지 않는다. asOf가 evaluatedAt과 같으면 현재 조회, 앞서면 과거 조회(확인 불가), 뒤면 FUTURE_AS_OF_NOT_ALLOWED로
+     * 정책은 HTTP 조회와 같다. 이전에는 호출자가 asOf만 넘기고 이 서비스가 시계를 다시 읽어, 실제로 시간이 흐르는 시계에서
+     * asOf가 몇 마이크로초 앞서 과거 조회로 판정됐다.
+     */
+    public PublicProductObservedState evaluateAt(String productKey, Instant asOf, Instant evaluatedAt) {
         var product = repository.findProduct(productKey).orElseThrow(() ->
                 new PublicProductQueryException("PRODUCT_NOT_FOUND", "등록되지 않은 공개 상품입니다."));
         var latestObservation = repository.findLatestObservation(productKey, asOf);
