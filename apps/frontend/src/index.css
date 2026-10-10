@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+/*
+ * 디자인 토큰. KB국민은행 태블릿 브랜치 리뉴얼의 색감·여백(따뜻한 회색 바탕, 짙은 회갈색 글자, 노랑 계열 강조, 큰 터치 영역)을 참고했다.
+ * KB 로고·워드마크·서비스명은 쓰지 않는다.
+ */
+@theme {
+  --color-canvas: #f6f4ef;
+  --color-surface: #ffffff;
+  --color-muted: #efebe3;
+  --color-line: #e2dccf;
+  --color-ink: #2b2925;
+  --color-ink-soft: #57524a;
+  --color-brand: #ffbc00;
+  --color-brand-ink: #3d3a33;
+  --color-brand-soft: #fff4d1;
+  --color-ready: #1f7a4d;
+  --color-ready-soft: #e4f3ea;
+  --color-hold: #9a4606;
+  --color-hold-soft: #fdf0dc;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+  --color-info: #2f5c8f;
+  --color-info-soft: #e8eff8;
+  --radius-card: 16px;
+  /* 가독성: 보조 텍스트 최소 13px, 본문 보조 15px(기본 12px·14px에서 올림). */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.3rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.45rem;
+  --font-sans: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+}
+
+html, body, #root { height: 100%; }
+body { margin: 0; background: var(--color-canvas); color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+:focus-visible { outline: 3px solid var(--color-info); outline-offset: 2px; }
