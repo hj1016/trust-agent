@@ -147,6 +147,12 @@ class ConsultationPreparationRepository {
                 .update();
     }
 
+    void insertLink(String runId, String consultationId, String preparationId, Instant linkedAt) {
+        jdbc.sql("insert into consultation_preparation_link (run_id, consultation_id, preparation_id, linked_at) values (:run, :consultation, :preparation, :linked)")
+                .param("run", runId).param("consultation", consultationId).param("preparation", preparationId)
+                .param("linked", linkedAt.atOffset(java.time.ZoneOffset.UTC)).update();
+    }
+
     void insertRun(String runId, String preparationId, String serviceId, String tokenScope, String outcome, String errorCode,
             String traceId, Instant startedAt, Instant finishedAt, String sectionEvaluationsJson) {
         jdbc.sql("""

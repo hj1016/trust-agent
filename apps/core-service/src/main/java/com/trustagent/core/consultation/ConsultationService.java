@@ -18,8 +18,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class ConsultationService {
 
+    /** 신청 요약(합성). 화면의 기업·신청 영역에 쓴다. */
+    public record ApplicationSummary(String applicationId, String companyId, String companyName, String productKey, long requestedAmountKrw,
+                                     String purpose, String requestedAt, String status) {}
+
+    public record FamilyRef(String familyId, boolean required, int order) {}
+
     public record View(String consultationId, String applicationId, String companyId, String productKey, String assignedUserId,
-                       String status, String workspaceId, String createdAt) {}
+                       String status, String workspaceId, String createdAt, ApplicationSummary application, List<FamilyRef> families) {}
 
     private final ConsultationRepository repository;
     private final GrantService grants;
@@ -63,9 +69,22 @@ public class ConsultationService {
                 userId, activeRole, traceId);
     }
 
-    private static View view(ConsultationRepository.Consultation consultation, ConsultationRepository.Application application) {
+    /** 등록된 합성 신청 목록(상담 건 생성용). */
+    public List<ApplicationSummary> applications() {
+        return repository.listApplications().stream().map(ConsultationService::summary).toList();
+    }
+
+    private View view(ConsultationRepository.Consultation consultation, ConsultationRepository.Application application) {
+        List<FamilyRef> families = repository.familyDetailsForProduct(application.productKey()).stream()
+                .map(family -> new FamilyRef(family.familyId(), family.required(), family.order())).toList();
         return new View(consultation.consultationId(), consultation.applicationId(), application.companyId(), application.productKey(),
-                consultation.assignedUserId(), consultation.status(), consultation.workspaceId(), consultation.createdAt().toString());
+                consultation.assignedUserId(), consultation.status(), consultation.workspaceId(), consultation.createdAt().toString(),
+                summary(application), families);
+    }
+
+    private static ApplicationSummary summary(ConsultationRepository.Application application) {
+        return new ApplicationSummary(application.applicationId(), application.companyId(), application.companyName(), application.productKey(),
+                application.requestedAmountKrw(), application.purpose(), application.requestedAt().toString(), application.status());
     }
 
     public static String workspace(jakarta.servlet.http.HttpServletRequest request) {

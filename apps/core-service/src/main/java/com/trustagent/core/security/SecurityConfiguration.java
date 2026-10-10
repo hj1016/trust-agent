@@ -58,10 +58,13 @@ public class SecurityConfiguration {
                 .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/login").permitAll()
+                        // 화면 정적 자원과 화면 경로(TASK-017b). 데이터는 없고 API 규칙은 아래 그대로다.
+                        .requestMatchers(HttpMethod.GET, WebAppRoutes.STATIC_PATTERNS).permitAll()
+                        .requestMatchers(HttpMethod.GET, WebAppRoutes.SCREEN_PATTERNS).permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/v1/session/**").authenticated()
                         .requestMatchers("/api/v1/reviews/**").access(new ActiveRoleAuthorizationManager(Set.of(Roles.REVIEWER)))
-                        .requestMatchers("/api/v1/consultations/**").access(new ActiveRoleAuthorizationManager(Set.of(Roles.STAFF)))
+                        .requestMatchers("/api/v1/consultations/**", "/api/v1/applications/**").access(new ActiveRoleAuthorizationManager(Set.of(Roles.STAFF)))
                         .requestMatchers("/api/v1/internal-policy/**", "/api/v1/public-products/**")
                             .access(new ActiveRoleAuthorizationManager(Set.of(Roles.STAFF, Roles.REVIEWER)))
                         .anyRequest().authenticated())

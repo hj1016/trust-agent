@@ -170,6 +170,22 @@ TRUST_AGENT_ES_REINDEX_USERNAME=trustagent_reindex TRUST_AGENT_ES_REINDEX_PASSWO
 
 **한계(수동 재색인).** 사람 결정이나 철회 적재 뒤 runner를 실행하기 전까지 새로 승인된 규정은 검색 후보에 없고, 철회된 규정은 색인에 남아 있을 수 있습니다. 남아 있는 쪽은 Core 재확인이 막지만 새 규정의 누락은 막지 못합니다. 승인 체험(TASK-027)은 승인 뒤 색인 갱신까지 검증합니다. 자동 전달은 별도 ADR입니다.
 
+## 업무지원 화면용 API (TASK-017b)
+
+```text
+GET  /api/v1/applications                           STAFF 활성. 등록된 합성 신청 목록(상담 건 생성용)
+GET  /api/v1/consultations/{id}                     응답에 application(신청 요약)과 families(상품 공문군, 필수 여부) 포함
+GET  /api/v1/consultations/{id}/preparation         담당자만. 이 상담 건에 연결된 최신 준비안. 없으면 404 PREPARATION_NOT_FOUND
+GET  /api/v1/consultations/{id}/confirmations       담당자만. 직원 근거 확인 기록
+POST /api/v1/consultations/{id}/confirmations       {"preparationId","familyId","ruleVersionIds"} → 201
+```
+
+준비안 ID는 상담 ID를 빼고 계산하므로 같은 신청의 다른 상담 건이 같은 내용을 기록하면 `ALREADY_RECORDED`가 됩니다. 상담 건별 준비안은 기록 경로가 성공 실행마다 남기는 연결(`consultation_preparation_link`, V12)로 찾습니다.
+
+직원 확인은 READY 공문군의 항목별 근거를 읽었다는 기록이며 대출 승인·거절, 고객별 적용 승인, 상담 준비 완료가 아닙니다. 조건: 담당자, STAFF 활성, 이 상담 건에 연결된 준비안, READY 섹션(HOLD 409 `SECTION_ON_HOLD`), 항목 전체(일부 422 `CONFIRMATION_INCOMPLETE`, 없는 규칙 422 `CONFIRMATION_MISMATCH`), 기록 직전 Core 재조회에서 사용 가능하고 선택 공문·승인 checklist version·결정 ID·항목·근거 해시가 준비안과 같음(다르면 409 `PREPARATION_STALE`), 같은 준비안·공문군 중복 409 `ALREADY_CONFIRMED`. 기록(`consultation_confirmation`, append-only)에는 확인 대상과 확인자·활성 역할·확인 시각·재확인 평가 시각이 남습니다.
+
+화면 정적 자원(`/`, `/index.html`, `/assets/**`)과 화면 경로(`/login`, `/consultations`, `/consultations/{id}`, `/reviews`)는 로그인 없이 열리며 데이터는 없습니다. API 경로의 인증·권한 규칙은 그대로입니다. 화면 빌드는 `apps/frontend/README.md`를 따릅니다.
+
 ## 공개 상품 관측 상태 조회
 
 ```text

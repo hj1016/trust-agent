@@ -47,7 +47,8 @@ jobs:
       - name: Reject private or generated files
         shell: bash
         run: |
-          forbidden_files="$({ git ls-files | grep -E '(^|/)(\.private-artifacts/|datasets/public/kb/snapshots/|\.idea/|__pycache__/|.*\.pyc$|.*\.html$|\.env($|\.))' || true; } | grep -v -E '(^|/)\.env\.example$' || true)"
+          # apps/frontend/index.html은 화면 진입점(TASK-017b)이라 예외다. 수집한 공개 HTML 스냅샷은 계속 막는다.
+          forbidden_files="$({ git ls-files | grep -E '(^|/)(\.private-artifacts/|datasets/public/kb/snapshots/|\.idea/|__pycache__/|.*\.pyc$|.*\.html$|\.env($|\.))' || true; } | grep -v -E '(^|/)\.env\.example$' | grep -v -x 'apps/frontend/index.html' || true)"
           if [[ -n "${forbidden_files}" ]]; then
             echo "Git에 포함할 수 없는 파일이 발견됐습니다."
             echo "${forbidden_files}"
@@ -86,6 +87,36 @@ jobs:
         env:
           TRUST_AGENT_REQUIRE_AI_INTEGRATION: "1"
         run: ./gradlew test bootJar --no-daemon -PaiServiceIntegration=true
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: apps/frontend/package-lock.json
+
+      - name: Install dependencies from lock file
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck, lint, unit tests, build
+        # TASK-017b: 화면 정적 검사·단위 테스트·빌드는 필수. 실제 Core·AI 서비스를 띄우는 브라우저 E2E(UiEndToEndRunner)는 로컬 실행·evidence 기록(필수 CI 미포함).
+        run: |
+          npm run typecheck
+          npm run lint
+          npm test
+          npm run build
 
   secret-scan:
     name: Secret scan
