@@ -288,7 +288,7 @@ class SecurityIntegrationTest {
         JdbcClient business = JdbcClient.create(businessDataSource);
         assertEquals(0, business.sql("select count(*) from information_schema.tables where table_name in ('app_user', 'security_event')").query(Integer.class).single());
         assertEquals(2, control.sql("select count(*) from information_schema.tables where table_name in ('app_user', 'security_event')").query(Integer.class).single());
-        assertEquals(1, control.sql("select count(*) from flyway_control_schema_history where success").query(Integer.class).single());
+        assertEquals(2, control.sql("select count(*) from flyway_control_schema_history where success").query(Integer.class).single()); // V1 인증, V2 grant
         assertEquals(3, control.sql("select count(*) from app_user where synthetic").query(Integer.class).single());
         assertEquals(List.of("REVIEWER", "STAFF"), control.sql("select role from app_user_role where user_id = :id order by role").param("id", DemoUsers.BOTH_USER).query(String.class).list());
         assertTrue(control.sql("select password_hash from app_user where user_id = :id").param("id", DemoUsers.STAFF_USER).query(String.class).single().startsWith("{bcrypt}"));

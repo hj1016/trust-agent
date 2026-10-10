@@ -36,7 +36,29 @@ TRUST_AGENT_CONTROL_FLYWAY_ENABLED=true ./gradlew :apps:core-service:bootRun --n
   --args='--spring.main.web-application-type=none --trust-agent.demo-users.enabled=true'
 ```
 
-아직 없는 것: 상담 건 표와 객체 권한 검사, AI 요청 승인(grant), Core → AI 서비스 호출(TASK-017a 두 번째 PR), 화면(017b), 체험 코드·workspace 복제(026). 이 PR의 인증은 합성 계정 기반이며 실제 행원 인증이 아닙니다.
+## 상담 건과 AI 요청 승인(grant) (TASK-017a 두 번째 PR, ADR-014)
+
+**합성 신청·기업 자료 적재(A안).** `datasets/synthetic/work/{companies,applications}`의 JSON을 업무 DB 표 `synthetic_work_company`·`synthetic_work_application`(append-only, canonical `source_hash`)에 넣습니다. 재실행은 멱등이고 같은 ID의 다른 내용은 거부합니다. Core가 신청·상담 자료의 원장이 되는 첫 단계이며, AI 서비스는 당분간 같은 JSON을 읽되 기록 경로에서 해시를 대조합니다.
+
+```bash
+./gradlew :apps:core-service:bootRun --no-daemon \
+  --args='--spring.main.web-application-type=none --trust-agent.synthetic-work-import.enabled=true --trust-agent.synthetic-work-import.root=/absolute/path/to/trust-agent'
+```
+
+```text
+POST /api/v1/consultations                 STAFF 활성. {"applicationId"} → 201. 등록되지 않은 신청 422 APPLICATION_NOT_REGISTERED
+GET  /api/v1/consultations                 내 상담 건
+GET  /api/v1/consultations/{id}            담당자가 아니면 404(존재 비노출, 보안 사건 기록)
+POST /api/v1/consultations/{id}/preparation {"businessDate"?} → grant 발급 → AI 서비스 호출 → 준비안 응답을 상태 코드와 함께 그대로 전달(헤더 X-TrustAgent-Grant)
+```
+
+**grant.** Core는 담당자 검사를 통과한 요청마다 `ai_request_grant`(제어 DB)를 발급합니다. 상담 ID, 신청 ID, 허용 공문군(승인된 매핑의 상품 공문군), 업무일, TTL(`TRUST_AGENT_AI_GRANT_TTL`, 기본 60초, 발급 시점 값을 행에 기록), 읽기 상한(`TRUST_AGENT_AI_GRANT_READ_CALL_LIMIT`, 기본 50). AI 서비스는 Tool·기록 호출마다 `X-TrustAgent-Grant` 헤더로 보내고, Core는 **서비스 토큰과 grant를 함께** 검사합니다. Tool: 존재 → 만료(403 `GRANT_EXPIRED`) → 상담 ID·공문군 범위(403 `GRANT_SCOPE_MISMATCH`) → 읽기 상한 원자 증가(403 `GRANT_EXHAUSTED`). 기록: `ISSUED → CONSUMING`(원자, 0행이면 409 `GRANT_CONSUMED`) → 업무 기록 → `CONSUMED`. 커밋 전 거부로 확정된 오류만 `ISSUED`로 되돌립니다. 커밋 뒤 실행 기록 쓰기 실패나 커밋 결과를 알 수 없는 DB 오류는 업무 DB에서 이번 run_id를 찾아 성공이면 `CONSUMED`, 아니면 `CONSUMING`으로 둡니다. 커밋 뒤 `CONSUMED` 갱신 실패도 `CONSUMING`으로 남습니다. 만료된 `CONSUMING`은 수동 대조 명령(`--trust-agent.grant-reconcile.enabled=true`)이 업무 DB와 대조해 `CONSUMED`(사후) 또는 `EXPIRED`로 정리하며 `ISSUED`로 돌리지 않습니다. 주기 실행은 없습니다. 중복 기록은 grant가 아니라 업무 DB의 `run_id` PK와 `preparation_id` 멱등이 막습니다. `TRUST_AGENT_AI_GRANT_REQUIRE=false`(로컬 기본)는 CLI·하네스 전용이며 헤더가 있으면 검사하고, `prod`는 true가 아니면 기동을 거부합니다.
+
+**기록 경로의 신청 대조.** 기록 본문의 `application.source_hash`가 등록된 해시와 다르면 422 `APPLICATION_SOURCE_MISMATCH`, 등록되지 않은 신청은 422 `APPLICATION_NOT_REGISTERED`입니다.
+
+**Core → AI 서비스.** `TRUST_AGENT_AI_SERVICE_BASE_URL`(내부망)과 수신 토큰 `TRUST_AGENT_AI_INBOUND_TOKEN`(AI 서비스의 같은 이름 환경변수와 같은 값). 연결 실패 502 `AI_SERVICE_UNAVAILABLE`, 시간 초과 504. 자동 재시도는 없습니다.
+
+아직 없는 것: 화면(017b), 체험 코드·workspace 복제(026), 절대 세션 만료, 대조의 주기 실행(수동 명령만 있음). 이 인증은 합성 계정 기반이며 실제 행원 인증이 아닙니다.
 
 ## 합성 내부 공문 기준일 조회
 

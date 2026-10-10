@@ -61,6 +61,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/v1/session/**").authenticated()
                         .requestMatchers("/api/v1/reviews/**").access(new ActiveRoleAuthorizationManager(Set.of(Roles.REVIEWER)))
+                        .requestMatchers("/api/v1/consultations/**").access(new ActiveRoleAuthorizationManager(Set.of(Roles.STAFF)))
                         .requestMatchers("/api/v1/internal-policy/**", "/api/v1/public-products/**")
                             .access(new ActiveRoleAuthorizationManager(Set.of(Roles.STAFF, Roles.REVIEWER)))
                         .anyRequest().authenticated())

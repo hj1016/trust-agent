@@ -14,9 +14,10 @@ ENV_TOOL_TOKEN = "TRUST_AGENT_TOOL_SERVICE_TOKEN"
 ENV_RECORD_TOKEN = "TRUST_AGENT_PREPARATION_RECORD_TOKEN"
 ENV_TIMEOUT_SECONDS = "TRUST_AGENT_CORE_TIMEOUT_SECONDS"
 ENV_REPOSITORY_ROOT = "TRUST_AGENT_REPOSITORY_ROOT"
+ENV_INBOUND_TOKEN = "TRUST_AGENT_AI_INBOUND_TOKEN"  # HTTP 진입점 수신 토큰(Core → AI 서비스). 설정되면 필수
 
 # 이 서비스가 읽는 환경변수 전체. DB 접속 정보는 없다(테스트가 이 목록을 검사한다).
-ENV_NAMES = (ENV_CORE_BASE_URL, ENV_TOOL_TOKEN, ENV_RECORD_TOKEN, ENV_TIMEOUT_SECONDS, ENV_REPOSITORY_ROOT)
+ENV_NAMES = (ENV_CORE_BASE_URL, ENV_TOOL_TOKEN, ENV_RECORD_TOKEN, ENV_TIMEOUT_SECONDS, ENV_REPOSITORY_ROOT, ENV_INBOUND_TOKEN)
 REQUIRED_ENV_NAMES = (ENV_CORE_BASE_URL, ENV_TOOL_TOKEN)
 DEFAULT_TIMEOUT_SECONDS = 5.0
 DEFAULT_REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
@@ -38,6 +39,7 @@ class Settings:
     record_token: Optional[str]
     timeout_seconds: float
     repository_root: Path
+    inbound_token: Optional[str] = None
 
     def masked(self) -> dict:
         """로그·출력용. 토큰 값 대신 설정 여부만 보여 준다."""
@@ -47,6 +49,7 @@ class Settings:
             "record_token_configured": bool(self.record_token),
             "timeout_seconds": self.timeout_seconds,
             "repository_root": str(self.repository_root),
+            "inbound_token_configured": bool(self.inbound_token),
         }
 
 
@@ -71,4 +74,5 @@ def load_settings(environ: Optional[Mapping[str, str]] = None) -> Settings:
         record_token=record_token,
         timeout_seconds=timeout,
         repository_root=repository_root,
+        inbound_token=(env.get(ENV_INBOUND_TOKEN) or "").strip() or None,
     )

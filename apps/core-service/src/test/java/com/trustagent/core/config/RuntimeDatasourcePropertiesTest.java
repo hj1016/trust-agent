@@ -50,9 +50,9 @@ class RuntimeDatasourcePropertiesTest {
     @Test
     void configuredSchemaVersionMatchesTheLatestClasspathMigration() {
         var validator = new ClasspathSchemaVersionValidator(
-                new PathMatchingResourcePatternResolver(), "10");
+                new PathMatchingResourcePatternResolver(), "11");
 
-        assertEquals("10", validator.classpathVersion());
+        assertEquals("11", validator.classpathVersion());
         assertThrows(
                 IllegalStateException.class,
                 () -> new ClasspathSchemaVersionValidator(
@@ -73,7 +73,7 @@ class RuntimeDatasourcePropertiesTest {
                 "TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent",
                 "TRUST_AGENT_DB_USERNAME", "runtime",
                 "TRUST_AGENT_DB_PASSWORD", "secret",
-                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "10"))) {
+                "TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "11"))) {
             assertThrows(RuntimeException.class, missingPolicyContext::refresh);
         }
 
@@ -81,7 +81,7 @@ class RuntimeDatasourcePropertiesTest {
                 Map.entry("TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent"),
                 Map.entry("TRUST_AGENT_DB_USERNAME", "runtime"),
                 Map.entry("TRUST_AGENT_DB_PASSWORD", "secret"),
-                Map.entry("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "10"),
+                Map.entry("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "11"),
                 Map.entry("TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1"),
                 Map.entry("TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h"),
                 Map.entry("TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE", "Asia/Seoul"),
@@ -92,7 +92,9 @@ class RuntimeDatasourcePropertiesTest {
                 Map.entry("TRUST_AGENT_PREPARATION_RECORD_TOKEN", "temporary-record-token-for-test"),
                 Map.entry("TRUST_AGENT_CONTROL_DB_URL", "jdbc:postgresql://db/trust_agent_control"),
                 Map.entry("TRUST_AGENT_CONTROL_DB_USERNAME", "control_user"),
-                Map.entry("TRUST_AGENT_CONTROL_DB_PASSWORD", "control-password-for-test")))) {
+                Map.entry("TRUST_AGENT_CONTROL_DB_PASSWORD", "control-password-for-test"),
+                Map.entry("TRUST_AGENT_AI_SERVICE_BASE_URL", "http://ai-service:8090"),
+                Map.entry("TRUST_AGENT_AI_INBOUND_TOKEN", "inbound-token-for-test")))) {
             configuredContext.refresh();
         }
     }
@@ -103,7 +105,7 @@ class RuntimeDatasourcePropertiesTest {
         runtimeOnly.put("TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent");
         runtimeOnly.put("TRUST_AGENT_DB_USERNAME", "runtime");
         runtimeOnly.put("TRUST_AGENT_DB_PASSWORD", "runtime-secret");
-        runtimeOnly.put("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "10");
+        runtimeOnly.put("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "11");
         runtimeOnly.put("TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1");
         runtimeOnly.put("TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h");
         runtimeOnly.put("TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE", "Asia/Seoul");
@@ -115,6 +117,8 @@ class RuntimeDatasourcePropertiesTest {
         runtimeOnly.put("TRUST_AGENT_CONTROL_DB_URL", "jdbc:postgresql://db/trust_agent_control");
         runtimeOnly.put("TRUST_AGENT_CONTROL_DB_USERNAME", "control_user");
         runtimeOnly.put("TRUST_AGENT_CONTROL_DB_PASSWORD", "control-password-for-test");
+        runtimeOnly.put("TRUST_AGENT_AI_SERVICE_BASE_URL", "http://ai-service:8090");
+        runtimeOnly.put("TRUST_AGENT_AI_INBOUND_TOKEN", "inbound-token-for-test");
         runtimeOnly.put("trust-agent.baseline-import.enabled", "true");
         try (var missingImporterContext = productionContext(runtimeOnly)) {
             assertThrows(RuntimeException.class, missingImporterContext::refresh);
@@ -135,7 +139,7 @@ class RuntimeDatasourcePropertiesTest {
         settings.put("TRUST_AGENT_DB_URL", "jdbc:postgresql://db/trust_agent");
         settings.put("TRUST_AGENT_DB_USERNAME", "runtime");
         settings.put("TRUST_AGENT_DB_PASSWORD", "runtime-secret");
-        settings.put("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "10");
+        settings.put("TRUST_AGENT_SCHEMA_EXPECTED_VERSION", "11");
         settings.put("TRUST_AGENT_FRESHNESS_POLICY_VERSION", "public-evidence-confirmation-v1");
         settings.put("TRUST_AGENT_MAX_CONFIRMATION_AGE", "24h");
         settings.put("TRUST_AGENT_INTERNAL_BUSINESS_TIMEZONE", "Asia/Seoul");
@@ -147,6 +151,8 @@ class RuntimeDatasourcePropertiesTest {
         settings.put("TRUST_AGENT_CONTROL_DB_URL", "jdbc:postgresql://db/trust_agent_control");
         settings.put("TRUST_AGENT_CONTROL_DB_USERNAME", "control_user");
         settings.put("TRUST_AGENT_CONTROL_DB_PASSWORD", "control-password-for-test");
+        settings.put("TRUST_AGENT_AI_SERVICE_BASE_URL", "http://ai-service:8090");
+        settings.put("TRUST_AGENT_AI_INBOUND_TOKEN", "inbound-token-for-test");
         settings.put("trust-agent.synthetic-internal-import.enabled", "true");
         try (var context = productionContext(settings)) {
             assertThrows(RuntimeException.class, context::refresh);

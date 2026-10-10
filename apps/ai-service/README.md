@@ -35,6 +35,8 @@ curl -s -X POST http://127.0.0.1:8090/api/v1/ai/consultation-preparations \
 
 토큰 값은 환경변수로만 제공하며 파일·로그·출력·오류 메시지에 남기지 않습니다.
 
+**수신 토큰과 grant(TASK-017a, ADR-014).** `TRUST_AGENT_AI_INBOUND_TOKEN`을 설정하면 HTTP 진입점은 Core가 보내는 `Authorization: Bearer` 값이 같을 때만 처리합니다(아니면 401). 본문의 `grantId`(Core가 발급한 AI 요청 승인)는 Tool·기록 호출에 `X-TrustAgent-Grant` 헤더로 그대로 전달되며 준비안 본문에는 들어가지 않습니다. CLI는 `--grant-id`로 같은 동작을 합니다. 수신 토큰이 없는 로컬 CLI 모드에서는 헤더 없이 호출하고 Core의 `require-grant=false`가 허용합니다.
+
 ## 종료 코드
 
 | 코드 | 뜻 |

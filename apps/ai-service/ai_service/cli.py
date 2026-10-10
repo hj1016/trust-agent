@@ -36,6 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
     prepare_command.add_argument("--consultation-id", help="추적용 상담 ID (64자 이내)")
     prepare_command.add_argument("--repository-root", help=f"저장소 루트 (생략 시 {ENV_REPOSITORY_ROOT} 또는 패키지 위치 기준)")
     prepare_command.add_argument("--metrics-file", help="Core 호출 계측 결과를 쓸 JSON 파일 경로 (준비안 출력은 바뀌지 않음)")
+    prepare_command.add_argument("--grant-id", help="Core가 발급한 AI 요청 승인 ID (있으면 Tool·기록 호출에 X-TrustAgent-Grant 헤더로 전달)")
     return parser
 
 
@@ -63,7 +64,7 @@ def main(argv: Optional[Sequence[str]] = None, environ: Optional[dict] = None, s
     started_at = datetime.now(timezone.utc)
     started = time.perf_counter()
     try:
-        preparation = prepare(args.application, args.business_date, args.consultation_id, settings=settings, **prepare_overrides)
+        preparation = prepare(args.application, args.business_date, args.consultation_id, settings=settings, grant_id=args.grant_id, **prepare_overrides)
     except InputError as error:
         print(f"입력 오류({error.code}): {error}", file=err)
         return EXIT_INPUT_ERROR

@@ -62,7 +62,7 @@ class _Section:
 
 def prepare(application_id: str, business_date: Optional[str] = None, consultation_id: Optional[str] = None, *,
             settings: Settings, transport: Optional[HttpTransport] = None, clock: Optional[Callable[[], datetime]] = None,
-            run_id_factory: Optional[Callable[[], str]] = None) -> dict:
+            run_id_factory: Optional[Callable[[], str]] = None, grant_id: Optional[str] = None) -> dict:
     """준비안을 조립하고 Core에 기록한 뒤 출력 계약 형태의 dict를 돌려준다. 재실행은 항상 Core를 다시 본다."""
     now = (clock or (lambda: datetime.now(timezone.utc)))()
     effective_business_date = _business_date(business_date, now)
@@ -74,7 +74,9 @@ def prepare(application_id: str, business_date: Optional[str] = None, consultati
     mapping, mapping_hash = _load_mapping(root)
     families = _families_for(mapping, application["product_key"])
 
-    client = CoreClient(settings.core_base_url, settings.tool_token, settings.record_token, settings.timeout_seconds, transport)
+    if grant_id is not None and (not grant_id.strip() or len(grant_id) > 64):
+        raise InputError("INVALID_GRANT_ID", "grant ID는 1~64자여야 합니다.")
+    client = CoreClient(settings.core_base_url, settings.tool_token, settings.record_token, settings.timeout_seconds, transport, grant_id=grant_id)
     tool_validator = _validator(root / TOOL_SCHEMA_PATH)
     evidence_validator = _validator(root / EVIDENCE_SCHEMA_PATH)
 

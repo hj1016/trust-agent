@@ -185,7 +185,7 @@ class ConsultationPreparationReadyIntegrationTest {
         application.put("application_id", PreparationScenario.APPLICATION);
         application.put("company_id", "SW-COMPANY-001");
         application.put("product_key", "kb-seller-loan");
-        application.put("source_hash", "sha256:" + "f".repeat(64));
+        application.put("source_hash", jdbc.sql("select source_hash from synthetic_work_application where application_id = :id").param("id", PreparationScenario.APPLICATION).query(String.class).single()); // Core에 등록된 원본 해시(A안)
         body.put("business_date", "2026-10-06");
         body.put("status", "READY");
         body.put("preparation_complete", true);

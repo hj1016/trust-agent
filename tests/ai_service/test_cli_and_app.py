@@ -92,6 +92,43 @@ class AppTest(unittest.TestCase):
             self.skipTest("fastapi 또는 httpx가 설치되지 않았습니다.")
         self.root = make_root()
 
+    def test_inbound_token_is_required_when_configured_and_grant_id_is_forwarded(self):
+        import os
+        from unittest import mock
+
+        from fastapi.testclient import TestClient
+
+        from ai_service import app as app_module
+
+        transport = partial_transport()
+        original_prepare = app_module.prepare
+
+        def prepare_with_fake(application_id, business_date, consultation_id, *, settings, grant_id=None):
+            return original_prepare(application_id, business_date, consultation_id, settings=settings, transport=transport, clock=CLOCK, grant_id=grant_id)
+
+        environ = environ_for(self.root)
+        environ[config.ENV_INBOUND_TOKEN] = "temporary-inbound-token"
+        with mock.patch.dict(os.environ, environ, clear=False), mock.patch.object(app_module, "prepare", prepare_with_fake):
+            client = TestClient(app_module.app)
+            body = {"applicationId": "SW-APPLICATION-001", "businessDate": "2026-10-06", "grantId": "ai-grant:" + "a" * 32}
+            missing = client.post("/api/v1/ai/consultation-preparations", json=body)
+            self.assertEqual(401, missing.status_code)
+            self.assertEqual("UNAUTHENTICATED", missing.json()["detail"]["code"])
+            self.assertEqual([], transport.calls, "수신 인증 실패면 Core를 부르지 않는다")
+            wrong = client.post("/api/v1/ai/consultation-preparations", json=body, headers={"Authorization": "Bearer wrong"})
+            self.assertEqual(401, wrong.status_code)
+            self.assertNotIn("temporary-inbound-token", wrong.text)
+            ok = client.post("/api/v1/ai/consultation-preparations", json=body, headers={"Authorization": "Bearer temporary-inbound-token"})
+            self.assertEqual(200, ok.status_code, ok.text)
+            self.assertEqual(6, len(transport.calls))
+            self.assertTrue(all(h.get("X-TrustAgent-Grant") == "ai-grant:" + "a" * 32 for h in transport.headers_seen), "grant 헤더가 Tool·기록 호출 전부에 실린다")
+            self.assertNotIn("ai-grant:", ok.text, "grant ID는 준비안 본문에 들어가지 않는다")
+        with mock.patch.dict(os.environ, environ_for(self.root), clear=False), mock.patch.object(app_module, "prepare", prepare_with_fake):
+            transport.calls.clear(); transport.headers_seen.clear()
+            no_grant = TestClient(app_module.app).post("/api/v1/ai/consultation-preparations", json={"applicationId": "SW-APPLICATION-001", "businessDate": "2026-10-06"})
+            self.assertEqual(200, no_grant.status_code)
+            self.assertTrue(all("X-TrustAgent-Grant" not in h for h in transport.headers_seen), "grant 없이(로컬 CLI 모드) 헤더를 보내지 않는다")
+
     def test_http_entry_point_returns_preparation_and_maps_errors(self):
         import os
         from unittest import mock
@@ -103,8 +140,8 @@ class AppTest(unittest.TestCase):
         transport = partial_transport()
         original_prepare = app_module.prepare
 
-        def prepare_with_fake(application_id, business_date, consultation_id, *, settings):
-            return original_prepare(application_id, business_date, consultation_id, settings=settings, transport=transport, clock=CLOCK)
+        def prepare_with_fake(application_id, business_date, consultation_id, *, settings, grant_id=None):
+            return original_prepare(application_id, business_date, consultation_id, settings=settings, transport=transport, clock=CLOCK, grant_id=grant_id)
 
         with mock.patch.dict(os.environ, environ_for(self.root), clear=False), \
                 mock.patch.object(app_module, "prepare", prepare_with_fake):

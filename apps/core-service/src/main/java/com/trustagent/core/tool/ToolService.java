@@ -29,18 +29,34 @@ public class ToolService {
     private final BusinessTimePolicy businessTimePolicy;
     private final Clock clock;
 
+    private final com.trustagent.core.grant.GrantService grants;
+
     public ToolService(InternalPolicyApplicableService applicable, ToolCallAuditRecorder recorder,
-            BusinessTimePolicy businessTimePolicy, Clock clock) {
+            BusinessTimePolicy businessTimePolicy, Clock clock, com.trustagent.core.grant.GrantService grants) {
         this.applicable = applicable;
         this.recorder = recorder;
         this.businessTimePolicy = businessTimePolicy;
         this.clock = clock;
+        this.grants = grants;
     }
 
     public Object call(String toolName, JsonNode body, String serviceId, String traceId) {
+        return call(toolName, body, serviceId, traceId, null);
+    }
+
+    /** grantId는 X-TrustAgent-Grant 헤더 값(없으면 null). 서비스 토큰 검사(필터)를 통과한 뒤 grant 범위를 검사한다(ADR-014 7·8항). */
+    public Object call(String toolName, JsonNode body, String serviceId, String traceId, String grantId) {
         if (!ALLOWLIST.contains(toolName)) {
             audit(serviceId, toolName, null, null, null, "TOOL_NOT_FOUND", null, List.of(), traceId);
             throw new ToolApiException("TOOL_NOT_FOUND", "허용 목록에 없는 tool입니다: " + toolName);
+        }
+        try {
+            grants.authorizeTool(grantId, body == null ? null : optionalText(body, "consultationId"),
+                    body == null ? null : optionalText(body, "familyId"), toolName, null, traceId);
+        } catch (com.trustagent.core.grant.GrantException exception) {
+            audit(serviceId, toolName, body == null ? null : optionalText(body, "familyId"), null,
+                    body == null ? null : optionalText(body, "consultationId"), exception.code(), null, List.of(), traceId);
+            throw new ToolApiException(exception.code(), exception.getMessage());
         }
         return switch (toolName) {
             case APPLICABLE_CHECKLIST -> applicableChecklist(body, serviceId, traceId);

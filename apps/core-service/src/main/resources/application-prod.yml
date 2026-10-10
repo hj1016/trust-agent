@@ -11,6 +11,13 @@ server:
         secure: ${TRUST_AGENT_SESSION_COOKIE_SECURE:true}
 
 trust-agent:
+  ai-grant:
+    ttl: ${TRUST_AGENT_AI_GRANT_TTL:60s}
+    read-call-limit: ${TRUST_AGENT_AI_GRANT_READ_CALL_LIMIT:50}
+    require: ${TRUST_AGENT_AI_GRANT_REQUIRE:true}
+  ai-service:
+    base-url: ${TRUST_AGENT_AI_SERVICE_BASE_URL}
+    inbound-token: ${TRUST_AGENT_AI_INBOUND_TOKEN}
   control-datasource:
     url: ${TRUST_AGENT_CONTROL_DB_URL}
     username: ${TRUST_AGENT_CONTROL_DB_USERNAME}

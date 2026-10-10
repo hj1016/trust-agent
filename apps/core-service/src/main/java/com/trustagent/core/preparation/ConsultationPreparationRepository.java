@@ -29,6 +29,12 @@ class ConsultationPreparationRepository {
     private final JdbcClient jdbc;
     private final ObjectMapper mapper;
 
+    /** 등록된 합성 신청의 원본 해시(A안). 없으면 비어 있다. */
+    java.util.Optional<String> applicationSourceHash(String applicationId) {
+        return jdbc.sql("select source_hash from synthetic_work_application where application_id = :id").param("id", applicationId)
+                .query(String.class).optional();
+    }
+
     ConsultationPreparationRepository(JdbcClient jdbc, ObjectMapper mapper) {
         this.jdbc = jdbc;
         this.mapper = mapper;

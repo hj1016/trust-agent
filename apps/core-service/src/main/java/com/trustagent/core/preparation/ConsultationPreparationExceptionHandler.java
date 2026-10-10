@@ -34,7 +34,15 @@ class ConsultationPreparationExceptionHandler {
             Map.entry("PREPARATION_CONFLICT", HttpStatus.CONFLICT),
             Map.entry("SERIALIZATION_FAILED", HttpStatus.INTERNAL_SERVER_ERROR),
             Map.entry("RECORD_WRITE_FAILED", HttpStatus.INTERNAL_SERVER_ERROR),
-            Map.entry("FAILURE_AUDIT_WRITE_FAILED", HttpStatus.INTERNAL_SERVER_ERROR));
+            Map.entry("FAILURE_AUDIT_WRITE_FAILED", HttpStatus.INTERNAL_SERVER_ERROR),
+            Map.entry("APPLICATION_NOT_REGISTERED", HttpStatus.UNPROCESSABLE_CONTENT),
+            Map.entry("APPLICATION_SOURCE_MISMATCH", HttpStatus.UNPROCESSABLE_CONTENT),
+            Map.entry("GRANT_REQUIRED", HttpStatus.UNAUTHORIZED),
+            Map.entry("GRANT_NOT_FOUND", HttpStatus.FORBIDDEN),
+            Map.entry("GRANT_EXPIRED", HttpStatus.FORBIDDEN),
+            Map.entry("GRANT_SCOPE_MISMATCH", HttpStatus.FORBIDDEN),
+            Map.entry("WORKSPACE_UNAVAILABLE", HttpStatus.FORBIDDEN),
+            Map.entry("GRANT_CONSUMED", HttpStatus.CONFLICT));
 
     @ExceptionHandler(ConsultationPreparationException.class)
     ProblemDetail handle(ConsultationPreparationException exception, HttpServletRequest request) {

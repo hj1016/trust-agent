@@ -28,6 +28,19 @@ trust-agent:
     password: ${TRUST_AGENT_CONTROL_DB_PASSWORD:${spring.datasource.password}}
     flyway-enabled: ${TRUST_AGENT_CONTROL_FLYWAY_ENABLED:${spring.flyway.enabled}}
     maximum-pool-size: ${TRUST_AGENT_CONTROL_DB_MAX_POOL_SIZE:2}
+  ai-grant:
+    # AI 요청 승인(ADR-014). TTL은 설정값이며 발급 시점 값이 grant 행에 기록된다. require=false는 로컬 CLI·하네스 전용이고 cloud/prod는 true를 강제한다.
+    ttl: ${TRUST_AGENT_AI_GRANT_TTL:60s}
+    read-call-limit: ${TRUST_AGENT_AI_GRANT_READ_CALL_LIMIT:50}
+    require: ${TRUST_AGENT_AI_GRANT_REQUIRE:false}
+  ai-service:
+    # Core → AI 서비스 호출(내부망). 수신 토큰은 환경변수로만 제공한다.
+    base-url: ${TRUST_AGENT_AI_SERVICE_BASE_URL:http://127.0.0.1:8090}
+    inbound-token: ${TRUST_AGENT_AI_INBOUND_TOKEN:}
+    timeout: ${TRUST_AGENT_AI_SERVICE_TIMEOUT:30s}
+  synthetic-work-import:
+    # 합성 신청·기업 자료 적재 명령(A안). root는 저장소 루트 또는 datasets 디렉터리.
+    enabled: false
   demo-users:
     # 합성 직원 3명 적재 명령(demo 전용). 비밀번호는 TRUST_AGENT_DEMO_PASSWORD_<사용자 ID>(- 대신 _) 환경변수로만 받는다.
     enabled: false
@@ -96,7 +109,7 @@ trust-agent:
     max-validation-age: ${TRUST_AGENT_VALIDATION_MAX_AGE:24h}
     policy-version: ${TRUST_AGENT_VALIDATION_POLICY_VERSION:internal-validation-v1}
   schema:
-    expected-version: ${TRUST_AGENT_SCHEMA_EXPECTED_VERSION:10}
+    expected-version: ${TRUST_AGENT_SCHEMA_EXPECTED_VERSION:11}
 
 management:
   server:
