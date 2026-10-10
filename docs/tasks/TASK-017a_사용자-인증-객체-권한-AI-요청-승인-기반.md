@@ -165,7 +165,8 @@
 - 업무 DB V11: `synthetic_work_company`, `synthetic_work_application`(canonical `source_hash`), `consultation`(append-only, 보호 목록). 제어 DB V2: `ai_request_grant`, `ai_request_grant_use`(append-only). schema expected-version 11.
 - Core: `consultation/`(적재기·runner `--trust-agent.synthetic-work-import.enabled=true`, 상담 건 API, 404 비노출), `grant/`(발급·Tool 검사·기록 CONSUMING/CONSUMED, 커밋 전 거부만 ISSUED 복귀, 불확실 실패는 CONSUMING 유지, 대조 메서드와 수동 runner, 설정 TTL 60초·읽기 50회·require), `ai/`(Core → AI 서비스 호출, 502/504), Tool 서비스·기록 컨트롤러의 grant 검사, 기록 경로 신청 해시 대조, prod 필수 설정·require 강제, `/api/v1/consultations/**` STAFF 활성.
 - AI 서비스: 수신 토큰(`TRUST_AGENT_AI_INBOUND_TOKEN`) 검사, `grantId` 수신과 `X-TrustAgent-Grant` 헤더 전달, CLI `--grant-id`.
-- 테스트: `ConsultationGrantIntegrationTest`(10, 실제 장애 주입 2건 포함), `AiGrantEndToEndIntegrationTest`(2, uvicorn), 기존 기록 테스트의 신청 해시를 등록 해시로, 운영 기동 거부 1건, Python 1건. 전체 Java 233건 중 232 통과·1 skip, Python 117 통과.
+- 테스트: `ConsultationGrantIntegrationTest`(12, 실제 장애 주입 2건 포함), `AiGrantEndToEndIntegrationTest`(2, uvicorn), 기존 기록 테스트의 신청 해시를 등록 해시로, 운영 기동 거부 1건, Python 1건. 전체 Java 233건 중 232 통과·1 skip, Python 117 통과.
+- 병합 전 보완(사용자 검토): grant 업무일과 Tool 조회·준비안 기록 업무일 대조, 브라우저 응답의 grant ID 헤더 제거, Tool·기록 경로 workspace null 우회 차단. 부정 테스트 2건 추가.
 - 결과 기록: `docs/evidence/CONSULTATION_GRANT_EVIDENCE.md`.
 - 하지 않은 것: 화면(017b), 체험 코드·workspace(026), 대조의 주기 실행(수동 runner만 있음), AI 서비스가 Core API로 신청을 받는 구조(현재는 JSON 직접 읽기 + 해시 대조).
 

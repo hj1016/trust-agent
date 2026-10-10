@@ -206,6 +206,60 @@ class ConsultationGrantIntegrationTest {
         assertEquals(5, jdbc.sql("select count(*) from tool_call_audit where consultation_id = :c and outcome = 'OK'").param("c", consultationId).query(Integer.class).single());
     }
 
+    /** 업무일 경계: grant에 저장된 업무일과 다른 업무일로 Tool 조회·준비안 기록을 할 수 없다. */
+    @Test
+    void businessDateMustMatchGrantForToolAndRecord() throws Exception {
+        String consultationId = createConsultation();
+        GrantService.Grant grant = grants.issue("main", consultationId, "SW-APPLICATION-001", List.of("SIN-PREPAYMENT-FEE", "SIN-SELLER-CHECKLIST"),
+                LocalDate.of(2026, 10, 6), DemoUsers.STAFF_USER, "STAFF", "t-date");
+        HttpResponse<String> otherDate = tool(TOOL_TOKEN, grant.grantId(), "{\"familyId\":\"SIN-PREPAYMENT-FEE\",\"businessDate\":\"2026-10-07\",\"consultationId\":\"" + consultationId + "\"}");
+        assertEquals(403, otherDate.statusCode());
+        assertEquals("GRANT_SCOPE_MISMATCH", mapper.readTree(otherDate.body()).get("code").stringValue());
+        HttpResponse<String> noDate = tool(TOOL_TOKEN, grant.grantId(), "{\"familyId\":\"SIN-PREPAYMENT-FEE\",\"consultationId\":\"" + consultationId + "\"}");
+        assertEquals(403, noDate.statusCode(), "grant를 쓸 때 업무일 생략(오늘로 채워짐)은 허용하지 않는다");
+        assertEquals("GRANT_SCOPE_MISMATCH", mapper.readTree(noDate.body()).get("code").stringValue());
+        assertEquals(0, grants.find(grant.grantId()).orElseThrow().readCalls(), "거부된 호출은 읽기 횟수에 들어가지 않는다");
+
+        ObjectNode body = recordBody(consultationId, grant.grantId());
+        ObjectNode shifted = body.deepCopy();
+        shifted.put("business_date", "2026-10-07");
+        shifted.put("preparation_id", preparationId(shifted));
+        HttpResponse<String> recorded = record(RECORD_TOKEN, grant.grantId(), shifted);
+        assertEquals(403, recorded.statusCode(), recorded.body());
+        assertEquals("GRANT_SCOPE_MISMATCH", mapper.readTree(recorded.body()).get("code").stringValue());
+        assertEquals("ISSUED", grants.find(grant.grantId()).orElseThrow().state(), "기록 시작 전 거부라 grant는 그대로");
+        assertEquals(0, jdbc.sql("select count(*) from consultation_preparation_run where run_id = :r").param("r", shifted.get("run_id").stringValue()).query(Integer.class).single());
+        assertTrue(grants.usesOf(grant.grantId()).contains("RECORD_BEGIN:GRANT_SCOPE_MISMATCH"));
+        assertEquals(201, record(RECORD_TOKEN, grant.grantId(), body).statusCode(), "같은 grant로 맞는 업무일 기록은 된다");
+    }
+
+    /** workspace 경계: Tool·기록 경로는 Core가 서비스하는 workspace로 검사하며 null로 우회되지 않는다. */
+    @Test
+    void workspaceIsCheckedOnToolAndRecordAndNullIsRejected() throws Exception {
+        String consultationId = createConsultation();
+        GrantService.Grant foreign = grants.issue("trial-other", consultationId, "SW-APPLICATION-001", List.of("SIN-PREPAYMENT-FEE", "SIN-SELLER-CHECKLIST"),
+                LocalDate.of(2026, 10, 6), DemoUsers.STAFF_USER, "STAFF", "t-ws");
+        HttpResponse<String> toolResponse = tool(TOOL_TOKEN, foreign.grantId(), "{\"familyId\":\"SIN-PREPAYMENT-FEE\",\"businessDate\":\"2026-10-06\",\"consultationId\":\"" + consultationId + "\"}");
+        assertEquals(403, toolResponse.statusCode());
+        assertEquals("WORKSPACE_UNAVAILABLE", mapper.readTree(toolResponse.body()).get("code").stringValue());
+        GrantService.Grant main = grants.issue("main", consultationId, "SW-APPLICATION-001", List.of("SIN-PREPAYMENT-FEE", "SIN-SELLER-CHECKLIST"),
+                LocalDate.of(2026, 10, 6), DemoUsers.STAFF_USER, "STAFF", "t-ws-main");
+        ObjectNode body = recordBody(consultationId, main.grantId());
+        HttpResponse<String> recorded = record(RECORD_TOKEN, foreign.grantId(), body);
+        assertEquals(403, recorded.statusCode());
+        assertEquals("WORKSPACE_UNAVAILABLE", mapper.readTree(recorded.body()).get("code").stringValue());
+        assertEquals("ISSUED", grants.find(foreign.grantId()).orElseThrow().state());
+        assertEquals(0, grants.find(foreign.grantId()).orElseThrow().readCalls());
+        // 서비스 계층에서 workspace를 비워 호출해도 우회가 아니라 거부다.
+        var nullTool = org.junit.jupiter.api.Assertions.assertThrows(com.trustagent.core.grant.GrantException.class,
+                () -> grants.authorizeTool(main.grantId(), consultationId, "SIN-PREPAYMENT-FEE", "2026-10-06", "applicable_checklist", null, "t-null"));
+        assertEquals("WORKSPACE_UNAVAILABLE", nullTool.code());
+        var nullRecord = org.junit.jupiter.api.Assertions.assertThrows(com.trustagent.core.grant.GrantException.class,
+                () -> grants.beginRecord(main.grantId(), consultationId, "SW-APPLICATION-001", "2026-10-06", null, body.get("run_id").stringValue(), null, "t-null"));
+        assertEquals("WORKSPACE_UNAVAILABLE", nullRecord.code());
+        assertEquals("ISSUED", grants.find(main.grantId()).orElseThrow().state());
+    }
+
     @Test
     void expiredGrantIsRefusedAfterTtl() throws Exception {
         String consultationId = createConsultation();
@@ -418,7 +472,7 @@ class ConsultationGrantIntegrationTest {
         GrantService.Grant grant = grants.issue("main", consultationId, "SW-APPLICATION-001", List.of("SIN-PREPAYMENT-FEE"),
                 LocalDate.of(2026, 10, 6), DemoUsers.STAFF_USER, "STAFF", "t-orphan");
         String runId = "consultation-preparation-run:" + UUID.randomUUID().toString().replace("-", "");
-        grants.beginRecord(grant.grantId(), consultationId, "SW-APPLICATION-001", null, runId, null, "t-orphan"); // Core 재시작으로 끊긴 기록을 흉내
+        grants.beginRecord(grant.grantId(), consultationId, "SW-APPLICATION-001", "2026-10-06", grants.servedWorkspace(), runId, null, "t-orphan"); // Core 재시작으로 끊긴 기록을 흉내
         assertEquals("CONSUMING", grants.find(grant.grantId()).orElseThrow().state());
         try {
             CLOCK.set(PreparationScenario.EVALUATED_AT.plusSeconds(120));
@@ -442,6 +496,8 @@ class ConsultationGrantIntegrationTest {
         HttpResponse<String> response = staff.postJson("/api/v1/consultations/" + consultationId + "/preparation", "{\"businessDate\":\"2026-10-06\"}");
         assertEquals(502, response.statusCode(), response.body());
         assertEquals("AI_SERVICE_UNAVAILABLE", mapper.readTree(response.body()).get("code").stringValue());
+        assertTrue(response.headers().firstValue("X-TrustAgent-Grant").isEmpty(), "grant ID를 브라우저에 보내지 않는다");
+        assertFalse(response.body().contains("ai-grant:"));
         assertEquals(1, control.sql("select count(*) from ai_request_grant where consultation_id = :c and state = 'ISSUED'").param("c", consultationId).query(Integer.class).single(),
                 "grant는 발급됐지만 사용되지 않은 채 만료된다");
         assertEquals(400, staff.postJson("/api/v1/consultations/" + consultationId + "/preparation", "{\"businessDate\":\"2026/10/06\"}").statusCode());

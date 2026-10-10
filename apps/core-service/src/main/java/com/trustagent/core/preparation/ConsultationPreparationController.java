@@ -56,8 +56,9 @@ public class ConsultationPreparationController {
         String applicationId = body == null || body.get("application") == null ? null : text(body.get("application"), "application_id");
         String runId = body == null ? null : text(body, "run_id");
         String preparationId = body == null ? null : text(body, "preparation_id");
+        String businessDate = body == null ? null : text(body, "business_date");
         try {
-            grants.beginRecord(grantId, consultationId, applicationId, null, runId, preparationId, trace);
+            grants.beginRecord(grantId, consultationId, applicationId, businessDate, grants.servedWorkspace(), runId, preparationId, trace);
         } catch (com.trustagent.core.grant.GrantException exception) {
             throw new ConsultationPreparationException(exception.code(), exception.getMessage());
         }

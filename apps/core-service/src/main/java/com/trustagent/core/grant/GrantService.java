@@ -30,6 +30,7 @@ public class GrantService {
                         String state, int readCalls, int readCallLimit, String recordRunId, String recordPreparationId) {}
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GrantService.class);
+    private static final java.util.Set<String> DATE_SCOPED_TOOLS = java.util.Set.of("applicable_checklist");
     private static final java.util.regex.Pattern RUN_ID = java.util.regex.Pattern.compile("^consultation-preparation-run:[a-f0-9]{32}$");
     private static final java.util.regex.Pattern PREPARATION_ID = java.util.regex.Pattern.compile("^consultation-preparation:sha256:[a-f0-9]{64}$");
 
@@ -44,6 +45,14 @@ public class GrantService {
         this.mapper = mapper;
         this.properties = properties;
         this.clock = clock;
+    }
+
+    /**
+     * 이 Core가 서비스하는 workspace. Tool·기록 경로는 사용자 세션이 없으므로 grant의 workspace를 이 값과 대조한다.
+     * 현재는 운영 workspace 하나(main)이며 workspace별 DB 라우팅은 TASK-026이다.
+     */
+    public String servedWorkspace() {
+        return com.trustagent.core.security.ActiveRole.DEFAULT_WORKSPACE;
     }
 
     public boolean required() {
@@ -79,7 +88,8 @@ public class GrantService {
      * Tool 호출 검사. require=false이고 헤더가 없으면 통과(로컬 CLI). 통과하면 읽기 호출 수를 원자적으로 늘린다.
      * 반환값은 사용 여부(헤더 없음이면 null).
      */
-    public Optional<Grant> authorizeTool(String grantId, String consultationId, String familyId, String toolName, String workspaceId, String traceId) {
+    public Optional<Grant> authorizeTool(String grantId, String consultationId, String familyId, String businessDate, String toolName,
+                                         String workspaceId, String traceId) {
         if (grantId == null || grantId.isBlank()) {
             if (properties.require()) {
                 throw new GrantException("GRANT_REQUIRED", 401, "AI 요청 승인(grant)이 필요합니다.");
@@ -92,6 +102,12 @@ public class GrantService {
         if (familyId == null || !grant.allowedFamilyIds().contains(familyId)) {
             throw use(grantId, "TOOL", toolName, "GRANT_SCOPE_MISMATCH", traceId,
                     new GrantException("GRANT_SCOPE_MISMATCH", 403, "승인된 상담 건의 공문군이 아닙니다."));
+        }
+        // 업무일로 조회하는 Tool(applicable_checklist)은 grant의 업무일과 같아야 한다. 생략하면 Tool이 오늘로 채우므로 grant 사용 시에는 명시를 요구한다.
+        // rule_evidence는 업무일 인자가 없고 평가 시각(Core 시계) 기준이라 대조하지 않는다.
+        if (DATE_SCOPED_TOOLS.contains(toolName) && !grant.businessDate().toString().equals(businessDate)) {
+            throw use(grantId, "TOOL", toolName, "GRANT_SCOPE_MISMATCH", traceId,
+                    new GrantException("GRANT_SCOPE_MISMATCH", 403, "승인된 업무일이 아닙니다."));
         }
         int updated = control.sql("""
                 update ai_request_grant set read_calls = read_calls + 1, updated_at = :now
@@ -109,7 +125,7 @@ public class GrantService {
      * 기록 시작: ISSUED → CONSUMING 원자 갱신. 0행이면 이미 사용 중·사용됨(409).
      * 이번 시도의 run_id와 본문의 preparation_id를 grant에 남겨, 커밋 여부가 불확실할 때 대조가 업무 DB에서 찾을 수 있게 한다.
      */
-    public Optional<Grant> beginRecord(String grantId, String consultationId, String applicationId, String workspaceId,
+    public Optional<Grant> beginRecord(String grantId, String consultationId, String applicationId, String businessDate, String workspaceId,
                                        String runId, String preparationId, String traceId) {
         if (grantId == null || grantId.isBlank()) {
             if (properties.require()) {
@@ -123,6 +139,10 @@ public class GrantService {
         if (applicationId == null || !grant.applicationId().equals(applicationId)) {
             throw use(grantId, "RECORD_BEGIN", null, "GRANT_SCOPE_MISMATCH", traceId,
                     new GrantException("GRANT_SCOPE_MISMATCH", 403, "승인된 상담 건의 신청이 아닙니다."));
+        }
+        if (!grant.businessDate().toString().equals(businessDate)) {
+            throw use(grantId, "RECORD_BEGIN", null, "GRANT_SCOPE_MISMATCH", traceId,
+                    new GrantException("GRANT_SCOPE_MISMATCH", 403, "승인된 업무일이 아닙니다."));
         }
         if (runId == null || !RUN_ID.matcher(runId).matches()) {
             // run_id가 없으면 커밋 여부를 대조할 수 없으므로 grant를 쓰지 않는다(기록 경로의 INVALID_REQUEST와 같은 판단).
@@ -220,7 +240,8 @@ public class GrantService {
             markExpired(grant.grantId());
             throw use(grant.grantId(), kind, toolName, "GRANT_EXPIRED", traceId, new GrantException("GRANT_EXPIRED", 403, "AI 요청 승인이 만료됐습니다."));
         }
-        if (workspaceId != null && !grant.workspaceId().equals(workspaceId)) {
+        // workspace는 호출자가 비워 둘 수 없다. null이면 검사 우회가 아니라 거부다(ADR-014 8항).
+        if (workspaceId == null || !grant.workspaceId().equals(workspaceId)) {
             throw use(grant.grantId(), kind, toolName, "WORKSPACE_UNAVAILABLE", traceId, new GrantException("WORKSPACE_UNAVAILABLE", 403, "승인된 workspace가 아닙니다."));
         }
         if (consultationId == null || !grant.consultationId().equals(consultationId)) {

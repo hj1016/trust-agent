@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -180,7 +181,9 @@ class AiGrantEndToEndIntegrationTest {
         assertFalse(response.body().contains(TOOL_TOKEN));
         assertFalse(response.body().contains(RECORD_TOKEN));
         assertFalse(response.body().contains(INBOUND_TOKEN));
-        String grantId = response.headers().firstValue("X-TrustAgent-Grant").orElseThrow();
+        assertTrue(response.headers().firstValue("X-TrustAgent-Grant").isEmpty(), "grant ID는 브라우저 응답 헤더에 없다");
+        assertFalse(response.body().contains("ai-grant:"), "grant ID는 브라우저 응답 본문에 없다");
+        String grantId = control.sql("select grant_id from ai_request_grant where consultation_id = :c").param("c", consultationId).query(String.class).single();
 
         GrantService.Grant grant = grants.find(grantId).orElseThrow();
         assertEquals("CONSUMED", grant.state());
@@ -194,6 +197,7 @@ class AiGrantEndToEndIntegrationTest {
         assertEquals(5, jdbc.sql("select count(*) from tool_call_audit where consultation_id = :c and outcome = 'OK'").param("c", consultationId).query(Integer.class).single());
 
         // 같은 상담 건 재요청: 새 grant, Core는 ALREADY_RECORDED, 실행 기록 2건.
+        assertEquals(LocalDate.of(2026, 10, 6), grant.businessDate());
         HttpResponse<String> again = staff.postJson("/api/v1/consultations/" + consultationId + "/preparation", "{\"businessDate\":\"2026-10-06\"}");
         assertEquals(200, again.statusCode(), again.body());
         assertEquals("ALREADY_RECORDED", mapper.readTree(again.body()).get("record").get("status").stringValue());

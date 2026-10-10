@@ -52,7 +52,8 @@ public class ToolService {
         }
         try {
             grants.authorizeTool(grantId, body == null ? null : optionalText(body, "consultationId"),
-                    body == null ? null : optionalText(body, "familyId"), toolName, null, traceId);
+                    body == null ? null : optionalText(body, "familyId"), body == null ? null : optionalText(body, "businessDate"),
+                    toolName, grants.servedWorkspace(), traceId);
         } catch (com.trustagent.core.grant.GrantException exception) {
             audit(serviceId, toolName, body == null ? null : optionalText(body, "familyId"), null,
                     body == null ? null : optionalText(body, "consultationId"), exception.code(), null, List.of(), traceId);

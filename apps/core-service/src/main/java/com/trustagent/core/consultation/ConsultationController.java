@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 상담 건 API(STAFF 활성). 담당자가 아니면 404이며 거부는 보안 사건으로 남긴다.
- * 준비안 요청은 grant를 발급해 AI 서비스를 내부망에서 부르고 응답을 그대로 전달한다(상태 코드 포함).
+ * 준비안 요청은 grant를 발급해 AI 서비스를 내부망에서 부르고 응답을 그대로 전달한다(상태 코드 포함). grant ID는 응답에 넣지 않는다.
  */
 @RestController
 @RequestMapping("/api/v1/consultations")
@@ -88,9 +88,9 @@ public class ConsultationController {
         String activeRole = ActiveRole.current(request).orElse("STAFF");
         GrantService.Grant grant = consultations.issueGrant(view.get(), businessDate, authentication.getName(), activeRole, traceId(request));
         AiServiceClient.Response response = aiService.prepare(view.get().applicationId(), businessDate.toString(), consultationId, grant.grantId(), traceId(request));
+        // grant ID는 Core와 AI 서비스 사이의 내부 값이라 브라우저 응답에 싣지 않는다(헤더·본문 모두).
         return ResponseEntity.status(response.status())
-                .contentType(response.status() >= 400 && !response.body().startsWith("{\"preparation_id\"") ? MediaType.APPLICATION_JSON : MediaType.APPLICATION_JSON)
-                .header("X-TrustAgent-Grant", grant.grantId())
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(response.body());
     }
 
