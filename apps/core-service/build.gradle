@@ -45,13 +45,23 @@ def aiServiceIntegrationRequested = project.hasProperty('aiServiceIntegration')
 // TASK-021 호출 계측 runner(AiServiceCallMetricsRunner)는 -PaiCallMetrics=true일 때만 실행하며 CI에는 넣지 않는다. 실행 수는 -PaiCallMetricsRuns=<N>(기본 30).
 def aiCallMetricsRequested = project.hasProperty('aiCallMetrics') && project.property('aiCallMetrics').toString() == 'true'
 def aiCallMetricsRuns = project.hasProperty('aiCallMetricsRuns') ? project.property('aiCallMetricsRuns').toString() : '30'
+// TASK-016 검색 평가 하네스(SearchEvaluationRunner)는 -PsearchEvaluation=true일 때만 실행하며 CI에는 넣지 않는다.
+// 분석기는 -PsearchAnalyzer=standard|nori, 보류 기준 버전 표기는 -PsearchHoldVersion=<버전>(기본 bm25-hold-v1).
+def searchEvaluationRequested = project.hasProperty('searchEvaluation') && project.property('searchEvaluation').toString() == 'true'
+def searchAnalyzer = project.hasProperty('searchAnalyzer') ? project.property('searchAnalyzer').toString() : 'standard'
+def searchHoldVersion = project.hasProperty('searchHoldVersion') ? project.property('searchHoldVersion').toString() : 'bm25-hold-v1'
+def searchFuzziness = project.hasProperty('searchFuzziness') ? project.property('searchFuzziness').toString() : ''
+def searchDecisionGuard = project.hasProperty('searchDecisionGuard') ? project.property('searchDecisionGuard').toString() : 'off'
+def searchMinShouldMatch = project.hasProperty('searchMinShouldMatch') ? project.property('searchMinShouldMatch').toString() : ''
+def searchTuningOnly = project.hasProperty('searchTuningOnly') ? project.property('searchTuningOnly').toString() : 'false'
+def searchTuningSets = project.hasProperty('searchTuningSets') ? project.property('searchTuningSets').toString() : 'prepayment-fee-smoke-v1'
 def aiServiceVenv = layout.buildDirectory.dir('ai-venv')
 def aiServiceDir = rootProject.layout.projectDirectory.dir('apps/ai-service')
 
 tasks.register('prepareAiServiceEnv', Exec) {
     description = 'AI 서비스 연결 검증용 Python venv를 만들고 requirements-ai.txt를 설치한다.'
     group = 'verification'
-    onlyIf { aiServiceIntegrationRequested || aiCallMetricsRequested }
+    onlyIf { aiServiceIntegrationRequested || aiCallMetricsRequested || searchEvaluationRequested }
     inputs.file(aiServiceDir.file('requirements-ai.txt'))
     inputs.file(rootProject.layout.projectDirectory.file('requirements.txt'))
     outputs.dir(aiServiceVenv)
@@ -84,8 +94,16 @@ tasks.named('test') {
     systemProperty 'trustAgent.aiServicePython', aiServiceVenv.get().file('bin/python').asFile.absolutePath
     systemProperty 'trustAgent.aiCallMetrics', aiCallMetricsRequested.toString()
     systemProperty 'trustAgent.aiCallMetrics.runs', aiCallMetricsRuns
+    systemProperty 'trustAgent.searchEvaluation', searchEvaluationRequested.toString()
+    systemProperty 'trustAgent.searchAnalyzer', searchAnalyzer
+    systemProperty 'trustAgent.searchHoldVersion', searchHoldVersion
+    systemProperty 'trustAgent.searchFuzziness', searchFuzziness
+    systemProperty 'trustAgent.searchDecisionGuard', searchDecisionGuard
+    systemProperty 'trustAgent.searchTuningSets', searchTuningSets
+    systemProperty 'trustAgent.searchMinShouldMatch', searchMinShouldMatch
+    systemProperty 'trustAgent.searchTuningOnly', searchTuningOnly
     environment 'TRUST_AGENT_REQUIRE_AI_INTEGRATION', System.getenv('TRUST_AGENT_REQUIRE_AI_INTEGRATION') ?: ''
-    if (aiServiceIntegrationRequested || aiCallMetricsRequested) {
+    if (aiServiceIntegrationRequested || aiCallMetricsRequested || searchEvaluationRequested) {
         dependsOn 'prepareAiServiceEnv'
     }
 }

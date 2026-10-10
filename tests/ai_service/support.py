@@ -82,6 +82,10 @@ class FakeTransport:
                              "recordedAt": "2026-10-06T03:00:05Z"}).encode("utf-8"))
         self.calls: list[tuple[str, dict, str]] = []
 
+    @staticmethod
+    def ok_response(body) -> TransportResponse:
+        return ok(body)
+
     def usable(self, family_id: str, checklist: dict) -> "FakeTransport":
         self.checklist[family_id] = lambda: ok(checklist)
         if checklist.get("approvedChecklist"):

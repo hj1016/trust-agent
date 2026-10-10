@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trust-agent.local/contracts/ai-search-request.schema.json",
+  "title": "AI 서비스 근거 검색 요청 (TASK-016)",
+  "description": "POST /api/v1/ai/search 본문. 공문군과 업무일은 호출자가 명시하며 질의 문장에서 추론하지 않는다. 모르는 필드와 길이·범위 위반은 400이다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["query", "familyId"],
+  "properties": {
+    "query": {"type": "string", "minLength": 1, "maxLength": 200},
+    "familyId": {"type": "string", "pattern": "^SIN-[A-Z0-9-]+$"},
+    "businessDate": {"type": "string", "format": "date", "description": "없으면 Asia/Seoul 오늘"},
+    "consultationId": {"type": "string", "minLength": 1, "maxLength": 64},
+    "topK": {"type": "integer", "minimum": 1, "maximum": 10, "description": "없으면 5"}
+  }
+}
