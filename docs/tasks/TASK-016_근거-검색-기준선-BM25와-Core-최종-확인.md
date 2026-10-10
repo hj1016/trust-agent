@@ -1,6 +1,6 @@
 # TASK-016 근거 검색 기준선: Elasticsearch BM25 + metadata filter + Core 최종 확인
 
-- 상태: **계획 승인**, 첫 구현 PR(색인·재색인 runner·불변식·멱등·compose) 착수 승인 (결정자 사용자, PR #46. 채택: 검색 범위 합성 공문 4건, 색인 B, 분석기는 초기 점검용으로 nori·standard 비교, 보류는 절대 점수+상대 비율 조합 우선 시험(다른 방식도 비교), 초기 재색인 수동 runner, Core Tool 재확인, 진단·행원 응답 분리. 수용 기준 미달 시 통과 처리하지 않고 실측값과 원인을 보고한 뒤 별도 판단. 이전 상태: 검색 범위 현재 합성 공문 4건, 초기 수용 기준 Recall@5 ≥ 0.80·MRR ≥ 0.70·Precision(반환 수 기준) ≥ 0.70·무관 근거 혼입률 ≤ 0.25 채택, 금지 근거 노출 0건·놓친 보류 0% 유지. ADR-013 승인(PR #44), ADR-014는 보완 뒤 승인 대기. 구현 착수는 계획·ADR 검수 뒤 별도 승인)
+- 상태: **진행 중. 검색 수용 기준 미충족(구현 완료·통과 아님).** 두 번째 구현(검색 API·평가 스크립트·하네스)은 Draft PR. 최종 평가에서 nori는 Recall@5·MRR·Precision·혼입률을 충족했지만 E22에서 금지 근거 노출·놓친 보류·후보 유출이 각 1건이라 필수 기준 미충족이다. 사용자 판단: nori를 우선 개발 후보로 채택, TASK-014가 예정한 조정용 자료(tuning-v1)로 관련성 보류 기준을 개선, eval-v1은 수정하지 않음, reranker·LLM 분류기는 이번 범위 밖, AWS 반영 보류. 이전 상태: **계획 승인**, 첫 구현 PR(색인·재색인 runner·불변식·멱등·compose) 착수 승인 (결정자 사용자, PR #46. 채택: 검색 범위 합성 공문 4건, 색인 B, 분석기는 초기 점검용으로 nori·standard 비교, 보류는 절대 점수+상대 비율 조합 우선 시험(다른 방식도 비교), 초기 재색인 수동 runner, Core Tool 재확인, 진단·행원 응답 분리. 수용 기준 미달 시 통과 처리하지 않고 실측값과 원인을 보고한 뒤 별도 판단. 이전 상태: 검색 범위 현재 합성 공문 4건, 초기 수용 기준 Recall@5 ≥ 0.80·MRR ≥ 0.70·Precision(반환 수 기준) ≥ 0.70·무관 근거 혼입률 ≤ 0.25 채택, 금지 근거 노출 0건·놓친 보류 0% 유지. ADR-013 승인(PR #44), ADR-014는 보완 뒤 승인 대기. 구현 착수는 계획·ADR 검수 뒤 별도 승인)
 - 담당자 / 인간 결정자: AI 조사·계획·구현·평가 실행 / 사용자 범위·기준·판정·검수
 - 요구사항 출처: ADR-013(승인, 색인 불변식과 질의 시점 필터의 보장 조건 대응표), PLAN-002 TASK-016 절(ES 색인, BM25 + filter 검색 API, 결과마다 Tool 2 재확인, 골든셋 평가 결과 기록), TASK-014(골든셋 3종, 세 단계 지표, 평가 스크립트 명세, 관련성 보류 기준 고정 절차, AC-05b·05c 후속 판단), CLAUDE.md 검색 baseline(BM25 + dense vector k-NN + metadata filter + reranker 중 이 Task는 BM25 + filter 기준선), ADR-014(진입 구조, 초안), 사용자 지시(검색 API 접근 권한, 최소 정보 제공, 진단 정보 분리, 요청 제한, fail-closed, 검색 범위는 현재 합성 공문 4건, Recall@5·MRR은 TASK-014 제안값을 초기 수용 기준으로, 반환 수 기준 Precision과 무관 근거 혼입률 보완 지표 추가)
 - 관련 Task / ADR: TASK-014(완료), TASK-015(완료), TASK-021(완료 대기, 지연 열 형식 재사용), TASK-017c(행원용 Core 검색 경로 연결), TASK-018(벡터·reranker, 같은 골든셋으로 비교), ADR-011·012·013·014
@@ -124,18 +124,18 @@ TASK-014의 세 단계 지표를 그대로 계산한다. 통과 기준은 다음
 |---|---|---|---|---|
 | AC-01 | 재색인 runner 2회 실행 | 문서 수와 `source_hash` 집합 불변, alias가 최신 색인. 분석기만 바꾸면 새 색인, 실패 시 현재 색인·alias 유지 | Java 통합 테스트(ES Testcontainer) | PR #49에서 구현·검증(병합 뒤 결과 기록) |
 | AC-02 | 색인 불변식 | 색인 문서 집합 = 사람 결정 있는 승인 checklist 항목의 규칙 version 집합. 셀러론 v2(미승인)·v1 수수료율(FIXTURE)·철회 규칙 0건. 셀러론 승인 뒤 재색인 → 생김, 철회 뒤 → 사라짐. 같은 규칙 version의 여러 승인 구간은 한 문서의 `approvals[]`·`effective_ranges[]`에 모두 남고 내용 충돌은 거부 | Java 통합 테스트 | PR #49에서 구현·검증(병합 뒤 결과 기록) |
-| AC-03 | 검색 단계 후보 | 요청 공문군 밖·업무일 밖(`effective_ranges` 구간 밖, 구간 사이 공백 포함) 규칙 0건(골든셋 37건 전체) | 평가 결과 | 미검증 |
-| AC-04 | 응답 내용 출처 | `evidence_text`·`json_pointer`·`evidence_hash`는 Tool 2 응답과 바이트 일치, `instruction`·`structured_change`는 Tool 1 항목과 일치. ES 문서 본문이 응답에 쓰이지 않음 | Python 단위 테스트(가짜 ES·가짜 Core) | 미검증 |
-| AC-05 | Tool 1 사용 불가 | 후보가 있어도 `EVIDENCE_HOLD`, Core 사유 그대로, `evidence` 빈 배열 | Python 단위 테스트 + 평가(`fixture_period`, `unapproved`) | 미검증 |
-| AC-06 | Tool 2 403·오류·계약 위반 | 그 후보만 제거, 진단 `removed`에 사유, 응답에 없음 | Python 단위 테스트 | 미검증 |
-| AC-07 | 입력 오류 | `familyId` 없음·200자 초과·`topK` 11·모르는 필드 400. 질의에서 인자를 만들지 않음 | Python 단위·계약 테스트 | 미검증 |
-| AC-08 | ES·Tool 통신 실패 | `EVIDENCE_HOLD`와 서비스 사유 코드, 추측 결과 없음 | Python 단위 테스트 | 미검증 |
-| AC-09 | 진단 분리 | 진단 설정 없이 응답에 `diagnostics` 없음, 설정 시에만 포함 | Python 테스트 + 계약 schema | 미검증 |
-| AC-10 | 평가 거부 | `evaluation_context` 불일치(자료 해시·승인 상태·평가 시각) 시 평가 스크립트가 거부 | Python 테스트 + 하네스 | 미검증 |
-| AC-11 | 보류 기준 고정 | 초기 점검용 10건으로 방식·값을 정해 버전과 함께 설정·결과 파일에 기록. 최종 평가용으로 조정하지 않음 | 하네스 실행 로그 + 판단 기록 | 미검증 |
-| AC-12 | 최종 평가 | 27건 결과 파일에 세 단계 지표 전부와 호출 수·지연. 필수 항목(노출 0, 놓친 보류 0, 유출 0, 제외 조건 0) 충족. Recall@5·MRR·Precision·혼입률은 측정값을 기록하고 기준 충족 여부를 표시 | evidence | 미검증 |
-| AC-13 | 변경 범위 | Core 승인·일정·변경안·검증 코드와 Tool allowlist 변경 없음. 업무 DB 스키마 변경 없음 | diff 검토 | 미검증 |
-| AC-14 | 테스트 수 | 기존 Python·Java 테스트 유지, 새 테스트 추가, 평가 하네스는 CI 미포함 | CI run | 미검증 |
+| AC-03 | 검색 단계 후보 | 요청 공문군 밖·업무일 밖(`effective_ranges` 구간 밖, 구간 사이 공백 포함) 규칙 0건(골든셋 37건 전체) | 평가 결과 | 검증. 37건 × 3구성에서 전달 후보의 제외 조건 위반 0건(`docs/evidence/SEARCH_EVALUATION_bm25_v1.md`) |
+| AC-04 | 응답 내용 출처 | `evidence_text`·`json_pointer`·`evidence_hash`는 Tool 2 응답과 바이트 일치, `instruction`·`structured_change`는 Tool 1 항목과 일치. ES 문서 본문이 응답에 쓰이지 않음 | Python 단위 테스트(가짜 ES·가짜 Core) | 검증. `tests/ai_service/test_search.py`, `tests/contract/test_ai_search_contracts.py` |
+| AC-05 | Tool 1 사용 불가 | 후보가 있어도 `EVIDENCE_HOLD`, Core 사유 그대로, `evidence` 빈 배열 | Python 단위 테스트 + 평가(`fixture_period`, `unapproved`) | 검증. 단위 테스트 + 평가(S09, E19~E21, E26·E27 CORE_DECISION 보류) |
+| AC-06 | Tool 2 403·오류·계약 위반 | 그 후보만 제거, 진단 `removed`에 사유, 응답에 없음 | Python 단위 테스트 | 검증. 단위 테스트(403 EVIDENCE_NOT_AVAILABLE만 제외, 그 외 전체 보류) |
+| AC-07 | 입력 오류 | `familyId` 없음·200자 초과·`topK` 11·모르는 필드 400. 질의에서 인자를 만들지 않음 | Python 단위·계약 테스트 | 검증. 단위·계약·라우트 테스트(400) |
+| AC-08 | ES·Tool 통신 실패 | `EVIDENCE_HOLD`와 서비스 사유 코드, 추측 결과 없음 | Python 단위 테스트 | 검증. 단위 테스트(ES·Core 실패 전부 보류) |
+| AC-09 | 진단 분리 | 진단 설정 없이 응답에 `diagnostics` 없음, 설정 시에만 포함 | Python 테스트 + 계약 schema | 검증. 단위·계약 테스트 |
+| AC-10 | 평가 거부 | `evaluation_context` 불일치(자료 해시·승인 상태·평가 시각) 시 평가 스크립트가 거부 | Python 테스트 + 하네스 | 검증. `tests/unit/test_evaluate_search.py`(fingerprint·승인 상태·진단·untuned·eval 조정 거부) |
+| AC-11 | 보류 기준 고정 | 초기 점검용 10건으로 방식·값을 정해 버전과 함께 설정·결과 파일에 기록. 최종 평가용으로 조정하지 않음 | 하네스 실행 로그 + 판단 기록 | 실행. 구성별 고정값: standard 1.488901, standard+fuzzy 1.266529, nori 2.346652(combined, ratio 0). 최종 평가용으로 조정하지 않음 |
+| AC-12 | 최종 평가 | 27건 결과 파일에 세 단계 지표 전부와 호출 수·지연. 필수 항목(노출 0, 놓친 보류 0, 유출 0, 제외 조건 0) 충족. Recall@5·MRR·Precision·혼입률은 측정값을 기록하고 기준 충족 여부를 표시 | evidence | **미충족.** standard·fuzzy: 필수 0이나 Recall@5 0.235/0.412. nori: Recall@5 1.0, MRR 1.0, Precision 0.853, 혼입 0.217이나 E22 유출·노출·놓친 보류 각 1건. 별도 판단 필요 |
+| AC-13 | 변경 범위 | Core 승인·일정·변경안·검증 코드와 Tool allowlist 변경 없음. 업무 DB 스키마 변경 없음 | diff 검토 | 검증. diff: Core main 변경 없음(테스트 컨테이너·Gradle 속성만) |
+| AC-14 | 테스트 수 | 기존 Python·Java 테스트 유지, 새 테스트 추가, 평가 하네스는 CI 미포함 | CI run | Python 139건 통과. CI는 PR 생성 뒤 |
 
 ### 완료 기준 변경 이력
 
@@ -182,11 +182,20 @@ TASK-014의 세 단계 지표를 그대로 계산한다. 통과 기준은 다음
 
 ## Implementation Result (구현 결과와 자동 검증)
 
-미착수.
+두 번째·세 번째 PR(검색 API + 평가)을 하나의 브랜치로 구현했다(계획의 2·3단계).
+
+- AI 서비스: `search.py`(ES BM25 + filter → 관련성 보류 → Tool 1 → 후보별 Tool 2), `es_client.py`(읽기 전용 사용자, 표준 라이브러리), `search_messages.py`, `POST /api/v1/ai/search`(입력 오류 400, 설정 누락 503, `X-Evidence-Status`), 설정(`TRUST_AGENT_ES_*`, `TRUST_AGENT_SEARCH_HOLD_*`, `TRUST_AGENT_SEARCH_DIAGNOSTICS`, `TRUST_AGENT_SEARCH_FUZZINESS`).
+- 계약: `contracts/ai-search-request.schema.json`, `contracts/ai-search-response.schema.json`. `relevance_hold`는 `{method, min_score, min_ratio, version}`(combined가 값 두 개).
+- 평가: `scripts/evaluate_search.py`(`run`: 세 단계 지표·거부 조건, `tune`: 초기 점검용으로 세 방식 비교), `SearchEvaluationRunner`(`-PsearchEvaluation=true`, 고정 시계·재색인·uvicorn·스크립트 실행, 분석기·fuzziness 선택).
+- 테스트: Python 139건 통과(검색 15, 평가 7, 계약 2 추가). Java 하네스 3구성 실행 성공.
+- 결과: `docs/evidence/SEARCH_EVALUATION_bm25_v1.md`, 원본 `docs/evidence/task-016/`. **수용 기준 미충족**(위 AC-12). standard 계열은 한국어 토큰화 때문에 Recall이 낮고, nori는 수치 기준을 전부 넘지만 결정 질의 E22에서 범위 안 근거가 절대 점수 고정값을 넘어 유출됐다.
+- 하지 않은 것: compose 이미지의 nori 전환, 조정용 자료 추가, 행원용 Core 경로(017c), dense k-NN·reranker(018).
 
 ## AI self-review
 
-미착수.
+- 평가 스크립트는 `relevance_hold.version == untuned`를 최종 평가로 받지 않고, `kind: eval` 자료로는 `tune`을 거부한다. 고정값은 초기 점검용 결과(`hold-tuning.json`)에서만 나왔다.
+- 격자 탐색이 관측 점수 자체를 후보로 쓰므로 고정값이 특정 질의 점수의 바로 위에 놓인다(여유 없음). 조정용 자료를 늘리기 전에는 구조적 한계다.
+- 진단 응답의 `raw_candidates`는 ES 필터 적용 뒤·보류 적용 전 후보다. TASK-014의 "필터·관련성 처리 전 원시 후보"보다 좁은 정의이며 제외 조건 위반 지표는 전달 후보로 잰다(명세와 같음).
 
 ## 인간 검수와 Explainability Gate
 

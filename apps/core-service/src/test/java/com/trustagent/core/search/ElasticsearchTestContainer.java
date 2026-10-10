@@ -25,7 +25,13 @@ final class ElasticsearchTestContainer {
     static final String SEARCH_USER = "trustagent_search";
     static final String SEARCH_PASSWORD = "test-search-" + UUID.randomUUID();
 
-    static final GenericContainer<?> CONTAINER = new GenericContainer<>(DockerImageName.parse(IMAGE))
+    /** 분석기 비교(TASK-016 제안 1): -PsearchAnalyzer=nori면 고정 digest 이미지 위에 analysis-nori 플러그인만 설치한 테스트 이미지를 만든다. */
+    static final String ANALYZER = System.getProperty("trustAgent.searchAnalyzer", "standard");
+
+    static final GenericContainer<?> CONTAINER = (SearchProperties.ANALYZER_NORI.equals(ANALYZER)
+            ? new GenericContainer<>(new org.testcontainers.images.builder.ImageFromDockerfile("trustagent-es-nori-test", false)
+                    .withDockerfileFromBuilder(builder -> builder.from(IMAGE).run("bin/elasticsearch-plugin install --batch analysis-nori").build()))
+            : new GenericContainer<>(DockerImageName.parse(IMAGE)))
             .withEnv("discovery.type", "single-node")
             .withEnv("xpack.security.enabled", "true")
             .withEnv("xpack.security.http.ssl.enabled", "false")

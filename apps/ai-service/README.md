@@ -92,6 +92,28 @@ python3 scripts/summarize_ai_call_metrics.py --input-dir <디렉터리> --warmup
 
 Core와 함께 N회 반복 측정하는 runner는 `apps/core-service`의 `AiServiceCallMetricsRunner`(`-PaiCallMetrics=true -PaiServiceIntegration=true`, CI 미포함)입니다. 측정 결과는 `docs/evidence/AI_CALL_METRICS_EVIDENCE.md`에 기록합니다.
 
+## 근거 검색 API (TASK-016, ADR-013)
+
+```text
+POST /api/v1/ai/search   본문 {"query"(1~200자), "familyId"(필수), "businessDate"?, "consultationId"?, "topK"?(1~10, 기본 5)}
+                         → 200 + X-Evidence-Status: EVIDENCE | EVIDENCE_HOLD. 입력 오류·모르는 필드 400, 설정 누락 503.
+```
+
+계약은 `contracts/ai-search-request.schema.json`, `contracts/ai-search-response.schema.json`입니다. 공문군과 업무일은 호출자가 명시하며 질의 문장에서 추론하지 않습니다.
+
+흐름: Elasticsearch BM25(`evidence_text`, `structured_text`) + metadata filter(`family_id` term, `effective_ranges`에 업무일 intersects) → 관련성 보류 기준 → Core Tool 1(`applicable_checklist`, 사용 불가면 전체 보류) → 후보마다 Tool 2(`rule_evidence`) → 통과한 근거만 순위대로. ES에서는 규칙 version ID와 점수만 쓰고, 행원에게 가는 문장·위치·해시는 Tool 2, 지시 문장·구조화 값은 Tool 1 항목에서만 옵니다. ES·Core 통신 실패, 인증 실패, 계약 위반 응답은 전부 근거 보류(`hold_kind: UNVERIFIED`)이며 Tool 2의 403 `EVIDENCE_NOT_AVAILABLE`만 그 후보를 제외합니다.
+
+```bash
+export TRUST_AGENT_ES_URL=http://127.0.0.1:9200
+export TRUST_AGENT_ES_SEARCH_USERNAME=trustagent_search TRUST_AGENT_ES_SEARCH_PASSWORD='<읽기 전용 비밀번호>'
+export TRUST_AGENT_SEARCH_INDEX_ALIAS=trustagent-rule-evidence-main-current   # 선택, 기본값
+export TRUST_AGENT_SEARCH_HOLD_METHOD=combined TRUST_AGENT_SEARCH_HOLD_MIN_SCORE=<값> TRUST_AGENT_SEARCH_HOLD_MIN_RATIO=<값> TRUST_AGENT_SEARCH_HOLD_VERSION=bm25-hold-v1
+export TRUST_AGENT_SEARCH_DIAGNOSTICS=1   # 평가 하네스 전용. 응답에 diagnostics(원시 후보·전달 후보·제거 사유·Tool 1 판정·호출 수·소요)가 붙는다
+.venv/bin/python -m uvicorn ai_service.app:app --host 127.0.0.1 --port 8090
+```
+
+관련성 보류 기준은 `absolute`(최소 점수), `ratio`(상위 점수 대비 비율), `combined`(둘 다) 중 하나이며, 값이 없으면 보류 없음(`version: untuned`)입니다. 평가 스크립트 `scripts/evaluate_search.py`는 `untuned`를 최종 평가로 받지 않습니다(`run --allow-untuned`는 초기 점검용 조정에만, `tune`은 초기 점검용 결과로 세 방식을 비교). 고정값과 측정 결과는 `docs/evidence/SEARCH_EVALUATION_bm25_v1.md`에 있습니다. 행원용 Core 경로(세션·grant)는 TASK-017c이며, 이 API는 내부망의 Core에서만 호출하는 전제입니다.
+
 ## 테스트
 
 저장소 루트에서 다른 Python 테스트와 함께 실행합니다. `app.py` 테스트는 fastapi·httpx가 없으면 건너뜁니다.

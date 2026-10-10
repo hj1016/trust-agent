@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trust-agent.local/contracts/ai-search-response.schema.json",
+  "title": "AI 서비스 근거 검색 응답 (TASK-016, ADR-013)",
+  "description": "행원 모드 응답. evidence[].evidence는 Tool rule_evidence 응답에서, instruction·structured_change는 Tool applicable_checklist 항목에서만 온다. ES 문서 본문은 쓰지 않는다. diagnostics는 진단 모드(TRUST_AGENT_SEARCH_DIAGNOSTICS=1)에서만 있다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["search_version", "search_messages_hash", "synthetic", "disclaimer", "query", "family_id", "business_date", "evaluated_at", "status",
+               "hold_kind", "hold_reasons", "hold_message", "evidence", "notices", "relevance_hold"],
+  "properties": {
+    "search_version": {"const": "search-bm25-v1"},
+    "search_messages_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "synthetic": {"const": true},
+    "disclaimer": {"type": "string", "minLength": 1},
+    "query": {"type": "string", "minLength": 1, "maxLength": 200},
+    "family_id": {"type": "string", "pattern": "^SIN-[A-Z0-9-]+$"},
+    "business_date": {"type": "string", "format": "date"},
+    "evaluated_at": {"type": ["string", "null"], "format": "date-time", "description": "Tool 1의 evaluatedAt. Tool 1 전에 보류되면 null"},
+    "consultation_id": {"type": "string", "minLength": 1, "maxLength": 64},
+    "status": {"enum": ["EVIDENCE", "EVIDENCE_HOLD"]},
+    "hold_kind": {"enum": ["CORE_DECISION", "UNVERIFIED", "NO_CANDIDATE", null],
+                  "description": "CORE_DECISION: Core가 사용 불가로 판정. UNVERIFIED: 통신 실패·인증 실패·계약 위반(fail-closed). NO_CANDIDATE: 관련 후보 없음"},
+    "hold_reasons": {"type": "array", "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"}},
+    "hold_message": {"type": ["string", "null"]},
+    "evidence": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rank", "rule_version_id", "rule_key", "score", "instruction", "evidence_required", "structured_change", "evidence"],
+        "properties": {
+          "rank": {"type": "integer", "minimum": 1},
+          "rule_version_id": {"type": "string", "pattern": "^policy-rule:sha256:[a-f0-9]{64}$"},
+          "rule_key": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"},
+          "score": {"type": "string", "pattern": "^[0-9]+\\.[0-9]{6}$", "description": "ES BM25 점수(기록용). 정렬 근거일 뿐 의미 값이 아니다"},
+          "instruction": {"type": "string", "minLength": 1},
+          "evidence_required": {"type": "boolean"},
+          "structured_change": {"type": ["object", "null"]},
+          "evidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["notice_id", "evidence_text", "json_pointer", "evidence_hash"],
+            "properties": {
+              "notice_id": {"type": "string", "minLength": 1},
+              "evidence_text": {"type": "string", "minLength": 1},
+              "json_pointer": {"type": "string", "pattern": "^/"},
+              "evidence_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+            }
+          }
+        }
+      }
+    },
+    "notices": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["human_decision_notice", "source_notice", "search_notice", "hold_notice"],
+      "properties": {
+        "human_decision_notice": {"type": "string", "minLength": 1},
+        "source_notice": {"type": "string", "minLength": 1},
+        "search_notice": {"type": "string", "minLength": 1},
+        "hold_notice": {"type": ["string", "null"]}
+      }
+    },
+    "relevance_hold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "min_score", "min_ratio", "version"],
+      "properties": {
+        "method": {"enum": ["absolute", "ratio", "combined"]},
+        "min_score": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+        "min_ratio": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+        "version": {"type": "string", "minLength": 1}
+      }
+    },
+    "diagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw_candidates", "forwarded_candidates", "removed", "tool_1", "tool_calls", "timings_us"],
+      "properties": {
+        "raw_candidates": {"type": "array", "items": {"$ref": "#/$defs/candidate"}},
+        "forwarded_candidates": {"type": "array", "items": {"$ref": "#/$defs/candidate"}},
+        "removed": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["rule_version_id", "stage", "reason"],
+                    "properties": {"rule_version_id": {"type": "string"}, "stage": {"enum": ["HOLD", "CORE"]}, "reason": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"}}}},
+        "tool_1": {"type": ["object", "null"], "additionalProperties": false,
+                   "required": ["usable", "blocking_reasons", "decision_id", "approved_checklist_version_id", "selected_notice_id"],
+                   "properties": {"usable": {"type": "boolean"}, "blocking_reasons": {"type": "array", "items": {"type": "string"}},
+                                  "decision_id": {"type": ["string", "null"]}, "approved_checklist_version_id": {"type": ["string", "null"]},
+                                  "selected_notice_id": {"type": ["string", "null"]}}},
+        "tool_calls": {"type": "object", "additionalProperties": false, "required": ["applicable_checklist", "rule_evidence"],
+                       "properties": {"applicable_checklist": {"type": "integer", "minimum": 0}, "rule_evidence": {"type": "integer", "minimum": 0}}},
+        "timings_us": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}}
+      }
+    }
+  },
+  "$defs": {
+    "candidate": {"type": "object", "additionalProperties": false, "required": ["rule_version_id", "score"],
+                  "properties": {"rule_version_id": {"type": "string", "pattern": "^policy-rule:sha256:[a-f0-9]{64}$"}, "score": {"type": "string", "pattern": "^[0-9]+\\.[0-9]{6}$"}}}
+  }
+}

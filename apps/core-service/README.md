@@ -148,6 +148,15 @@ TRUST_AGENT_ES_REINDEX_USERNAME=trustagent_reindex TRUST_AGENT_ES_REINDEX_PASSWO
 
 **한계(수동 재색인).** 사람 결정이나 철회 적재 뒤 runner를 실행하기 전까지 새로 승인된 규정은 검색 후보에 없고, 철회된 규정은 색인에 남아 있을 수 있습니다. 남아 있는 쪽은 Core 재확인이 막지만 새 규정의 누락은 막지 못합니다. 승인 체험(TASK-027)은 승인 뒤 색인 갱신까지 검증합니다. 자동 전달은 별도 ADR입니다.
 
+### 검색 평가 하네스 (CI 미포함)
+
+`SearchEvaluationRunner`는 PostgreSQL·Elasticsearch Testcontainer, 고정 시계 2026-10-06T03:00:00Z, TASK-015 상태, 재색인, AI 서비스 HTTP(진단 모드)를 띄우고 `scripts/evaluate_search.py`를 실행합니다. 초기 점검용 10건을 보류 없음으로 돌려 세 방식을 비교·선택한 뒤 그 값을 고정해 초기 점검용과 최종 평가용 27건을 평가합니다. 결과는 `apps/core-service/build/reports/search-evaluation/<분석기>/`에 남습니다.
+
+```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :apps:core-service:test --tests '*SearchEvaluationRunner' \
+  -PsearchEvaluation=true -PaiServiceIntegration=true [-PsearchAnalyzer=standard|nori] [-PsearchHoldVersion=bm25-hold-v1] --no-daemon
+```
+
 ## 공개 상품 관측 상태 조회
 
 ```text

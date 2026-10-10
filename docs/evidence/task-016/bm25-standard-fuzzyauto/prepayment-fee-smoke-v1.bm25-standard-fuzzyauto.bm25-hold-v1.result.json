@@ -1,0 +1,648 @@
+{
+  "goldenset_id": "prepayment-fee-smoke",
+  "goldenset_version": "v1",
+  "kind": "smoke",
+  "query_count": 10,
+  "configuration": "bm25-standard-fuzzyauto",
+  "search_version": "search-bm25-v1",
+  "relevance_hold": {
+    "method": "combined",
+    "min_score": "1.266529",
+    "min_ratio": "0.00",
+    "version": "bm25-hold-v1"
+  },
+  "final_evaluation": false,
+  "targets": {
+    "recall_at_5": 0.8,
+    "mrr": 0.7,
+    "precision_returned": 0.7,
+    "irrelevant_rate_max": 0.25
+  },
+  "search_stage": {
+    "exclusion_violations": 0,
+    "exclusion_violation_queries": [],
+    "hold_query_leaks": 0,
+    "hold_query_leak_detail": [],
+    "forwarded_candidates_total": 3,
+    "raw_candidates_total": 15
+  },
+  "core_recheck_stage": {
+    "removed_by_reason": {},
+    "tool_calls": {
+      "applicable_checklist": 10,
+      "rule_evidence": 3
+    }
+  },
+  "final_stage": {
+    "queries_scored": 7,
+    "recall_at_5": 0.42857142857142855,
+    "mrr": 0.42857142857142855,
+    "precision_returned": 0.42857142857142855,
+    "irrelevant_count": 0,
+    "irrelevant_rate": 0.0,
+    "average_returned": 0.42857142857142855,
+    "exposed": 0,
+    "exposed_queries": [],
+    "false_holds": [
+      "S01",
+      "S03",
+      "S05",
+      "S07"
+    ],
+    "false_hold_rate": 0.5714285714285714,
+    "missed_holds": [],
+    "missed_hold_rate": 0.0,
+    "fields_provided_rate": 0.2,
+    "fields_missing": [
+      {
+        "query_id": "S01",
+        "expected": 2,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "after_value",
+            "expected_value": "0.8"
+          },
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "unit",
+            "expected_value": "PERCENT"
+          }
+        ],
+        "ok": false
+      },
+      {
+        "query_id": "S03",
+        "expected": 1,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "exceptions",
+            "expected_value": [
+              "별도 약정으로 수수료 면제가 확인된 경우"
+            ]
+          }
+        ],
+        "ok": false
+      },
+      {
+        "query_id": "S05",
+        "expected": 2,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "conditions",
+            "expected_value": [
+              "기업 고객의 기업여신 상담 건",
+              "2026-10-01 이후 중도상환"
+            ]
+          },
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "effective_on",
+            "expected_value": "2026-10-01"
+          }
+        ],
+        "ok": false
+      },
+      {
+        "query_id": "S07",
+        "expected": 3,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "after_value",
+            "expected_value": "0.8"
+          },
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "effective_on",
+            "expected_value": "2026-10-01"
+          },
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "before_value",
+            "expected_value": "1.2"
+          }
+        ],
+        "ok": false
+      }
+    ]
+  },
+  "verdict": {
+    "required_all_zero": true,
+    "recall_at_5": false,
+    "mrr": false,
+    "precision_returned": false,
+    "irrelevant_rate": true,
+    "all_targets_met": false
+  },
+  "latency_us": {
+    "p50": 20359,
+    "p95": 53300,
+    "count": 10
+  },
+  "failed_queries": [
+    "S01",
+    "S03",
+    "S05",
+    "S07"
+  ],
+  "queries": [
+    {
+      "query_id": "S01",
+      "category": "current_value",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "0.847392"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 2,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "after_value",
+            "expected_value": "0.8"
+          },
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "unit",
+            "expected_value": "PERCENT"
+          }
+        ],
+        "ok": false
+      },
+      "timings_us": {
+        "es": 39077,
+        "tool_1": 13492,
+        "total": 53300
+      }
+    },
+    {
+      "query_id": "S02",
+      "category": "numeric",
+      "expected_hold": false,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "1.936579"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "0.968448"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "1.936579"
+        }
+      ],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [
+        "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4"
+      ],
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "precision_returned": 1.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 1,
+        "missing": [],
+        "ok": true
+      },
+      "timings_us": {
+        "es": 15379,
+        "tool_1": 7602,
+        "tool_2": 8543,
+        "total": 32132
+      }
+    },
+    {
+      "query_id": "S03",
+      "category": "paraphrase",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "0.561265"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "0.430351"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 1,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "exceptions",
+            "expected_value": [
+              "별도 약정으로 수수료 면제가 확인된 경우"
+            ]
+          }
+        ],
+        "ok": false
+      },
+      "timings_us": {
+        "es": 9149,
+        "tool_1": 6859,
+        "total": 16500
+      }
+    },
+    {
+      "query_id": "S04",
+      "category": "direct",
+      "expected_hold": false,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "1.694785"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "1.694785"
+        }
+      ],
+      "removed": [],
+      "returned": [
+        "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a"
+      ],
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "precision_returned": 1.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 7686,
+        "tool_1": 7282,
+        "tool_2": 6247,
+        "total": 21799
+      }
+    },
+    {
+      "query_id": "S05",
+      "category": "numeric",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "1.266529"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "0.484224"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 2,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "conditions",
+            "expected_value": [
+              "기업 고객의 기업여신 상담 건",
+              "2026-10-01 이후 중도상환"
+            ]
+          },
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "effective_on",
+            "expected_value": "2026-10-01"
+          }
+        ],
+        "ok": false
+      },
+      "timings_us": {
+        "es": 13705,
+        "tool_1": 9591,
+        "total": 23737
+      }
+    },
+    {
+      "query_id": "S06",
+      "category": "direct",
+      "expected_hold": false,
+      "status": "EVIDENCE",
+      "hold_kind": null,
+      "hold_reasons": [],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "1.992184"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "0.945196"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "0.464071"
+        }
+      ],
+      "forwarded": [
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "1.992184"
+        }
+      ],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [
+        "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c"
+      ],
+      "recall_at_5": 1.0,
+      "reciprocal_rank": 1.0,
+      "precision_returned": 1.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 9603,
+        "tool_1": 7137,
+        "tool_2": 7672,
+        "total": 24872
+      }
+    },
+    {
+      "query_id": "S07",
+      "category": "old_value_apply",
+      "expected_hold": false,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "score": "0.484224"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "0.430351"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:6a0041a73cc2fdc4fde53d15662e34fa754ab86a07f74127a3f3722aa918143a",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        },
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": 0.0,
+      "reciprocal_rank": 0.0,
+      "precision_returned": 0.0,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": {
+        "expected": 3,
+        "missing": [
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "after_value",
+            "expected_value": "0.8"
+          },
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "effective_on",
+            "expected_value": "2026-10-01"
+          },
+          {
+            "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+            "field": "before_value",
+            "expected_value": "1.2"
+          }
+        ],
+        "ok": false
+      },
+      "timings_us": {
+        "es": 13384,
+        "tool_1": 6432,
+        "total": 20359
+      }
+    },
+    {
+      "query_id": "S08",
+      "category": "other_family",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "score": "1.006565"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:a72302da8f28a3b6d13bf74f835e9c6b7d967179c45b88f23e5d783336e03e3c",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 7615,
+        "tool_1": 6877,
+        "total": 14928
+      }
+    },
+    {
+      "query_id": "S09",
+      "category": "unapproved",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "CORE_DECISION",
+      "hold_reasons": [
+        "APPROVED_CHECKLIST_NOTICE_MISMATCH",
+        "HUMAN_REVIEW_PENDING"
+      ],
+      "raw_top5": [],
+      "forwarded": [],
+      "removed": [],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 9185,
+        "tool_1": 7390,
+        "total": 16902
+      }
+    },
+    {
+      "query_id": "S10",
+      "category": "decision_forbidden",
+      "expected_hold": true,
+      "status": "EVIDENCE_HOLD",
+      "hold_kind": "NO_CANDIDATE",
+      "hold_reasons": [
+        "NO_RELEVANT_CANDIDATE"
+      ],
+      "raw_top5": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "score": "0.645526"
+        }
+      ],
+      "forwarded": [],
+      "removed": [
+        {
+          "rule_version_id": "policy-rule:sha256:0827aed5d6b5dc697c5bcd86e1de62bb8aec9aa7ea89bf89bed0aaa072174ed4",
+          "stage": "HOLD",
+          "reason": "RELEVANCE_BELOW_THRESHOLD"
+        }
+      ],
+      "returned": [],
+      "recall_at_5": null,
+      "reciprocal_rank": null,
+      "precision_returned": null,
+      "irrelevant": [],
+      "exposed": [],
+      "exclusion_violations": [],
+      "leak": null,
+      "fields": null,
+      "timings_us": {
+        "es": 8050,
+        "tool_1": 7140,
+        "total": 15593
+      }
+    }
+  ]
+}

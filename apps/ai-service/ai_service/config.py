@@ -72,3 +72,78 @@ def load_settings(environ: Optional[Mapping[str, str]] = None) -> Settings:
         timeout_seconds=timeout,
         repository_root=repository_root,
     )
+
+
+# ---- 검색 설정(TASK-016). 준비안(prepare)에는 필요 없고 검색 API에만 쓴다. ----
+ENV_ES_URL = "TRUST_AGENT_ES_URL"
+ENV_ES_SEARCH_USERNAME = "TRUST_AGENT_ES_SEARCH_USERNAME"
+ENV_ES_SEARCH_PASSWORD = "TRUST_AGENT_ES_SEARCH_PASSWORD"
+ENV_ES_TIMEOUT_SECONDS = "TRUST_AGENT_ES_TIMEOUT_SECONDS"
+ENV_SEARCH_INDEX_ALIAS = "TRUST_AGENT_SEARCH_INDEX_ALIAS"
+ENV_SEARCH_HOLD_METHOD = "TRUST_AGENT_SEARCH_HOLD_METHOD"
+ENV_SEARCH_HOLD_MIN_SCORE = "TRUST_AGENT_SEARCH_HOLD_MIN_SCORE"
+ENV_SEARCH_HOLD_MIN_RATIO = "TRUST_AGENT_SEARCH_HOLD_MIN_RATIO"
+ENV_SEARCH_HOLD_VERSION = "TRUST_AGENT_SEARCH_HOLD_VERSION"
+ENV_SEARCH_DIAGNOSTICS = "TRUST_AGENT_SEARCH_DIAGNOSTICS"
+ENV_SEARCH_FUZZINESS = "TRUST_AGENT_SEARCH_FUZZINESS"
+SEARCH_ENV_NAMES = (ENV_ES_URL, ENV_ES_SEARCH_USERNAME, ENV_ES_SEARCH_PASSWORD, ENV_ES_TIMEOUT_SECONDS, ENV_SEARCH_INDEX_ALIAS,
+                    ENV_SEARCH_HOLD_METHOD, ENV_SEARCH_HOLD_MIN_SCORE, ENV_SEARCH_HOLD_MIN_RATIO, ENV_SEARCH_HOLD_VERSION, ENV_SEARCH_DIAGNOSTICS, ENV_SEARCH_FUZZINESS)
+DEFAULT_SEARCH_INDEX_ALIAS = "trustagent-rule-evidence-main-current"
+
+
+@dataclass(frozen=True)
+class EsSettings:
+    base_url: str
+    username: Optional[str]
+    password: Optional[str]
+    timeout_seconds: float
+
+
+def load_es_settings(environ: Optional[Mapping[str, str]] = None) -> EsSettings:
+    env = os.environ if environ is None else environ
+    raw_timeout = (env.get(ENV_ES_TIMEOUT_SECONDS) or "").strip()
+    try:
+        timeout = float(raw_timeout) if raw_timeout else DEFAULT_TIMEOUT_SECONDS
+    except ValueError as error:
+        raise SettingsError("SETTINGS_INVALID", f"{ENV_ES_TIMEOUT_SECONDS}는 숫자여야 합니다.") from error
+    if timeout <= 0:
+        raise SettingsError("SETTINGS_INVALID", f"{ENV_ES_TIMEOUT_SECONDS}는 0보다 커야 합니다.")
+    return EsSettings(
+        base_url=(env.get(ENV_ES_URL) or "http://127.0.0.1:9200").strip().rstrip("/"),
+        username=(env.get(ENV_ES_SEARCH_USERNAME) or "").strip() or None,
+        password=(env.get(ENV_ES_SEARCH_PASSWORD) or "").strip() or None,
+        timeout_seconds=timeout,
+    )
+
+
+def load_search_settings(environ: Optional[Mapping[str, str]] = None):
+    """관련성 보류 기준과 진단 모드. 값이 없으면 보류 없음(version untuned)이며 평가 스크립트는 untuned를 거부한다."""
+    from .search import RelevanceHold, SearchSettings  # 순환 import 회피
+
+    env = os.environ if environ is None else environ
+    method = (env.get(ENV_SEARCH_HOLD_METHOD) or "combined").strip()
+    if method not in ("absolute", "ratio", "combined"):
+        raise SettingsError("SETTINGS_INVALID", f"{ENV_SEARCH_HOLD_METHOD}는 absolute, ratio, combined 중 하나여야 합니다.")
+    min_score = (env.get(ENV_SEARCH_HOLD_MIN_SCORE) or "0").strip()
+    min_ratio = (env.get(ENV_SEARCH_HOLD_MIN_RATIO) or "0").strip()
+    for name, value in ((ENV_SEARCH_HOLD_MIN_SCORE, min_score), (ENV_SEARCH_HOLD_MIN_RATIO, min_ratio)):
+        try:
+            if float(value) < 0:
+                raise ValueError
+        except ValueError as error:
+            raise SettingsError("SETTINGS_INVALID", f"{name}는 0 이상의 숫자여야 합니다.") from error
+    return SearchSettings(
+        index_alias=(env.get(ENV_SEARCH_INDEX_ALIAS) or DEFAULT_SEARCH_INDEX_ALIAS).strip(),
+        hold=RelevanceHold(method=method, min_score=min_score, min_ratio=min_ratio, version=(env.get(ENV_SEARCH_HOLD_VERSION) or "untuned").strip()),
+        diagnostics=(env.get(ENV_SEARCH_DIAGNOSTICS) or "").strip() == "1",
+        fuzziness=_fuzziness(env.get(ENV_SEARCH_FUZZINESS)),
+    )
+
+
+def _fuzziness(value: Optional[str]) -> Optional[str]:
+    text = (value or "").strip().upper()
+    if not text:
+        return None
+    if text not in ("AUTO", "0", "1", "2"):
+        raise SettingsError("SETTINGS_INVALID", f"{ENV_SEARCH_FUZZINESS}는 AUTO, 0, 1, 2 중 하나여야 합니다.")
+    return text

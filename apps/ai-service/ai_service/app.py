@@ -10,12 +10,15 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from .assembler import InputError, prepare, record_class
-from .config import SettingsError, load_settings
+from .config import SettingsError, load_es_settings, load_search_settings, load_settings
+from .es_client import UrllibEsTransport
+from .search import SearchInputError, search
 
 # 기록 결과 종류 → HTTP 상태. 본문(record.recorded=false, error_code, usage_notice)은 바뀌지 않는다.
 HTTP_STATUS_BY_RECORD_CLASS = {
@@ -56,3 +59,40 @@ def create_preparation(request: PreparationRequest) -> JSONResponse:
     assert (status_code == 200) == recorded
     return JSONResponse(status_code=status_code, content=preparation,
                         headers={"X-Preparation-Recorded": "true" if recorded else "false"})
+
+
+@app.exception_handler(RequestValidationError)
+def _invalid_request(request: Request, error: RequestValidationError) -> JSONResponse:
+    """검색 API(TASK-016 AC-07): 본문 형식 오류는 400이며 어떤 필드가 틀렸는지만 알린다(값은 되돌려주지 않는다). 준비안 경로는 종전 422를 유지한다."""
+    if request.url.path != "/api/v1/ai/search":
+        return JSONResponse(status_code=422, content={"detail": error.errors()})
+    fields = sorted({".".join(str(part) for part in item.get("loc", ()) if part != "body") for item in error.errors()})
+    return JSONResponse(status_code=400, content={"detail": {"code": "INVALID_REQUEST", "message": "요청 본문이 계약과 다릅니다.", "fields": fields}})
+
+
+class SearchRequest(BaseModel):
+    model_config = {"extra": "forbid"}  # 모르는 필드는 400. 질의 문장에서 인자를 만들지 않는다.
+    query: str = Field(min_length=1, max_length=200)
+    familyId: str = Field(min_length=1, max_length=64)
+    businessDate: Optional[str] = Field(default=None, max_length=10)
+    consultationId: Optional[str] = Field(default=None, min_length=1, max_length=64)
+    topK: Optional[int] = Field(default=None, ge=1, le=10)
+
+
+@app.post("/api/v1/ai/search")
+def search_evidence(request: SearchRequest) -> JSONResponse:
+    """근거 검색 기준선(TASK-016). 보류(EVIDENCE_HOLD)도 200이며 본문의 status·hold_reasons로 구분한다(fail-closed).
+    설정 누락 503, 입력 오류 400. 진단 정보는 TRUST_AGENT_SEARCH_DIAGNOSTICS=1일 때만 본문에 있다."""
+    try:
+        settings = load_settings()
+        es_settings = load_es_settings()
+        search_settings = load_search_settings()
+    except SettingsError as error:
+        raise HTTPException(status_code=503, detail={"code": error.code, "message": str(error)}) from error
+    es = UrllibEsTransport(es_settings.base_url, es_settings.username, es_settings.password, es_settings.timeout_seconds)
+    try:
+        result = search(request.query, request.familyId, request.businessDate, request.consultationId, request.topK,
+                        settings=settings, search_settings=search_settings, es=es)
+    except SearchInputError as error:
+        raise HTTPException(status_code=400, detail={"code": error.code, "message": str(error)}) from error
+    return JSONResponse(status_code=200, content=result, headers={"X-Evidence-Status": result["status"]})
