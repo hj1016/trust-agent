@@ -134,7 +134,8 @@ public final class ProposalValidationService {
 
     private ProposalValidator.PublicFactCheck publicFactCheck(
             ProposalRepository.ReferenceRow reference, Instant validatedAt, ArrayNode refs) {
-        PublicProductObservedState state = publicProducts.get(reference.productKey(), validatedAt.toString());
+        // 같은 검증 작업의 기준 시각(validatedAt)으로 현재 공개 근거를 평가한다.
+        PublicProductObservedState state = publicProducts.evaluateAt(reference.productKey(), validatedAt, validatedAt);
         Long publicValue = null;
         ObjectNode ref = refs.addObject();
         ref.put("product_key", reference.productKey());

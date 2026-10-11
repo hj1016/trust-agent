@@ -149,7 +149,7 @@ public class InternalPolicyApplicableService {
                     }
                     // 공개 근거: 선택된 공문의 참조가 있으면 조회 시점 기준으로 확인한다. 참조가 없으면 해당 없음(확인된 것으로 본다).
                     publicEvidenceConfirmed = evaluatePublicEvidence(
-                            selected.noticeId(), knownAt, historicalKnownAt, blockingReasons, warningReasons);
+                            selected.noticeId(), knownAt, evaluatedAt, historicalKnownAt, blockingReasons, warningReasons);
                 }
             }
         }
@@ -213,14 +213,15 @@ public class InternalPolicyApplicableService {
 
     /** 필수 참조가 하나라도 확인되지 않으면 차단, 참고용은 경고. 과거 조회는 이미 차단이므로 확인 결과만 false로 둔다. */
     private boolean evaluatePublicEvidence(
-            String noticeId, Instant knownAt, boolean historicalKnownAt,
+            String noticeId, Instant knownAt, Instant evaluatedAt, boolean historicalKnownAt,
             List<String> blockingReasons, List<String> warningReasons) {
         List<InternalPolicyApplicableRepository.ReferenceRow> references = repository.findReferences(noticeId);
         if (references.isEmpty()) return true;
         if (historicalKnownAt) return false;
         boolean confirmed = true;
         for (InternalPolicyApplicableRepository.ReferenceRow reference : references) {
-            var state = publicProducts.get(reference.productKey(), knownAt.toString());
+            // 이 조회의 평가 시각(evaluatedAt)과 knownAt으로 평가한다. 과거 knownAt은 위에서 이미 차단한다.
+            var state = publicProducts.evaluateAt(reference.productKey(), knownAt, evaluatedAt);
             if (state.publicEvidenceConfirmationAllowed()) continue;
             if ("REQUIRED".equals(reference.evidenceRequirement())) {
                 confirmed = false;
