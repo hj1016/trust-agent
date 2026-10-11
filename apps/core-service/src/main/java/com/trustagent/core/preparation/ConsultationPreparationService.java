@@ -127,7 +127,7 @@ public class ConsultationPreparationService {
                     "기록 저장 중 DB 처리에 실패했습니다. 준비안과 섹션 어느 것도 저장되지 않았습니다.", exception);
         }
         recordRun(runId, result.preparationId(), serviceId, tokenScope, result.outcome().name(), null, traceId, startedAt,
-                sectionEvaluations(parsed, rechecked));
+                sectionEvaluations(parsed, rechecked), parsed.consultationId());
         return result;
     }
 
@@ -541,10 +541,24 @@ public class ConsultationPreparationService {
 
     private void recordRun(String runId, String preparationId, String serviceId, String tokenScope, String outcome,
             String errorCode, String traceId, Instant startedAt, String sectionEvaluations) {
+        recordRun(runId, preparationId, serviceId, tokenScope, outcome, errorCode, traceId, startedAt, sectionEvaluations, null);
+    }
+
+    /**
+     * 실행 기록. 성공(RECORDED·ALREADY_RECORDED)이고 상담 ID가 있으면 같은 트랜잭션에서 상담 건-준비안 연결(V12)도 남긴다.
+     * 준비안 ID는 상담 ID를 빼고 계산하므로, 상담 건별 준비안은 준비안 행이 아니라 이 연결로 찾는다(TASK-017b).
+     */
+    private void recordRun(String runId, String preparationId, String serviceId, String tokenScope, String outcome,
+            String errorCode, String traceId, Instant startedAt, String sectionEvaluations, String consultationId) {
         try {
-            requiresNew.executeWithoutResult(status -> repository.insertRun(
-                    runId, preparationId != null && PREPARATION_ID.matcher(preparationId).matches() ? preparationId : null,
-                    serviceId, tokenScope, outcome, errorCode, traceId, startedAt, clock.instant(), sectionEvaluations));
+            requiresNew.executeWithoutResult(status -> {
+                String preparation = preparationId != null && PREPARATION_ID.matcher(preparationId).matches() ? preparationId : null;
+                Instant finishedAt = clock.instant();
+                repository.insertRun(runId, preparation, serviceId, tokenScope, outcome, errorCode, traceId, startedAt, finishedAt, sectionEvaluations);
+                if (consultationId != null && preparation != null && ("RECORDED".equals(outcome) || "ALREADY_RECORDED".equals(outcome))) {
+                    repository.insertLink(runId, consultationId, preparation, finishedAt);
+                }
+            });
         } catch (RuntimeException auditFailure) {
             throw new ConsultationPreparationException("FAILURE_AUDIT_WRITE_FAILED",
                     "실행 기록을 저장할 수 없습니다 (원래 결과: " + outcome + (errorCode == null ? "" : " " + errorCode) + ")", auditFailure);

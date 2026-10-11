@@ -1,0 +1,33 @@
+{
+  "_source": "apps/ai-service/ai_service/messages.py의 CORE_REASON_MESSAGES와 SERVICE_REASON_MESSAGES. 계약 테스트가 일치를 확인한다.",
+  "messages": {
+    "AMBIGUOUS_EFFECTIVE_NOTICE": "적용 공문을 하나로 고를 수 없어(중첩 또는 끊긴 연결) 쓸 수 없습니다.",
+    "APPROVED_CHECKLIST_NOTICE_MISMATCH": "적용 일정의 checklist가 선택된 공문과 맞지 않아 쓸 수 없습니다.",
+    "CHECKLIST_VALIDATION_PENDING": "변경안 자동 검증이 아직 끝나지 않았습니다.",
+    "CORE_TIMEOUT": "Core 응답이 시간 안에 오지 않아 확인하지 못했습니다. 잠시 뒤 다시 실행하세요.",
+    "CORE_UNAVAILABLE": "Core에 연결하지 못해 확인하지 못했습니다. 잠시 뒤 다시 실행하세요.",
+    "EFFECTIVE_NOTICE_WITHDRAWN": "적용 공문이 철회되어 checklist를 쓸 수 없습니다.",
+    "EVIDENCE_UNAVAILABLE": "항목 근거를 받지 못해 이 공문군의 준비안을 만들지 않았습니다. 다시 실행하세요.",
+    "FIXTURE_CHECKLIST_NOT_APPROVED": "이 업무일에는 테스트용 예시 checklist만 있어 업무에 쓸 수 없습니다.",
+    "FUTURE_BUSINESS_DATE": "미래 업무일로는 checklist를 쓸 수 없습니다.",
+    "FUTURE_KNOWN_AT_NOT_ALLOWED": "미래 기준 시각은 허용되지 않습니다.",
+    "HISTORICAL_KNOWN_AT": "과거 기준 시각 조회는 업무 사용이 허용되지 않습니다.",
+    "HUMAN_DECISION_MISSING": "사람 검토 결정이 없는 checklist라 쓸 수 없습니다.",
+    "HUMAN_REVIEW_PENDING": "변경안이 담당 부서의 검토 대기 상태라 승인 checklist를 아직 쓸 수 없습니다.",
+    "INFORMATIONAL_PUBLIC_EVIDENCE_UNCONFIRMED": "참고용 공개 근거가 확인되지 않았습니다(사용은 가능).",
+    "INVALID_BUSINESS_DATE": "업무일 형식이 올바르지 않습니다.",
+    "INVALID_KNOWN_AT": "기준 시각 형식이 올바르지 않습니다.",
+    "NOTICE_NOT_YET_EFFECTIVE": "공문이 아직 시행 전이라 쓸 수 없습니다.",
+    "NO_APPLICABLE_NOTICE": "이 업무일에 적용되는 공문이 없습니다.",
+    "POLICY_EXTRACTION_FAILED": "공문 구조화가 실패해 checklist를 만들 수 없습니다.",
+    "POLICY_EXTRACTION_PENDING": "공문 구조화가 아직 끝나지 않았습니다.",
+    "POLICY_FAMILY_NOT_FOUND": "Core에 없는 공문군입니다.",
+    "PROPOSAL_REJECTED": "변경안이 반려되어 checklist를 쓸 수 없습니다.",
+    "PUBLIC_EVIDENCE_UNCONFIRMED": "필수 공개 근거가 확인되지 않아 쓸 수 없습니다.",
+    "RETROACTIVE_NOTICE": "소급 적용 공문입니다(사용은 가능).",
+    "TOOL_AUTH_FAILED": "Core 인증에 실패해 확인하지 못했습니다. 서비스 설정을 점검한 뒤 다시 실행하세요.",
+    "TOOL_RESPONSE_INVALID": "Core 응답이 계약과 달라 확인하지 못했습니다. 다시 실행하세요.",
+    "VALIDATION_FAILED": "변경안 자동 검증이 실패해 checklist를 쓸 수 없습니다.",
+    "VALIDATION_STALE": "변경안 검증 결과가 오래되어 재검증 전에는 쓸 수 없습니다."
+  }
+}

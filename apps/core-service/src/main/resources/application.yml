@@ -109,7 +109,7 @@ trust-agent:
     max-validation-age: ${TRUST_AGENT_VALIDATION_MAX_AGE:24h}
     policy-version: ${TRUST_AGENT_VALIDATION_POLICY_VERSION:internal-validation-v1}
   schema:
-    expected-version: ${TRUST_AGENT_SCHEMA_EXPECTED_VERSION:11}
+    expected-version: ${TRUST_AGENT_SCHEMA_EXPECTED_VERSION:12}
 
 management:
   server:

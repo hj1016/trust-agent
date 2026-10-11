@@ -10,13 +10,22 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice(assignableTypes = ConsultationController.class)
+@RestControllerAdvice(assignableTypes = {ConsultationController.class, ApplicationController.class})
 class ConsultationExceptionHandler {
 
-    private static final Map<String, HttpStatus> STATUS_BY_CODE = Map.of(
-            "APPLICATION_NOT_REGISTERED", HttpStatus.UNPROCESSABLE_CONTENT,
-            "PRODUCT_NOT_MAPPED", HttpStatus.UNPROCESSABLE_CONTENT,
-            "INVALID_BUSINESS_DATE", HttpStatus.BAD_REQUEST);
+    private static final Map<String, HttpStatus> STATUS_BY_CODE = Map.ofEntries(
+            Map.entry("APPLICATION_NOT_REGISTERED", HttpStatus.UNPROCESSABLE_CONTENT),
+            Map.entry("PRODUCT_NOT_MAPPED", HttpStatus.UNPROCESSABLE_CONTENT),
+            Map.entry("INVALID_BUSINESS_DATE", HttpStatus.BAD_REQUEST),
+            Map.entry("INVALID_REQUEST", HttpStatus.BAD_REQUEST),
+            Map.entry("PREPARATION_NOT_FOUND", HttpStatus.NOT_FOUND),
+            Map.entry("SECTION_NOT_IN_PREPARATION", HttpStatus.UNPROCESSABLE_CONTENT),
+            Map.entry("SECTION_ON_HOLD", HttpStatus.CONFLICT),
+            Map.entry("CONFIRMATION_MISMATCH", HttpStatus.UNPROCESSABLE_CONTENT),
+            Map.entry("CONFIRMATION_INCOMPLETE", HttpStatus.UNPROCESSABLE_CONTENT),
+            Map.entry("ALREADY_CONFIRMED", HttpStatus.CONFLICT),
+            Map.entry("PREPARATION_STALE", HttpStatus.CONFLICT),
+            Map.entry("ROLE_NOT_ACTIVE", HttpStatus.FORBIDDEN));
 
     @ExceptionHandler(ConsultationException.class)
     ProblemDetail handle(ConsultationException exception, HttpServletRequest request) {

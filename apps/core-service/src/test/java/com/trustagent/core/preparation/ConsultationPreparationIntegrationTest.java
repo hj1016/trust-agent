@@ -369,7 +369,7 @@ class ConsultationPreparationIntegrationTest {
                                has_table_privilege('trust_agent_runtime','consultation_preparation','UPDATE')::text || ' | ' ||
                                has_table_privilege('trust_agent_runtime','consultation_preparation_section','DELETE')::text
                         """));
-        assertEquals(4, count("trust_agent_protected_tables() where protected_table_name like 'consultation_%'"));
+        assertEquals(6, count("trust_agent_protected_tables() where protected_table_name like 'consultation_%'")); // V10 네 표 + V12 연결·직원 확인
         // CHECK: HOLD 섹션에 version ID가 있으면 DB가 거부한다(코드를 우회해도 막힌다).
         String violation = sqlState(() -> jdbc.sql("""
                 insert into consultation_preparation_section (preparation_id, family_id, required, status, hold_kind, hold_claim_basis,

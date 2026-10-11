@@ -38,13 +38,18 @@ public class ConsultationController {
 
     public record PreparationRequest(String businessDate) {}
 
+    public record ConfirmationRequest(String preparationId, String familyId, List<String> ruleVersionIds) {}
+
     private final ConsultationService consultations;
+    private final ConsultationWorkService work;
     private final AiServiceClient aiService;
     private final GrantService grants;
     private final SecurityEventRecorder events;
 
-    public ConsultationController(ConsultationService consultations, AiServiceClient aiService, GrantService grants, SecurityEventRecorder events) {
+    public ConsultationController(ConsultationService consultations, ConsultationWorkService work, AiServiceClient aiService, GrantService grants,
+                                  SecurityEventRecorder events) {
         this.consultations = consultations;
+        this.work = work;
         this.aiService = aiService;
         this.grants = grants;
         this.events = events;
@@ -92,6 +97,39 @@ public class ConsultationController {
         return ResponseEntity.status(response.status())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(response.body());
+    }
+
+    /** 이 상담 건에 연결된 최신 준비안(TASK-017b). 담당자가 아니면 404, 준비안이 없으면 404 PREPARATION_NOT_FOUND. */
+    @GetMapping("/{consultationId}/preparation")
+    public ResponseEntity<?> latestPreparation(@PathVariable String consultationId, Authentication authentication, HttpServletRequest request) {
+        if (consultations.findOwned(consultationId, authentication.getName(), ActiveRole.workspace(request)).isEmpty()) {
+            return notOwned(consultationId, authentication, request);
+        }
+        return work.latestPreparation(consultationId).<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseThrow(() -> new ConsultationException("PREPARATION_NOT_FOUND", "이 상담 건에 기록된 준비안이 없습니다."));
+    }
+
+    @GetMapping("/{consultationId}/confirmations")
+    public ResponseEntity<?> confirmations(@PathVariable String consultationId, Authentication authentication, HttpServletRequest request) {
+        if (consultations.findOwned(consultationId, authentication.getName(), ActiveRole.workspace(request)).isEmpty()) {
+            return notOwned(consultationId, authentication, request);
+        }
+        return ResponseEntity.ok(Map.of("confirmations", work.confirmations(consultationId)));
+    }
+
+    /** 직원 확인(READY 섹션의 항목별 근거 확인 기록). 대출 승인·거절이나 상담 준비 완료가 아니다. */
+    @PostMapping("/{consultationId}/confirmations")
+    public ResponseEntity<?> confirm(@PathVariable String consultationId, @RequestBody(required = false) ConfirmationRequest body,
+                                     Authentication authentication, HttpServletRequest request) {
+        if (consultations.findOwned(consultationId, authentication.getName(), ActiveRole.workspace(request)).isEmpty()) {
+            return notOwned(consultationId, authentication, request);
+        }
+        if (body == null || body.preparationId() == null || body.familyId() == null) {
+            throw new ConsultationException("INVALID_REQUEST", "preparationId와 familyId가 필요합니다.");
+        }
+        ConsultationWorkService.Confirmation confirmation = work.confirm(consultationId, body.preparationId(), body.familyId(), body.ruleVersionIds(),
+                authentication.getName(), ActiveRole.current(request).orElse(""), traceId(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(confirmation);
     }
 
     private ResponseEntity<ProblemDetail> notOwned(String consultationId, Authentication authentication, HttpServletRequest request) {

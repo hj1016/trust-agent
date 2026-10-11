@@ -44,6 +44,8 @@ def aiServiceIntegrationRequested = project.hasProperty('aiServiceIntegration')
         : (System.getenv('TRUST_AGENT_REQUIRE_AI_INTEGRATION') ?: '') == '1'
 // TASK-021 호출 계측 runner(AiServiceCallMetricsRunner)는 -PaiCallMetrics=true일 때만 실행하며 CI에는 넣지 않는다. 실행 수는 -PaiCallMetricsRuns=<N>(기본 30).
 def aiCallMetricsRequested = project.hasProperty('aiCallMetrics') && project.property('aiCallMetrics').toString() == 'true'
+// TASK-017b 브라우저 E2E(UiEndToEndRunner)는 -PuiE2E=true일 때만 실행하며 CI 필수 Job에는 넣지 않는다. 화면은 미리 apps/frontend에서 빌드한다.
+def uiE2ERequested = project.hasProperty('uiE2E') && project.property('uiE2E').toString() == 'true'
 def aiCallMetricsRuns = project.hasProperty('aiCallMetricsRuns') ? project.property('aiCallMetricsRuns').toString() : '30'
 def aiServiceVenv = layout.buildDirectory.dir('ai-venv')
 def aiServiceDir = rootProject.layout.projectDirectory.dir('apps/ai-service')
@@ -51,7 +53,7 @@ def aiServiceDir = rootProject.layout.projectDirectory.dir('apps/ai-service')
 tasks.register('prepareAiServiceEnv', Exec) {
     description = 'AI 서비스 연결 검증용 Python venv를 만들고 requirements-ai.txt를 설치한다.'
     group = 'verification'
-    onlyIf { aiServiceIntegrationRequested || aiCallMetricsRequested }
+    onlyIf { aiServiceIntegrationRequested || aiCallMetricsRequested || uiE2ERequested }
     inputs.file(aiServiceDir.file('requirements-ai.txt'))
     inputs.file(rootProject.layout.projectDirectory.file('requirements.txt'))
     outputs.dir(aiServiceVenv)
@@ -60,6 +62,14 @@ tasks.register('prepareAiServiceEnv', Exec) {
     def requirements = aiServiceDir.file('requirements-ai.txt').asFile.absolutePath
     commandLine 'sh', '-c',
             "python3 -m venv '${venvPath}' && '${venvPath}/bin/python' -m pip install --quiet --disable-pip-version-check --requirement '${requirements}'"
+}
+
+// TASK-017b: 업무지원 화면 빌드 결과(apps/frontend/dist)가 있으면 Core 정적 자원(static/)으로 넣는다(ADR-014 1항, 같은 출처 제공).
+// 화면 빌드는 apps/frontend에서 npm으로 한다. dist가 없으면 정적 자원 없이 API만 제공한다.
+tasks.named('processResources') {
+    from(rootProject.layout.projectDirectory.dir('apps/frontend/dist')) {
+        into 'static'
+    }
 }
 
 tasks.named('test') {
@@ -83,9 +93,10 @@ tasks.named('test') {
     systemProperty 'trustAgent.aiServiceIntegration', aiServiceIntegrationRequested.toString()
     systemProperty 'trustAgent.aiServicePython', aiServiceVenv.get().file('bin/python').asFile.absolutePath
     systemProperty 'trustAgent.aiCallMetrics', aiCallMetricsRequested.toString()
+    systemProperty 'trustAgent.uiE2E', uiE2ERequested.toString()
     systemProperty 'trustAgent.aiCallMetrics.runs', aiCallMetricsRuns
     environment 'TRUST_AGENT_REQUIRE_AI_INTEGRATION', System.getenv('TRUST_AGENT_REQUIRE_AI_INTEGRATION') ?: ''
-    if (aiServiceIntegrationRequested || aiCallMetricsRequested) {
+    if (aiServiceIntegrationRequested || aiCallMetricsRequested || uiE2ERequested) {
         dependsOn 'prepareAiServiceEnv'
     }
 }
