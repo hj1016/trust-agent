@@ -47,6 +47,8 @@ function ConsultationDetail({ consultationId, panelOpen, onTogglePanel }: { cons
   const consultation = useConsultation(consultationId);
   const preparation = usePreparation(consultationId);
   const confirmations = useConfirmations(consultationId);
+  const product = usePublicProduct(consultation.data?.productKey ?? "");
+  const productName = product.data?.displayName;
 
   if (consultation.isError) {
     const notFound = consultation.error instanceof ApiError && consultation.error.status === 404;
@@ -70,7 +72,8 @@ function ConsultationDetail({ consultationId, panelOpen, onTogglePanel }: { cons
             : <p className="text-ink-soft">상담 건을 불러오는 중…</p>}
           <Alert tone="info">{TEXT.humanDecision}</Alert>
           {consultation.data?.families.map((family) => (
-            <FamilyChecklistCard key={`${family.familyId}-${businessDate}`} consultationId={consultationId} family={family} businessDate={businessDate}
+            <FamilyChecklistCard key={`${family.familyId}-${businessDate}`} consultationId={consultationId} productKey={consultation.data!.productKey}
+              productName={productName} family={family} businessDate={businessDate}
               preparation={preparation.data} confirmations={confirmations.data} />
           ))}
           {consultation.data && <ConfirmationHistory confirmations={confirmations.data} loading={confirmations.isPending} />}
@@ -104,7 +107,6 @@ function Summary({ consultation, businessDate, onDate }: { consultation: Consult
         </div>
         <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-[15px] 2xl:grid-cols-4">
           <Field term="상품" value={product ?? application.productKey} />
-          <Field term="신청 금액" value={formatWon(application.requestedAmountKrw)} />
           <Field term="담당" value={consultation.assignedUserId} />
           <Field term="상담 상태" value={consultationStatus(consultation.status).text} />
           <div className="col-span-full min-w-0">
@@ -112,6 +114,10 @@ function Summary({ consultation, businessDate, onDate }: { consultation: Consult
             <dd className="mt-0.5 font-semibold leading-relaxed break-keep" data-testid="purpose">{application.purpose}</dd>
           </div>
         </dl>
+        <section aria-label="상담 맥락" className="mt-4 rounded-xl border border-line bg-canvas/60 p-4">
+          <h2 className="mb-2 text-[15px] font-bold text-ink">상담 맥락 · 공개 상품 정보</h2>
+          <ProductContext productKey={application.productKey} requestedAmountKrw={application.requestedAmountKrw} />
+        </section>
         <div className="mt-3">
           <TechnicalDetails rows={[
             ["기업 ID", application.companyId],
@@ -126,15 +132,72 @@ function Summary({ consultation, businessDate, onDate }: { consultation: Consult
   );
 }
 
-/** 상품 표시명: 공개 상품 관측 상태(기존 API)의 displayName. 못 읽으면 상품 키를 그대로 보인다. */
-function useProductName(productKey: string): string | undefined {
-  const query = useQuery({
-    queryKey: ["product-name", productKey],
-    queryFn: async () => (await request<{ displayName?: string }>(`/api/v1/public-products/${encodeURIComponent(productKey)}/observed-state`)).displayName,
+type PublicProduct = {
+  displayName?: string;
+  lastConfirmedAt?: string | null;
+  freshnessStatus?: string;
+  publicEvidenceConfirmationAllowed?: boolean;
+  terms?: { facts: Array<{ factKey: string; subjectType: string; valueType: string; integerValue: number | null; statusValue: string | null }> } | null;
+  confirmedObservation?: { observedAt: string; sourceUrl: string } | null;
+};
+
+/** 공개 상품 관측 상태(기존 API). 상품명과 상담 맥락의 공개 사실에 쓴다. */
+function usePublicProduct(productKey: string) {
+  return useQuery({
+    queryKey: ["public-product", productKey],
+    queryFn: () => request<PublicProduct>(`/api/v1/public-products/${encodeURIComponent(productKey)}/observed-state`),
     staleTime: 5 * 60_000,
   });
+}
+
+function useProductName(productKey: string): string | undefined {
+  const query = usePublicProduct(productKey);
   if (query.isPending) return "상품 정보를 불러오는 중…";
-  return query.data ?? undefined;
+  return query.data?.displayName ?? undefined;
+}
+
+const SUBJECT_LABEL: Record<string, string> = { CORPORATION: "법인", SOLE_PROPRIETOR: "개인사업자" };
+const SALE_STATUS: Record<string, string> = { SELLING: "판매 중" };
+
+/**
+ * 상담 맥락: 신청 금액 옆에 공개 상품의 확인된 사실(판매 상태, 사업자 유형별 최대 한도, 관측 시각)을 나란히 보인다.
+ * 금액 비교로 대출 가능 여부·한도를 판단하지 않는다. 공개 정보가 최신으로 확인되지 않았으면 '추가 확인 필요'다.
+ */
+function ProductContext({ productKey, requestedAmountKrw }: { productKey: string; requestedAmountKrw: number }) {
+  const query = usePublicProduct(productKey);
+  if (query.isPending) return <p className="text-sm text-ink-soft">공개 상품 정보를 불러오는 중…</p>;
+  if (query.isError || !query.data) {
+    return <p className="text-sm text-hold">추가 확인 필요: 공개 상품 정보를 불러오지 못했습니다.</p>;
+  }
+  const data = query.data;
+  const confirmed = data.publicEvidenceConfirmationAllowed === true;
+  const facts = data.terms?.facts ?? [];
+  const limits = facts.filter((fact) => fact.factKey.startsWith("max_limit_") && fact.integerValue !== null);
+  const sale = facts.find((fact) => fact.factKey === "sale_status")?.statusValue;
+  return (
+    <div className="flex flex-col gap-2" data-testid="product-context">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        {confirmed
+          ? <span className="rounded-full bg-ready-soft px-2.5 py-0.5 font-semibold text-ready">공개 원문으로 확인됨</span>
+          : <span className="rounded-full bg-hold-soft px-2.5 py-0.5 font-semibold text-hold">추가 확인 필요: 공개 정보 최신성 미확인</span>}
+        {data.confirmedObservation && <span className="text-ink-soft">공개 페이지 관측 {formatDateTime(data.confirmedObservation.observedAt)}</span>}
+      </div>
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-[15px] 2xl:grid-cols-3">
+        <div><dt className="text-sm text-ink-soft">신청 금액(신청 자료)</dt><dd className="font-semibold">{formatWon(requestedAmountKrw)}</dd></div>
+        {limits.map((fact) => (
+          <div key={fact.factKey}>
+            <dt className="text-sm text-ink-soft">공개 최대 한도({SUBJECT_LABEL[fact.subjectType] ?? fact.subjectType})</dt>
+            <dd className="font-semibold">{formatWon(fact.integerValue as number)}</dd>
+          </div>
+        ))}
+        {sale && <div><dt className="text-sm text-ink-soft">판매 상태</dt><dd className="font-semibold">{SALE_STATUS[sale] ?? `확인 필요(${sale})`}</dd></div>}
+      </dl>
+      <p className="text-sm text-ink-soft">
+        신청 금액과 공개 최대 한도를 나란히 보여 줄 뿐이며 대출 가능 여부나 한도 판단이 아닙니다. 어느 한도가 해당하는지는 신청 기업의 사업자 유형을 직원이 확인합니다(화면 자료에 사업자 유형이 없음).
+      </p>
+      <TechnicalDetails rows={[["공개 원문 출처", data.confirmedObservation?.sourceUrl], ["최신성 상태", data.freshnessStatus], ["마지막 확인 시각", data.lastConfirmedAt ?? null]]} />
+    </div>
+  );
 }
 
 function Field({ term, value, mono }: { term: string; value: string; mono?: boolean }) {

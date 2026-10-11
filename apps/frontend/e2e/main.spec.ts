@@ -52,25 +52,36 @@ test("AC-03·04 상담 건 생성 → 상세에서 질문 없이 적용 공문·
   // 기술 식별자는 기본 화면에 보이지 않고 상세 정보를 펼쳐야 보인다.
   await expect(fee.getByText(changed.ruleKey, { exact: true })).toBeHidden();
   await expect(fee.getByText(state.approvedChecklist.approvedChecklistVersionId)).toBeHidden();
-  await fee.getByRole("button", { name: "상세 정보" }).first().click();
+  await fee.getByRole("button", { name: "기술·감사 정보" }).first().click();
   await expect(fee.getByText(state.approvedChecklist.approvedChecklistVersionId)).toBeVisible();
   // 자금 용도는 잘리지 않고 전부 보인다.
   const consultation = await (await page.request.get(`/api/v1/consultations/${encodeURIComponent(firstConsultation)}`)).json();
   const purpose = page.getByTestId("purpose");
   await expect(purpose).toHaveText(consultation.application.purpose);
   expect(await purpose.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
-  await fee.getByRole("button", { name: /원문 근거 보기/ }).first().click();
+  await fee.getByRole("button", { name: /공문 원문 보기/ }).first().click();
   const firstRule = state.rules.find((rule: { ruleVersionId: string }) => rule.ruleVersionId === state.approvedChecklist.items[0].sourceRuleVersionId);
   await expect(fee.locator("blockquote").filter({ hasText: firstRule.evidenceText })).toBeVisible();
   // 원문 근거 영역: 근거 공문·원문 발췌·적용 조건·직원 확인사항이 기본으로 보이고, 해시·규칙 ID는 기술 상세를 펼쳐야 보인다.
   const evidence = fee.getByTestId("evidence-panel").first();
   await expect(evidence.getByText(state.selectedNotice.title)).toBeVisible();
   await expect(evidence.getByRole("heading", { name: "공문 원문 발췌" })).toBeVisible();
-  await expect(evidence.getByRole("heading", { name: "적용 조건" })).toBeVisible();
-  await expect(evidence.getByRole("heading", { name: "예외" })).toBeVisible();
-  await expect(evidence.getByRole("heading", { name: "직원 확인사항(승인 Checklist)" })).toBeVisible();
+  // 확인 상태: 자료로 대조한 사실과 추가 확인 사항을 나눠 보이며, 조건·예외는 원문 그대로 '추가 확인 필요'에 있다.
+  const checks = fee.getByTestId("check-status").first();
+  await expect(checks.locator("[data-kind=confirmed]").filter({ hasText: "적용 상품 일치" })).toBeVisible();
+  await expect(checks.locator("[data-kind=confirmed]").filter({ hasText: "업무일 기준 시행 중" })).toBeVisible();
+  for (const condition of changed.structuredChange.conditions) {
+    await expect(checks.locator("[data-kind=needs-check]").filter({ hasText: condition })).toBeVisible();
+  }
+  for (const exception of changed.structuredChange.exceptions) {
+    await expect(checks.locator("[data-kind=needs-check]").filter({ hasText: exception })).toBeVisible();
+  }
+  // 상담 맥락: 공개 상품 사실을 신청 금액 옆에 보이되 판단 문구는 없다.
+  const context = page.getByTestId("product-context");
+  await expect(context.getByText("공개 최대 한도(법인)")).toBeVisible();
+  await expect(context.getByText(/대출 가능 여부나 한도 판단이 아닙니다/)).toBeVisible();
   await expect(evidence.getByText(firstRule.evidenceHash)).toBeHidden();
-  await evidence.getByRole("button", { name: /기술 상세 정보/ }).click();
+  await evidence.getByRole("button", { name: /기술·감사 정보/ }).click();
   await expect(evidence.getByText(firstRule.evidenceHash)).toBeVisible();
   await expect(evidence.getByText(state.approvedChecklist.decisionId)).toBeVisible();
   // 공문 규칙 원문 전체: 기존 적용 조회의 규칙 수와 같고, 문서 파일 링크는 없다.
@@ -129,7 +140,7 @@ test("AC-07·08·09 READY 섹션 직원 확인: 전체 체크 뒤에만 기록, 
   await button.click();
   const done = fee.getByTestId(`confirmation-${PREPAYMENT}`);
   await expect(done.getByText(/근거 확인 기록됨 · 확인자 SYN-STAFF-01\(직원\)/)).toBeVisible();
-  await expect(done.getByRole("button", { name: "확인 대상 상세 정보" })).toBeVisible();
+  await expect(done.getByRole("button", { name: "확인 대상 기술·감사 정보" })).toBeVisible();
   await expect(page.getByRole("button", { name: DECISION_BUTTON })).toHaveCount(0);
   await shot(page, "04-confirmed");
   await page.reload();

@@ -96,12 +96,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 892,
+                  "duration": 859,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-10T06:42:46.965Z",
+                  "startTime": "2026-10-10T07:12:08.679Z",
                   "annotations": [
                     {
                       "type": "serial",
@@ -148,12 +148,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1257,
+                  "duration": 1239,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-10T06:42:48.142Z",
+                  "startTime": "2026-10-10T07:12:09.794Z",
                   "annotations": [
                     {
                       "type": "serial",
@@ -205,7 +205,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-10T06:42:49.403Z",
+                  "startTime": "2026-10-10T07:12:11.037Z",
                   "annotations": [
                     {
                       "type": "serial",
@@ -224,7 +224,7 @@
           ],
           "id": "81228c4c8886d566ba11-83223b8621a4c8b01b59",
           "file": "main.spec.ts",
-          "line": 88,
+          "line": 99,
           "column": 1
         },
         {
@@ -252,12 +252,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 682,
+                  "duration": 651,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-10T06:42:50.124Z",
+                  "startTime": "2026-10-10T07:12:11.757Z",
                   "annotations": [
                     {
                       "type": "serial",
@@ -276,7 +276,7 @@
           ],
           "id": "81228c4c8886d566ba11-26cb834910a3765a533f",
           "file": "main.spec.ts",
-          "line": 111,
+          "line": 122,
           "column": 1
         },
         {
@@ -304,12 +304,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 542,
+                  "duration": 520,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-10T06:42:50.810Z",
+                  "startTime": "2026-10-10T07:12:12.412Z",
                   "annotations": [
                     {
                       "type": "serial",
@@ -328,7 +328,7 @@
           ],
           "id": "81228c4c8886d566ba11-2483e474423d17488c81",
           "file": "main.spec.ts",
-          "line": 142,
+          "line": 153,
           "column": 1
         },
         {
@@ -356,12 +356,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 391,
+                  "duration": 377,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-10T06:42:51.355Z",
+                  "startTime": "2026-10-10T07:12:12.935Z",
                   "annotations": [
                     {
                       "type": "serial",
@@ -380,7 +380,7 @@
           ],
           "id": "81228c4c8886d566ba11-34350a55297549c4fe35",
           "file": "main.spec.ts",
-          "line": 152,
+          "line": 163,
           "column": 1
         },
         {
@@ -408,12 +408,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 481,
+                  "duration": 483,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-10T06:42:51.750Z",
+                  "startTime": "2026-10-10T07:12:13.315Z",
                   "annotations": [
                     {
                       "type": "serial",
@@ -432,7 +432,7 @@
           ],
           "id": "81228c4c8886d566ba11-ce1718758d7fd5abf227",
           "file": "main.spec.ts",
-          "line": 158,
+          "line": 169,
           "column": 1
         },
         {
@@ -460,12 +460,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1040,
+                  "duration": 1000,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-10T06:42:52.234Z",
+                  "startTime": "2026-10-10T07:12:13.802Z",
                   "annotations": [
                     {
                       "type": "serial",
@@ -484,7 +484,7 @@
           ],
           "id": "81228c4c8886d566ba11-7670cbe395a2435896d4",
           "file": "main.spec.ts",
-          "line": 172,
+          "line": 183,
           "column": 1
         }
       ]
@@ -492,8 +492,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-10T06:42:46.688Z",
-    "duration": 6618.91,
+    "startTime": "2026-10-10T07:12:08.406Z",
+    "duration": 6422.843,
     "expected": 8,
     "skipped": 0,
     "unexpected": 0,

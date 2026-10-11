@@ -11,6 +11,7 @@ export function ChangeHighlights({ items, effectiveFrom }: { items: ApprovedItem
     && item.structuredChange.after_value !== undefined && item.structuredChange.after_value !== null);
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-brand/40 bg-brand-soft/70 p-4" data-testid="change-highlights">
+      <p className="text-sm font-semibold text-ink-soft">공문 변경 요약</p>
       {effectiveFrom && (
         <div className="flex items-center gap-2 text-[15px] font-semibold text-brand-ink">
           <CalendarCheck className="size-5" /> 시행일 <span className="text-lg font-extrabold">{effectiveFrom}</span>
@@ -20,8 +21,7 @@ export function ChangeHighlights({ items, effectiveFrom }: { items: ApprovedItem
         const change = item.structuredChange!;
         return (
           <div key={item.sourceRuleVersionId} className="rounded-xl bg-surface px-4 py-3">
-            <p className="text-sm leading-relaxed text-ink-soft">{item.instruction}</p>
-            <div className="mt-2 flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {change.before_value !== null && change.before_value !== undefined && (
                 <span className="flex items-baseline gap-1.5">
                   <span className="text-sm text-ink-soft">변경 전</span>

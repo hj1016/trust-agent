@@ -2,7 +2,7 @@ import { ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 /** 기술 식별자(규칙 키, 공문·상담 ID, 승인 version, 해시, 원문 위치)는 기본 화면에서 접어 두고 필요할 때 펼친다. 값은 Core 응답 그대로다. */
-export function TechnicalDetails({ rows, label = "상세 정보" }: { rows: Array<[string, string | null | undefined]>; label?: string }) {
+export function TechnicalDetails({ rows, label = "기술·감사 정보" }: { rows: Array<[string, string | null | undefined]>; label?: string }) {
   const visible = rows.filter(([, value]) => value);
   if (visible.length === 0) return null;
   return (

@@ -11,13 +11,16 @@ import { reasonText, TEXT } from "@/lib/messages";
 import type { ApplicableState, Confirmation, FamilyRef, Preparation } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils";
 import { useApplicable, useConfirm } from "./queries";
-import { describeChange } from "./structured";
+import { CheckStatus } from "./CheckStatus";
+import { deriveChecks } from "./checkLines";
 import { ChangeHighlights } from "./ChangeHighlights";
 import { EvidencePanel, NoticeRulesPanel } from "./EvidencePanel";
 import { TechnicalDetails } from "@/components/TechnicalDetails";
 
 type Props = {
   consultationId: string;
+  productKey: string;
+  productName?: string;
   family: FamilyRef;
   businessDate: string;
   preparation: Preparation | null | undefined;
@@ -25,7 +28,7 @@ type Props = {
 };
 
 /** 공문군 하나: Core 적용 공문·승인 checklist·원문 근거(질문 없이 먼저 보임)와 READY 섹션의 직원 확인. */
-export function FamilyChecklistCard({ consultationId, family, businessDate, preparation, confirmations }: Props) {
+export function FamilyChecklistCard({ consultationId, productKey, productName, family, businessDate, preparation, confirmations }: Props) {
   const applicable = useApplicable(family.familyId, businessDate);
   const state = applicable.data;
   return (
@@ -59,7 +62,7 @@ export function FamilyChecklistCard({ consultationId, family, businessDate, prep
         )}
         {state && !state.internalChecklistUseAllowed && <Unusable state={state} />}
         {state?.internalChecklistUseAllowed && state.approvedChecklist && (
-          <ChecklistWithConfirmation consultationId={consultationId} familyId={family.familyId} state={state} businessDate={businessDate}
+          <ChecklistWithConfirmation consultationId={consultationId} productKey={productKey} productName={productName} familyId={family.familyId} state={state} businessDate={businessDate}
             preparation={preparation} confirmations={confirmations} />
         )}
       </CardContent>
@@ -81,8 +84,8 @@ function Unusable({ state }: { state: ApplicableState }) {
   );
 }
 
-function ChecklistWithConfirmation({ consultationId, familyId, state, businessDate, preparation, confirmations }: {
-  consultationId: string; familyId: string; state: ApplicableState; businessDate: string;
+function ChecklistWithConfirmation({ consultationId, productKey, productName, familyId, state, businessDate, preparation, confirmations }: {
+  consultationId: string; productKey: string; productName?: string; familyId: string; state: ApplicableState; businessDate: string;
   preparation: Preparation | null | undefined; confirmations: Confirmation[] | undefined;
 }) {
   const checklist = state.approvedChecklist!;
@@ -111,7 +114,7 @@ function ChecklistWithConfirmation({ consultationId, familyId, state, businessDa
     <div className="flex flex-col gap-3">
       <ChangeHighlights items={checklist.items} effectiveFrom={state.selectedNotice?.effectiveFrom} />
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="mt-1 text-[15px] font-bold text-ink">직원 확인사항 {checklist.items.length}개</h3>
+        <h3 className="mt-1 text-[15px] font-bold text-ink">승인된 Checklist {checklist.items.length}개 · 항목별 확인 상태</h3>
         <NoticeRulesPanel state={state} />
       </div>
       <ol className="flex flex-col gap-3">
@@ -131,11 +134,7 @@ function ChecklistWithConfirmation({ consultationId, familyId, state, businessDa
                 <div className="min-w-0 flex-1">
                   <label htmlFor={id} className="text-[15px] leading-relaxed font-semibold text-ink">{item.order + 1}. {item.instruction}</label>
                   {item.evidenceRequired && <div className="mt-1"><Badge tone="partial">근거 확인 필수</Badge></div>}
-                  {itemLines(item).length > 0 && (
-                    <ul className="mt-2 flex flex-col gap-1 text-[15px] text-ink">
-                      {itemLines(item).map((line) => <li key={line}>{line}</li>)}
-                    </ul>
-                  )}
+                  <CheckStatus lines={deriveChecks(item, { productKey, productName, businessDate })} />
                   {rule && <EvidencePanel item={item} rule={rule} state={state} />}
                 </div>
               </div>
@@ -163,7 +162,7 @@ function ChecklistWithConfirmation({ consultationId, familyId, state, businessDa
             <Alert tone="ready" className="text-[15px]">
               근거 확인 기록됨 · 확인자 {confirmation.confirmedBy}({roleLabel(confirmation.activeRole).text}) · {formatDateTime(confirmation.confirmedAt)} · 항목 {confirmation.confirmedRuleVersionIds.length}개
             </Alert>
-            <TechnicalDetails label="확인 대상 상세 정보" rows={[
+            <TechnicalDetails label="확인 대상 기술·감사 정보" rows={[
               ["확인 대상 공문", confirmation.selectedNoticeId],
               ["승인 checklist", confirmation.approvedChecklistVersionId],
               ["검수 결정", confirmation.decisionId],
@@ -176,9 +175,3 @@ function ChecklistWithConfirmation({ consultationId, familyId, state, businessDa
   );
 }
 
-/** 항목 아래 줄: 변경 값은 위쪽 변경 요약에 크게 있으므로 빼고, 시행일(값이 없는 항목)·조건·예외만 보인다. */
-function itemLines(item: { structuredChange: import("@/lib/types").StructuredChange | null }): string[] {
-  const numeric = item.structuredChange && item.structuredChange.unit !== "BOOLEAN" && item.structuredChange.after_value != null;
-  // 조건·예외는 원문 근거 영역에 있으므로 여기서는 값이 없는 항목의 시행일만 보인다.
-  return describeChange(item.structuredChange).filter((line) => line.startsWith("시행일") && !numeric);
-}

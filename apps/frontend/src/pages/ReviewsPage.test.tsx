@@ -15,9 +15,9 @@ describe("ReviewsPage", () => {
     expect(await screen.findByText("[합성] 셀러론 상담 준비 체크리스트 안내 v2")).toBeInTheDocument();
     expect(screen.getByText("검토 결정 없음")).toBeInTheDocument();
     expect(screen.getByTestId("review-read-only")).toHaveTextContent("승인·수정·반려는 이 화면에서 할 수 없습니다");
-    // 결정 버튼은 없다. 남는 버튼은 식별자를 펼치는 '상세 정보'뿐이다.
+    // 결정 버튼은 없다. 남는 버튼은 식별자를 펼치는 '기술·감사 정보'뿐이다.
     expect(screen.queryAllByRole("button", { name: /승인|수정|반려|결정/ })).toHaveLength(0);
-    expect(screen.queryAllByRole("button").every((button) => button.textContent?.includes("상세 정보"))).toBe(true);
+    expect(screen.queryAllByRole("button").every((button) => button.textContent?.includes("기술·감사 정보"))).toBe(true);
     vi.unstubAllGlobals();
   });
 });

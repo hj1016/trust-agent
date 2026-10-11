@@ -5,19 +5,16 @@ import { TechnicalDetails } from "@/components/TechnicalDetails";
 import type { ApplicableRule, ApplicableState, ApprovedItem } from "@/lib/types";
 
 /**
- * 항목 하나의 원문 근거(은행원용). 기본으로 보이는 것: 근거 공문(제목·차수·발행일·시행일·사용 상태), 공문 원문 발췌,
- * 적용 조건과 예외, 직원 확인사항. 규칙 ID·JSON Pointer·근거 해시·승인 결정 ID는 감사·무결성 확인용으로 그대로 두되 접어 둔다.
+ * 항목 하나의 공문 원문 근거(은행원용). 기본으로 보이는 것: 근거 공문(제목·차수·발행일·시행일·사용 상태)과 공문 원문 발췌.
+ * 조건·예외는 항목의 '확인 상태'에서 보이고, 승인된 Checklist 문장은 원문과 다를 때만 함께 보인다. 규칙 ID·JSON Pointer·근거 해시·승인 결정 ID는 감사·무결성 확인용으로 그대로 두되 접어 둔다.
  * 원문 발췌(공문 규칙 문장)와 직원 확인사항(승인 Checklist 지시)은 출처가 다르므로 나눠 보인다. 값은 모두 Core 응답 그대로다.
  */
 export function EvidencePanel({ item, rule, state }: { item: ApprovedItem; rule: ApplicableRule; state: ApplicableState }) {
   const notice = state.selectedNotice;
-  const change = item.structuredChange;
-  const conditions = Array.isArray(change?.conditions) ? change.conditions : [];
-  const exceptions = Array.isArray(change?.exceptions) ? change.exceptions : [];
   return (
     <Collapsible>
       <CollapsibleTrigger className="group mt-2 inline-flex items-center gap-1 rounded-lg px-1 py-1 text-[15px] font-semibold text-info hover:underline">
-        <FileText className="size-4" /> 원문 근거 보기 <ChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
+        <FileText className="size-4" /> 공문 원문 보기 <ChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-2 flex flex-col gap-3 rounded-xl border border-line bg-surface p-4" data-testid="evidence-panel">
@@ -37,30 +34,15 @@ export function EvidencePanel({ item, rule, state }: { item: ApprovedItem; rule:
             <h4 className="flex items-center gap-1 text-sm font-semibold text-ink-soft"><Quote className="size-4" /> 공문 원문 발췌</h4>
             <blockquote className="mt-1 rounded-lg border-l-4 border-brand bg-brand-soft/50 px-4 py-3 text-[15px] leading-relaxed text-ink">{rule.evidenceText}</blockquote>
           </section>
-          {(conditions.length > 0 || exceptions.length > 0) && (
-            <section aria-label="적용 조건과 예외" className="grid gap-2 sm:grid-cols-2">
-              {conditions.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-semibold text-ink-soft">적용 조건</h4>
-                  <ul className="mt-1 list-disc pl-5 text-[15px] text-ink">{conditions.map((text) => <li key={text}>{text}</li>)}</ul>
-                </div>
-              )}
-              {exceptions.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-semibold text-ink-soft">예외</h4>
-                  <ul className="mt-1 list-disc pl-5 text-[15px] text-ink">{exceptions.map((text) => <li key={text}>{text}</li>)}</ul>
-                </div>
-              )}
-            </section>
-          )}
-          <section aria-label="직원 확인사항">
-            <h4 className="text-sm font-semibold text-ink-soft">직원 확인사항(승인 Checklist)</h4>
-            <p className="mt-1 text-[15px] leading-relaxed text-ink">{item.instruction}</p>
-            {item.instruction === rule.evidenceText && (
-              <p className="mt-1 text-sm text-ink-soft">이 항목의 확인 지시는 공문 원문 문장과 같습니다.</p>
+          {item.instruction === rule.evidenceText
+            ? <p className="text-sm text-ink-soft">이 공문 문장이 그대로 승인된 Checklist 항목이 됐습니다.</p>
+            : (
+              <section aria-label="승인된 Checklist 문장">
+                <h4 className="text-sm font-semibold text-ink-soft">승인된 Checklist 문장</h4>
+                <p className="mt-1 text-[15px] leading-relaxed text-ink">{item.instruction}</p>
+              </section>
             )}
-          </section>
-          <TechnicalDetails label="기술 상세 정보(감사·무결성 확인용)" rows={[
+          <TechnicalDetails rows={[
             ["규칙 ID", rule.ruleVersionId],
             ["규칙 키", item.ruleKey],
             ["JSON Pointer", rule.jsonPointer],

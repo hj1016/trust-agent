@@ -30,7 +30,7 @@ function renderCard(prep: Preparation | null, fetchMock = vi.fn()) {
   vi.stubGlobal("fetch", fetchMock);
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <FamilyChecklistCard consultationId="c1" family={{ familyId: "SIN-PREPAYMENT-FEE", required: true, order: 0 }} businessDate="2026-10-06"
+      <FamilyChecklistCard consultationId="c1" productKey="kb-seller-loan" family={{ familyId: "SIN-PREPAYMENT-FEE", required: true, order: 0 }} businessDate="2026-10-06"
         preparation={prep} confirmations={[]} />
     </QueryClientProvider>,
   );
