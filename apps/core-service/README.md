@@ -310,3 +310,7 @@ address를 바꿀 때는 외부 ingress에 노출하지 않고 내부 probe와 �
 합니다. `prod` profile은 DB URL, username, password, 기대 schema version,
 freshness policy version과 max confirmation age가 모두 명시되지 않으면 기동하지
 않습니다.
+
+## 승인 근거 검색과 벡터 색인
+
+검색 기반 분리 반영은 TASK-028을 따른다. 벡터 색인을 켜면 Core가 AI 임베딩 인터페이스를 호출하고 승인 근거의 벡터를 Elasticsearch에 저장한다. AI 서비스는 업무 DB에 직접 접근하지 않는다. 기존 기본값은 유지하며 모델 및 검색 방식의 최종 선택, LLM 답변, 이후 상담 업무 기능은 후속 PR로 구분한다.

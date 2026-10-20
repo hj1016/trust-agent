@@ -29,6 +29,11 @@ final class SearchDocuments {
 
     record Built(List<ObjectNode> documents, String contentHash) {}
 
+    /** 벡터 필드 설정. null이면 BM25 전용 색인(기존과 같다). */
+    record VectorSpec(String modelTag, int dimension) {}
+
+    static final String VECTOR_FIELD = "evidence_vector";
+
     private final ObjectMapper mapper;
     private final CanonicalJsonHasher hasher;
 
@@ -38,6 +43,11 @@ final class SearchDocuments {
     }
 
     Built build(List<IndexedRule> rules, Instant indexedAt) {
+        return build(rules, indexedAt, null);
+    }
+
+    /** vector가 있으면 문서에 임베딩 모델 표식을 넣어 내용 해시에 반영한다(모델이 바뀌면 새 색인). 벡터 값 자체는 해시에 넣지 않는다. */
+    Built build(List<IndexedRule> rules, Instant indexedAt, VectorSpec vector) {
         Map<String, List<IndexedRule>> byRule = new LinkedHashMap<>();
         for (IndexedRule rule : rules) {
             byRule.computeIfAbsent(rule.ruleVersionId(), key -> new ArrayList<>()).add(rule);
@@ -76,6 +86,7 @@ final class SearchDocuments {
             }
             doc.put("dataset_class", "SYNTHETIC_INTERNAL");
             doc.put("synthetic", true);
+            if (vector != null) doc.put("embedding_model", vector.modelTag());
             doc.put("source_hash", hasher.canonicalize(doc).sha256());
             hashSubject.add(doc.deepCopy());
             doc.put("indexed_at", indexedAt.toString());
@@ -134,9 +145,20 @@ final class SearchDocuments {
         return text.toString();
     }
 
+    /** 임베딩 입력 문장: BM25와 같은 두 필드(근거 원문 + 구조화 값 문장). "passage: " 접두어는 AI 서비스가 붙인다. */
+    static String embeddingText(JsonNode doc) {
+        String evidence = doc.path("evidence_text").stringValue();
+        String structured = doc.path("structured_text").stringValue();
+        return (evidence + (structured == null || structured.isBlank() ? "" : "\n" + structured)).strip();
+    }
+
     /** 색인 설정(분석기·mapping·reindex 버전)의 해시. 문서 내용이 같아도 설정이 다르면 새 색인을 만든다. */
     String settingsHash(String analyzer) {
-        ObjectNode definition = (ObjectNode) indexDefinition(analyzer, "", "", 0, Instant.EPOCH);
+        return settingsHash(analyzer, null);
+    }
+
+    String settingsHash(String analyzer, VectorSpec vector) {
+        ObjectNode definition = (ObjectNode) indexDefinition(analyzer, "", "", null, 0, Instant.EPOCH, vector);
         ((ObjectNode) definition.get("mappings")).remove("_meta");
         return hasher.canonicalize(definition).sha256();
     }
@@ -155,6 +177,11 @@ final class SearchDocuments {
     }
 
     JsonNode indexDefinition(String analyzer, String workspaceId, String contentHash, String settingsHash, int documentCount, Instant indexedAt) {
+        return indexDefinition(analyzer, workspaceId, contentHash, settingsHash, documentCount, indexedAt, null);
+    }
+
+    JsonNode indexDefinition(String analyzer, String workspaceId, String contentHash, String settingsHash, int documentCount, Instant indexedAt,
+                             VectorSpec vector) {
         ObjectNode definition = mapper.createObjectNode();
         ObjectNode settings = definition.putObject("settings");
         settings.putObject("index").put("number_of_shards", 1).put("number_of_replicas", 0);
@@ -172,6 +199,10 @@ final class SearchDocuments {
         meta.put("document_count", documentCount);
         meta.put("analyzer", analyzer);
         meta.put("indexed_at", indexedAt.toString());
+        if (vector != null) {
+            meta.put("embedding_model", vector.modelTag());
+            meta.put("embedding_dimension", vector.dimension());
+        }
         ObjectNode properties = mappings.putObject("properties");
         for (String keyword : List.of("rule_version_id", "family_id", "notice_id", "rule_key", "json_pointer", "evidence_hash",
                 "dataset_class", "source_hash")) {
@@ -192,6 +223,11 @@ final class SearchDocuments {
         properties.putObject("effective_ranges").put("type", "date_range").put("format", "strict_date");
         properties.putObject("synthetic").put("type", "boolean");
         properties.putObject("indexed_at").put("type", "date");
+        if (vector != null) {
+            // 같은 색인에 벡터를 둔다(별도 Vector DB 없음). e5 출력은 L2 정규화돼 있어 cosine 유사도로 kNN한다.
+            properties.putObject("embedding_model").put("type", "keyword");
+            properties.putObject(VECTOR_FIELD).put("type", "dense_vector").put("dims", vector.dimension()).put("index", true).put("similarity", "cosine");
+        }
         return definition;
     }
 }

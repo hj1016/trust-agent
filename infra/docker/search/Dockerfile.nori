@@ -1,0 +1,14 @@
+# TASK-016: 한국어 분석기(nori) 포함 Elasticsearch 이미지. 검증용이며 배포 compose와 AWS에는 아직 적용하지 않는다.
+# 기반 이미지는 compose.search.yml과 같은 digest로 고정한다.
+# 플러그인은 공식 배포물을 버전 고정 URL로 받고 sha512를 빌드 안에서 대조한다(불일치면 빌드 실패).
+# 확인 기록(2026-10-10 관측): sha512는 공식 .sha512 파일과 일치, .asc 서명은 Elastic 서명키 46095ACC8548582C1A2699A9D27D666CD88E42B4로 검증됨,
+# plugin-descriptor의 version·elasticsearch.version은 모두 8.19.6.
+FROM docker.elastic.co/elasticsearch/elasticsearch@sha256:bfb2108076735fbfc5dcd5d49f12f5aa93fab9759034c55f7da3b4345606c903
+
+ARG NORI_URL=https://artifacts.elastic.co/downloads/elasticsearch-plugins/analysis-nori/analysis-nori-8.19.6.zip
+ARG NORI_SHA512=bdd1e4c66820d283144b0d338cf153fd793d7790c2d96e7fb90b79689bd886cc74c28fc218779f58c04871bdff2f67b265c3fd3970ccf1aa25fcc05ab8d4b63f
+
+RUN curl -fsSL --retry 3 -o /tmp/analysis-nori.zip "${NORI_URL}" \
+ && echo "${NORI_SHA512}  /tmp/analysis-nori.zip" | sha512sum -c - \
+ && bin/elasticsearch-plugin install --batch file:///tmp/analysis-nori.zip \
+ && rm -f /tmp/analysis-nori.zip

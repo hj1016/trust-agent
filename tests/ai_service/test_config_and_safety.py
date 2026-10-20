@@ -114,3 +114,45 @@ class SafetyTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StartupGuardTest(unittest.TestCase):
+    """R1: 운영 기동 검사. 로컬 예외는 명시 설정으로만."""
+
+    def test_production_is_default_and_requires_inbound_token(self):
+        with self.assertRaises(config.SettingsError) as raised:
+            config.check_startup({})
+        self.assertEqual("STARTUP_REFUSED", raised.exception.code)
+        self.assertEqual("production", config.check_startup({config.ENV_INBOUND_TOKEN: "t"}))
+
+    def test_production_refuses_search_diagnostics(self):
+        for value in ("1", "true", "on"):
+            with self.assertRaises(config.SettingsError):
+                config.check_startup({config.ENV_INBOUND_TOKEN: "t", config.ENV_SEARCH_DIAGNOSTICS: value})
+        self.assertEqual("production", config.check_startup({config.ENV_INBOUND_TOKEN: "t", config.ENV_SEARCH_DIAGNOSTICS: "0"}))
+
+    def test_local_exception_must_be_explicit(self):
+        self.assertEqual("local", config.check_startup({config.ENV_DEPLOYMENT: "local", config.ENV_SEARCH_DIAGNOSTICS: "1"}))
+        with self.assertRaises(config.SettingsError):
+            config.check_startup({config.ENV_DEPLOYMENT: "dev"})
+
+    def test_refusal_message_does_not_contain_token_value(self):
+        with self.assertRaises(config.SettingsError) as raised:
+            config.check_startup({config.ENV_INBOUND_TOKEN: "secret-token-value", config.ENV_SEARCH_DIAGNOSTICS: "1"})
+        self.assertNotIn("secret-token-value", str(raised.exception))
+
+    def test_http_app_startup_runs_the_guard(self):
+        from unittest import mock
+        try:
+            from fastapi.testclient import TestClient
+        except ImportError:  # pragma: no cover
+            self.skipTest("fastapi 미설치")
+        import os
+        from ai_service import app as app_module
+        with mock.patch.dict(os.environ, {config.ENV_DEPLOYMENT: "", config.ENV_INBOUND_TOKEN: ""}, clear=False):
+            with self.assertRaises(config.SettingsError):
+                with TestClient(app_module.app):
+                    pass
+        with mock.patch.dict(os.environ, {config.ENV_DEPLOYMENT: "local"}, clear=False):
+            with TestClient(app_module.app):
+                pass
