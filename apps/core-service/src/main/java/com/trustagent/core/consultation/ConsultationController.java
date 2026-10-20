@@ -45,9 +45,11 @@ public class ConsultationController {
     private final AiServiceClient aiService;
     private final GrantService grants;
     private final SecurityEventRecorder events;
+    private final ConsultationAnswerService answers;
 
     public ConsultationController(ConsultationService consultations, ConsultationWorkService work, AiServiceClient aiService, GrantService grants,
-                                  SecurityEventRecorder events) {
+                                  SecurityEventRecorder events, ConsultationAnswerService answers) {
+        this.answers = answers;
         this.consultations = consultations;
         this.work = work;
         this.aiService = aiService;
@@ -98,6 +100,31 @@ public class ConsultationController {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(response.body());
     }
+
+    /** 상담 화면 추가 질문: 근거 검색 + AI 설명(검증 통과분만). 보류·결정 요청·AI 장애도 200으로 상태와 사유를 돌려준다(화면이 기존 Checklist로 안내). */
+    @PostMapping("/{consultationId}/answers")
+    public ResponseEntity<?> answer(@PathVariable String consultationId, @RequestBody(required = false) AnswerRequest body,
+                                    Authentication authentication, HttpServletRequest request) {
+        Optional<ConsultationService.View> view = consultations.findOwned(consultationId, authentication.getName(), ActiveRole.workspace(request));
+        if (view.isEmpty()) {
+            return notOwned(consultationId, authentication, request);
+        }
+        if (body == null || body.question() == null || body.familyId() == null) {
+            throw new ConsultationException("INVALID_REQUEST", "question과 familyId가 필요합니다.");
+        }
+        LocalDate businessDate;
+        try {
+            businessDate = body.businessDate() == null || body.businessDate().isBlank()
+                    ? LocalDate.now(java.time.ZoneId.of("Asia/Seoul")) : LocalDate.parse(body.businessDate().trim());
+        } catch (DateTimeParseException exception) {
+            throw new ConsultationException("INVALID_BUSINESS_DATE", "업무일은 YYYY-MM-DD 형식이어야 합니다.");
+        }
+        String activeRole = ActiveRole.current(request).orElse("STAFF");
+        return ResponseEntity.ok(answers.answer(view.get(), new ConsultationAnswerService.Request(body.question(), body.familyId(), businessDate),
+                authentication.getName(), activeRole, traceId(request)));
+    }
+
+    public record AnswerRequest(String question, String familyId, String businessDate) {}
 
     /** 이 상담 건에 연결된 최신 준비안(TASK-017b). 담당자가 아니면 404, 준비안이 없으면 404 PREPARATION_NOT_FOUND. */
     @GetMapping("/{consultationId}/preparation")

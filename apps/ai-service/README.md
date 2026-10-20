@@ -4,10 +4,10 @@ FastAPI 기반 AI 서비스. TASK-015 범위에서 **규칙 조립 상담 준비
 
 이 서비스가 하지 않는 것:
 
-- LLM 문장 생성. 준비안의 모든 문장은 승인 checklist 항목의 지시 문장, 근거 Tool이 돌려준 규칙 원문, 구조화 값, 고정 안내 문구(`ai_service/messages.py`)에서만 옵니다. LLM 생성과 그 검증은 TASK-019입니다.
+- 규칙 조립 준비안에서의 LLM 문장 생성. 준비안의 모든 문장은 승인 checklist 항목의 지시 문장, 근거 Tool이 돌려준 규칙 원문, 구조화 값, 고정 안내 문구(`ai_service/messages.py`)에서만 옵니다. 추가 질문의 LLM 설명과 검사는 TASK-030에서 별도 API로 제공한다. 실제 모델 품질 비교는 남아 있다.
 - 업무 DB 접근. DB 접속 설정 항목 자체가 없고 DB 드라이버 의존성도 없습니다. Core에는 서비스 토큰으로만 접근합니다.
 - 승인·거절·한도·금리·신용등급 결정. 준비안 계약(`contracts/consultation-preparation.schema.json`)에 그런 필드가 없습니다.
-- 근거 검색(TASK-016), 화면과 행원 최종 확인(TASK-017), 사용자별 인증·권한, 행원 메모 입력(TASK-015 제안 4로 제외).
+- 이 AI 서버 자체의 사용자 세션 인증과 행원 메모 입력(TASK-015 제안 4로 제외).
 
 ## 실행
 
@@ -81,7 +81,7 @@ curl -s -X POST http://127.0.0.1:8090/api/v1/ai/consultation-preparations \
 - 출력·기록 계약은 `additionalProperties: false`이고 결정 필드가 없습니다(SAFE-A).
 - 고정 문구 표에 결정 표현이 없음을 테스트가 금지 표현 목록으로 확인합니다(SAFE-B).
 - 모든 준비안에 `human_decision_notice`가 있습니다(SAFE-D). 보류 섹션에는 항목·근거가 없습니다(SAFE-E). 자유 문장 입력 경로가 없습니다(SAFE-F).
-- 질문 기반 안전성 사례(S10·E22·E23)와 LLM 출력 검증은 TASK-019입니다. 이 서비스의 검증 통과는 LLM 안전성 검증을 뜻하지 않습니다.
+- 추가 질문의 인용과 출력 검사는 TASK-030에 포함했다. 질문 기반 안전성 사례의 실제 모델 평가와 인간 검수는 별도이며, 자동 연결 검증 통과가 모델 안전성 전체를 보장하지 않는다.
 
 ## 호출 계측 (TASK-021, 선택)
 
@@ -109,3 +109,23 @@ Core와 함께 실행하는 연결 검증은 `apps/core-service`의 Java 통합 
 `POST /api/v1/ai/search`는 수신 토큰을 확인하고 Core가 발급한 grant를 조회 Tool에 전달한다. Core 승인 기준과 권한 확인 뒤 Elasticsearch에서 후보 ID와 점수를 얻고, 근거 본문은 Core에서 다시 확인한다. `TRUST_AGENT_SEARCH_MODE=bm25|vector|hybrid`로 검색 방식을 지정한다. hybrid는 BM25와 벡터 kNN의 순위를 RRF(k=60)로 결합한다. 관련성 통과 기준은 순위 결합과 별도다.
 
 `POST /api/v1/ai/embeddings`는 Core 재색인용 passage 임베딩 인터페이스다. 로컬 e5-small manifest를 추적하며 모델 파일은 Git에 넣지 않는다. 벡터 또는 hybrid 실행은 별도 모델 디렉터리와 같은 모델로 만든 색인이 필요하다. 공통 JSON 프로필, 후속 모델 비교 및 임계값 선택은 별도 반영한다. 검색 기반 코드의 자동 검증은 검색 품질 완료를 뜻하지 않는다.
+
+## 승인 근거 기반 추가 질문 (TASK-030)
+
+`POST /api/v1/ai/answers`는 Core가 전달한 질문, 공문군, 업무일, 상담 ID와 grant를 받는다. 수신 토큰 확인 후 기존 검색 경로로 승인 근거를 찾고, 설명 생성 → 문장별 인용/수치/날짜/상품 범위 검사 → 모델 추가 검증을 수행한다. 검사를 통과하지 못한 초안은 HTTP 응답에서 제외한다.
+
+- `ANSWERED`: 검사에 통과한 설명. 최종 제공 전 Core가 승인 근거를 다시 확인한다.
+- `EVIDENCE_HOLD`: 사용할 수 있는 검색 근거 부족.
+- `ANSWER_HOLD`: 모델 미설정, 호출 실패 또는 설명 검사 실패. 검증된 근거가 있으면 근거만 제공할 수 있다.
+- `DECISION_DECLINED`: 대출 승인 등 결정을 맡긴 요청. 설명을 만들지 않는다.
+
+기존 규칙 조립 준비안과 별도 흐름이다. 업무 DB는 계속 Core만 접근한다. 문장과 인용구를 대조하는 검사는 의미 전체의 정확성을 보증하지 않으며 생성과 추가 검증이 같은 모델이면 같은 오류를 놓칠 수 있다.
+
+### 모델 연결과 비용
+
+- 기본 provider는 `bedrock`이다. `TRUST_AGENT_LLM_MODEL`, `TRUST_AGENT_LLM_APPROVAL_ID`와 `llm_budget`의 사용자 예산 승인이 없으면 유료 모델 호출 없이 설명을 보류한다. 예산 등록은 이 PR의 실행에 포함하지 않았다. 비용은 추정치이며 실제 청구 내역과 다를 수 있다.
+- `TRUST_AGENT_LLM_PROVIDER=ollama`에서는 `TRUST_AGENT_OLLAMA_URL`의 루프백 주소와 `TRUST_AGENT_OLLAMA_MODEL`로 로컬 모델을 지정한다. 모델 이름은 실행 설정이며 이번 검증에서 모델 품질을 확정하지 않았다.
+- `TRUST_AGENT_AI_DEPLOYMENT=local`과 `TRUST_AGENT_LLM_FAKE=echo`를 함께 지정하면 연결 검증용 정해진 응답을 쓴다. 실제 모델이 아니며 품질 평가에 사용하지 않는다.
+- `TRUST_AGENT_EVAL_TRACE_DIR`는 local에서만 사용할 수 있는 평가 기록 경로이다. 운영 모드에서는 설정 시 기동을 거부한다. 내부 생성 초안은 응답에서 제거하고 평가 기록은 Git에 포함하지 않는다.
+
+단위 테스트는 정해진 모델 응답과 로컬 모의 HTTP 서버를 사용한다. 실제 모델 추론과 검색/답변 품질 비교는 별도 작업이다. 실행 결과와 검토 사례는 [통합 검증 기록](../../docs/evidence/APPROVED_EVIDENCE_ANSWERS_INTEGRATION.md)을 따른다.

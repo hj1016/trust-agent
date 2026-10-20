@@ -212,4 +212,6 @@ def check_startup(environ: Optional[Mapping[str, str]] = None) -> str:
         raise SettingsError("STARTUP_REFUSED", f"운영 기동에는 {ENV_INBOUND_TOKEN}가 필요합니다(로컬은 {ENV_DEPLOYMENT}=local).")
     if (env.get(ENV_SEARCH_DIAGNOSTICS) or "").strip() not in ("", "0"):
         raise SettingsError("STARTUP_REFUSED", f"운영 기동에서는 {ENV_SEARCH_DIAGNOSTICS}를 켤 수 없습니다(로컬은 {ENV_DEPLOYMENT}=local).")
+    if (env.get("TRUST_AGENT_EVAL_TRACE_DIR") or "").strip():
+        raise SettingsError("STARTUP_REFUSED", f"운영 기동에서는 평가 전용 기록(TRUST_AGENT_EVAL_TRACE_DIR)을 켤 수 없습니다(로컬은 {ENV_DEPLOYMENT}=local).")
     return deployment

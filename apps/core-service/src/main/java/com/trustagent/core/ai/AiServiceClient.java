@@ -29,13 +29,28 @@ public class AiServiceClient {
         this.http = HttpClient.newBuilder().connectTimeout(properties.timeout()).build();
     }
 
+    /** Core → AI 서비스 추가 질문(근거 검색 + RAG). grant ID와 수신 토큰을 넘긴다. 응답은 Core가 다시 확인한 뒤에만 브라우저로 간다. */
+    public Response answer(String question, String familyId, String businessDate, String consultationId, String grantId, String traceId) {
+        ObjectNode body = mapper.createObjectNode();
+        body.put("question", question);
+        body.put("familyId", familyId);
+        body.put("businessDate", businessDate);
+        body.put("consultationId", consultationId);
+        body.put("grantId", grantId);
+        return post("/api/v1/ai/answers", body, traceId);
+    }
+
     public Response prepare(String applicationId, String businessDate, String consultationId, String grantId, String traceId) {
         ObjectNode body = mapper.createObjectNode();
         body.put("applicationId", applicationId);
         body.put("businessDate", businessDate);
         body.put("consultationId", consultationId);
         body.put("grantId", grantId);
-        HttpRequest.Builder request = HttpRequest.newBuilder(URI.create(properties.baseUrl().replaceAll("/+$", "") + "/api/v1/ai/consultation-preparations"))
+        return post("/api/v1/ai/consultation-preparations", body, traceId);
+    }
+
+    private Response post(String path, ObjectNode body, String traceId) {
+        HttpRequest.Builder request = HttpRequest.newBuilder(URI.create(properties.baseUrl().replaceAll("/+$", "") + path))
                 .timeout(properties.timeout())
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
