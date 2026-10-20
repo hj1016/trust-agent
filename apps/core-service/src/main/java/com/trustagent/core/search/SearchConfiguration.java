@@ -1,5 +1,6 @@
 package com.trustagent.core.search;
 
+import com.trustagent.core.ai.AiServiceProperties;
 import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +17,11 @@ public class SearchConfiguration {
     }
 
     @Bean
-    SearchReindexService searchReindexService(JdbcClient jdbc, ElasticsearchClient client, SearchProperties properties, ObjectMapper mapper, Clock clock) {
-        return new SearchReindexService(jdbc, client, properties, mapper, clock);
+    SearchReindexService searchReindexService(JdbcClient jdbc, ElasticsearchClient client, SearchProperties properties, ObjectMapper mapper, Clock clock,
+                                              SearchVectorProperties vector, AiServiceProperties ai) {
+        if (!vector.enabled()) {
+            return new SearchReindexService(jdbc, client, properties, mapper, clock);
+        }
+        return new SearchReindexService(jdbc, client, properties, mapper, clock, vector.spec(), new AiPassageEmbedder(ai, vector, mapper));
     }
 }

@@ -29,20 +29,31 @@ public class SearchReindexService {
     private final SearchDocuments documents;
     private final SearchProperties properties;
     private final Clock clock;
+    private final SearchDocuments.VectorSpec vector;
+    private final PassageEmbedder embedder;
 
     public SearchReindexService(JdbcClient jdbc, ElasticsearchClient elasticsearch, SearchProperties properties, ObjectMapper mapper, Clock clock) {
+        this(jdbc, elasticsearch, properties, mapper, clock, null, null);
+    }
+
+    /** vector·embedder가 있으면 승인 근거마다 벡터를 함께 색인한다. 임베딩이 실패하면 새 색인을 만들지 않고 기존 alias를 유지한다. */
+    public SearchReindexService(JdbcClient jdbc, ElasticsearchClient elasticsearch, SearchProperties properties, ObjectMapper mapper, Clock clock,
+                                SearchDocuments.VectorSpec vector, PassageEmbedder embedder) {
+        if ((vector == null) != (embedder == null)) throw new IllegalArgumentException("벡터 설정과 임베딩 구현은 함께 있어야 합니다.");
         this.repository = new RuleEvidenceIndexRepository(jdbc);
         this.elasticsearch = elasticsearch;
         this.documents = new SearchDocuments(mapper);
         this.properties = properties;
         this.clock = clock;
+        this.vector = vector;
+        this.embedder = embedder;
     }
 
     public Result reindex() {
         Instant now = clock.instant();
         List<IndexedRule> rules = repository.loadApprovedRules();
-        SearchDocuments.Built built = documents.build(rules, now);
-        String settingsHash = documents.settingsHash(properties.analyzer());
+        SearchDocuments.Built built = documents.build(rules, now, vector);
+        String settingsHash = documents.settingsHash(properties.analyzer(), vector);
         String alias = properties.alias();
         String targetBase = properties.indexNamePrefix() + documents.indexSuffix(built.contentHash(), settingsHash);
         Optional<String> current = elasticsearch.aliasTarget(alias);
@@ -54,6 +65,9 @@ public class SearchReindexService {
         }
         // 원칙: alias가 가리키는 현재 색인은 새 색인의 준비·검증·전환이 끝나기 전에는 절대 지우지 않는다.
         // 현재 색인 이름이 목표 이름과 같은데 내용이 어긋나면(문서 수·메타 불일치) 다른 이름으로 새로 만든다.
+        if (vector != null) {
+            attachVectors(built);  // 실패하면 여기서 예외: 새 색인을 만들기 전이므로 기존 alias·색인은 그대로다.
+        }
         String candidate = current.isPresent() && current.get().equals(targetBase) ? targetBase + "-r" + now.getEpochSecond() : targetBase;
         if (elasticsearch.indexExists(candidate)) {
             // 현재 색인이 아닌 잔여 색인(이전 실행이 alias 교체 전에 끊긴 경우)만 지운다.
@@ -61,7 +75,7 @@ public class SearchReindexService {
         }
         try {
             elasticsearch.createIndex(candidate, documents.indexDefinition(properties.analyzer(), properties.workspaceId(), built.contentHash(),
-                    settingsHash, built.documents().size(), now));
+                    settingsHash, built.documents().size(), now, vector));
             elasticsearch.bulkIndex(candidate, built.documents());
             elasticsearch.refresh(candidate);
             long indexed = elasticsearch.count(candidate);
@@ -87,6 +101,19 @@ public class SearchReindexService {
         }
         LOGGER.info("재색인 완료: alias={} index={} documents={} removed={}", alias, candidate, built.documents().size(), removed);
         return new Result(Outcome.CREATED, alias, candidate, built.documents().size(), built.contentHash(), removed);
+    }
+
+    private void attachVectors(SearchDocuments.Built built) {
+        List<String> passages = built.documents().stream().map(SearchDocuments::embeddingText).toList();
+        if (passages.isEmpty()) return;
+        PassageEmbedder.Embeddings embeddings = embedder.embed(passages);
+        if (!vector.modelTag().equals(embeddings.model()) || embeddings.dimension() != vector.dimension() || embeddings.vectors().size() != passages.size()) {
+            throw new SearchIndexException("SEARCH_EMBEDDING_MODEL_MISMATCH", "임베딩 결과가 벡터 설정과 다릅니다.");
+        }
+        for (int i = 0; i < passages.size(); i++) {
+            var array = built.documents().get(i).putArray(SearchDocuments.VECTOR_FIELD);
+            for (float value : embeddings.vectors().get(i)) array.add(value);
+        }
     }
 
     /** 생략 조건: 현재 색인의 메타(내용 해시, 설정 해시, reindex 버전)와 실제 문서 수가 예상과 모두 같을 때만. */

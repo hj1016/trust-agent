@@ -11,14 +11,19 @@ from __future__ import annotations
 
 from typing import Optional
 
+from contextlib import asynccontextmanager
 from typing import Optional as _Optional
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from .assembler import InputError, prepare, record_class
-from .config import SettingsError, load_settings
+from .config import SettingsError, check_startup, load_es_settings, load_search_settings, load_settings
+from . import embedding
+from .es_client import UrllibEsTransport
+from .search import SearchInputError, search
 
 # 기록 결과 종류 → HTTP 상태. 본문(record.recorded=false, error_code, usage_notice)은 바뀌지 않는다.
 HTTP_STATUS_BY_RECORD_CLASS = {
@@ -34,7 +39,14 @@ HTTP_STATUS_BY_RECORD_CLASS = {
     "NOT_ATTEMPTED": 503,
 }
 
-app = FastAPI(title="TrustAgent AI Service", version="0.1.0", docs_url=None, redoc_url=None)
+@asynccontextmanager
+async def _lifespan(_app: FastAPI):
+    # R1: HTTP 서버로 뜰 때 운영 기동 검사를 통과하지 못하면 예외로 기동을 멈춘다(uvicorn이 종료).
+    check_startup()
+    yield
+
+
+app = FastAPI(title="TrustAgent AI Service", version="0.1.0", docs_url=None, redoc_url=None, lifespan=_lifespan)
 
 
 class PreparationRequest(BaseModel):
@@ -71,3 +83,68 @@ def create_preparation(request: PreparationRequest, authorization: _Optional[str
     assert (status_code == 200) == recorded
     return JSONResponse(status_code=status_code, content=preparation,
                         headers={"X-Preparation-Recorded": "true" if recorded else "false"})
+
+
+@app.exception_handler(RequestValidationError)
+def _invalid_request(request: Request, error: RequestValidationError) -> JSONResponse:
+    """검색 API(TASK-016 AC-07): 본문 형식 오류는 400이며 어떤 필드가 틀렸는지만 알린다(값은 되돌려주지 않는다). 준비안 경로는 종전 422를 유지한다."""
+    if request.url.path != "/api/v1/ai/search":
+        return JSONResponse(status_code=422, content={"detail": error.errors()})
+    fields = sorted({".".join(str(part) for part in item.get("loc", ()) if part != "body") for item in error.errors()})
+    return JSONResponse(status_code=400, content={"detail": {"code": "INVALID_REQUEST", "message": "요청 본문이 계약과 다릅니다.", "fields": fields}})
+
+
+class EmbeddingRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    texts: list[str] = Field(min_length=1, max_length=64)
+    kind: str = Field(pattern="^(query|passage)$")
+
+
+@app.post("/api/v1/ai/embeddings")
+def create_embeddings(request: EmbeddingRequest, authorization: _Optional[str] = Header(default=None)) -> JSONResponse:
+    """Core 재색인 전용 내부 API: 승인 근거 문장의 로컬 임베딩(passage). 업무 DB·ES에 쓰지 않는다. 문장은 로그에 남기지 않는다."""
+    try:
+        settings = load_settings()
+    except SettingsError as error:
+        raise HTTPException(status_code=503, detail={"code": error.code, "message": str(error)}) from error
+    _check_inbound_token(settings, authorization)
+    try:
+        texts = embedding.validate_texts(request.texts)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail={"code": "INVALID_REQUEST", "message": str(error)}) from error
+    try:
+        embedder = embedding.get_embedder()
+        vectors = embedder.encode(texts, request.kind)
+    except embedding.EmbeddingUnavailable as error:
+        raise HTTPException(status_code=503, detail={"code": error.code, "message": str(error)}) from error
+    return JSONResponse(status_code=200, content={"model": embedder.tag, "dimension": embedder.dimension, "kind": request.kind, "vectors": vectors})
+
+
+class SearchRequest(BaseModel):
+    model_config = {"extra": "forbid"}  # 모르는 필드는 400. 질의 문장에서 인자를 만들지 않는다.
+    query: str = Field(min_length=1, max_length=200)
+    familyId: str = Field(min_length=1, max_length=64)
+    businessDate: Optional[str] = Field(default=None, max_length=10)
+    consultationId: Optional[str] = Field(default=None, min_length=1, max_length=64)
+    topK: Optional[int] = Field(default=None, ge=1, le=10)
+    grantId: Optional[str] = Field(default=None, min_length=1, max_length=64)
+
+
+@app.post("/api/v1/ai/search")
+def search_evidence(request: SearchRequest, authorization: _Optional[str] = Header(default=None)) -> JSONResponse:
+    """근거 검색 기준선(TASK-016). 보류(EVIDENCE_HOLD)도 200이며 본문의 status·hold_reasons로 구분한다(fail-closed).
+    설정 누락 503, 입력 오류 400. 진단 정보는 TRUST_AGENT_SEARCH_DIAGNOSTICS=1일 때만 본문에 있다."""
+    try:
+        settings = load_settings()
+        es_settings = load_es_settings()
+        search_settings = load_search_settings()
+    except SettingsError as error:
+        raise HTTPException(status_code=503, detail={"code": error.code, "message": str(error)}) from error
+    _check_inbound_token(settings, authorization)
+    es = UrllibEsTransport(es_settings.base_url, es_settings.username, es_settings.password, es_settings.timeout_seconds)
+    try:
+        result = search(request.query, request.familyId, request.businessDate, request.consultationId, request.topK,
+                        settings=settings, search_settings=search_settings, es=es, grant_id=request.grantId)
+    except SearchInputError as error:
+        raise HTTPException(status_code=400, detail={"code": error.code, "message": str(error)}) from error
+    return JSONResponse(status_code=200, content=result, headers={"X-Evidence-Status": result["status"]})

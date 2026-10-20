@@ -83,6 +83,10 @@ class FakeTransport:
         self.calls: list[tuple[str, dict, str]] = []
         self.headers_seen: list[dict] = []
 
+    @staticmethod
+    def ok_response(body) -> TransportResponse:
+        return ok(body)
+
     def usable(self, family_id: str, checklist: dict) -> "FakeTransport":
         self.checklist[family_id] = lambda: ok(checklist)
         if checklist.get("approvedChecklist"):

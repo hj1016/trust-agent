@@ -4,3 +4,7 @@
 fastapi==0.133.0
 uvicorn==0.40.0
 httpx==0.28.1
+# 로컬 임베딩(multilingual-e5-small ONNX, models/multilingual-e5-small.manifest.json). torch 없이 CPU 실행
+onnxruntime==1.31.0
+tokenizers==0.23.3
+numpy==2.4.6

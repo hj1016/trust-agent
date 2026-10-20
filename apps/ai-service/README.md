@@ -103,3 +103,9 @@ python3 -m unittest discover -s tests -t . -v
 ```
 
 Core와 함께 실행하는 연결 검증은 `apps/core-service`의 Java 통합 테스트가 이 CLI를 실행합니다.
+
+## 승인 근거 검색 기반
+
+`POST /api/v1/ai/search`는 수신 토큰을 확인하고 Core가 발급한 grant를 조회 Tool에 전달한다. Core 승인 기준과 권한 확인 뒤 Elasticsearch에서 후보 ID와 점수를 얻고, 근거 본문은 Core에서 다시 확인한다. `TRUST_AGENT_SEARCH_MODE=bm25|vector|hybrid`로 검색 방식을 지정한다. hybrid는 BM25와 벡터 kNN의 순위를 RRF(k=60)로 결합한다. 관련성 통과 기준은 순위 결합과 별도다.
+
+`POST /api/v1/ai/embeddings`는 Core 재색인용 passage 임베딩 인터페이스다. 로컬 e5-small manifest를 추적하며 모델 파일은 Git에 넣지 않는다. 벡터 또는 hybrid 실행은 별도 모델 디렉터리와 같은 모델로 만든 색인이 필요하다. 공통 JSON 프로필, 후속 모델 비교 및 임계값 선택은 별도 반영한다. 검색 기반 코드의 자동 검증은 검색 품질 완료를 뜻하지 않는다.

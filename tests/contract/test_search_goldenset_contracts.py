@@ -23,6 +23,7 @@ SMOKE = GOLDENSET_ROOT / "prepayment-fee-smoke-v1.json"
 EVAL = GOLDENSET_ROOT / "prepayment-fee-eval-v1.json"
 SAFETY = GOLDENSET_ROOT / "prepayment-fee-safety-v1.json"
 SAFETY_V2 = GOLDENSET_ROOT / "prepayment-fee-safety-v2.json"
+TUNING = GOLDENSET_ROOT / "prepayment-fee-tuning-v1.json"
 SCHEMA = "search-goldenset.schema.json"
 
 PREPAYMENT = "SIN-PREPAYMENT-FEE"
@@ -122,6 +123,7 @@ class SearchGoldensetContractTest(unittest.TestCase):
         cls.eval = load(EVAL)
         cls.safety = load(SAFETY)
         cls.safety_v2 = load(SAFETY_V2)
+        cls.tuning = load(TUNING)
         cls.rules_by_id, cls.rules_by_key = rule_index()
 
     # ---- AC-01 ----
@@ -396,6 +398,46 @@ class SearchGoldensetContractTest(unittest.TestCase):
         broken["pass_criteria_owner"] = "TASK-014"
         with self.assertRaises(ValidationError):
             validate(broken)
+
+
+    # ---- TASK-016 조정용 자료(tuning-v1): 관련성 보류 기준 조정 전용, 최종 평가와 분리 ----
+    def test_tuning_set_is_separate_from_smoke_and_eval(self):
+        validate(self.tuning)
+        self.assertEqual("tuning", self.tuning["kind"])
+        self.assertEqual(self.smoke["evaluation_context"], self.tuning["evaluation_context"])
+        ids = [q["query_id"] for q in self.tuning["queries"]]
+        self.assertEqual(len(ids), len(set(ids)))
+        other_ids = {q["query_id"] for q in self.smoke["queries"] + self.eval["queries"]}
+        self.assertEqual(set(), set(ids) & other_ids)
+        other_texts = {normalized(q["query"]) for q in self.smoke["queries"] + self.eval["queries"]}
+        for query in self.tuning["queries"]:
+            self.assertNotIn(normalized(query["query"]), other_texts, query["query_id"])
+
+    def test_tuning_set_rules_and_hold_shape(self):
+        for query in self.tuning["queries"]:
+            with self.subTest(query_id=query["query_id"]):
+                ids = query["relevant"] + query["supporting"] + query["must_not"]
+                for rule_id in ids:
+                    self.assertIn(rule_id, self.rules_by_id)
+                self.assertEqual(len(ids), len(set(ids)), "relevant·supporting·must_not는 겹치지 않는다")
+                union = sorted({r for rules in query["exclusion_reasons"].values() for r in rules})
+                self.assertEqual(sorted(query["must_not"]), union)
+                if query["expected_evidence_hold"]:
+                    self.assertEqual([], query["relevant"] + query["supporting"] + query["expected_fields"])
+                for expected in query["expected_fields"]:
+                    self.assertIn(expected["rule_version_id"], query["relevant"])
+                    change = self.rules_by_id[expected["rule_version_id"]]["rule"]["structured_change"]
+                    self.assertEqual(change[expected["field"]], expected["expected_value"])
+
+    def test_tuning_set_covers_decision_requests_lookalikes_and_normal_inquiries(self):
+        counts = Counter(q["category"] for q in self.tuning["queries"])
+        self.assertGreaterEqual(counts["decision_forbidden"], 6, "직접 결정 요청")
+        self.assertGreaterEqual(counts["hold"], 6, "금융 용어가 비슷하지만 무관한 질문")
+        positives = [q for q in self.tuning["queries"] if not q["expected_evidence_hold"]]
+        self.assertGreaterEqual(len(positives), 6, "정상 규정 문의")
+        # 결정 관련 단어를 포함한 정상 문의가 있어야 단순 키워드 차단을 가려낼 수 있다.
+        decision_words = ("승인", "거절", "한도", "대출")
+        self.assertGreaterEqual(sum(1 for q in positives if any(w in q["query"] for w in decision_words)), 2)
 
 
 if __name__ == "__main__":
