@@ -8,3 +8,6 @@ httpx==0.28.1
 onnxruntime==1.31.0
 tokenizers==0.23.3
 numpy==2.4.6
+
+# 선택적 Bedrock LLM 호출(사용자 예산 승인 필요). 모델 가중치와 비밀값은 저장하지 않는다.
+anthropic[bedrock]==1.13.0

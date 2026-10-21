@@ -33,7 +33,7 @@ class PublicProductSchemaIntegrationTest {
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
                 .cleanDisabled(true)
                 .load();
-        assertEquals(12, flyway.migrate().migrationsExecuted);
+        assertEquals(13, flyway.migrate().migrationsExecuted);
         assertEquals(0, flyway.migrate().migrationsExecuted);
 
         try (Connection connection = adminConnection(); Statement statement = connection.createStatement()) {
@@ -82,7 +82,7 @@ class PublicProductSchemaIntegrationTest {
                       AND table_name <> 'flyway_schema_history'
                     """)) {
                 assertTrue(result.next());
-                assertEquals(45, result.getInt(1)); // V12: consultation_preparation_link, consultation_confirmation
+                assertEquals(46, result.getInt(1)); // V12: consultation_preparation_link, consultation_confirmation, V13: consultation_answer_audit
             }
             try (ResultSet result = statement.executeQuery("""
                     SELECT version
@@ -92,7 +92,7 @@ class PublicProductSchemaIntegrationTest {
                     LIMIT 1
                     """)) {
                 assertTrue(result.next());
-                assertEquals("12", result.getString(1));
+                assertEquals("13", result.getString(1));
             }
             try (ResultSet result = statement.executeQuery("""
                     SELECT count(*)
@@ -110,7 +110,7 @@ class PublicProductSchemaIntegrationTest {
                     WHERE actual.tgenabled = 'O'
                     """)) {
                 assertTrue(result.next());
-                assertEquals(90, result.getInt(1)); // 보호 표 45개 × (append-only + truncate 트리거)
+                assertEquals(92, result.getInt(1)); // 보호 표 46개 × (append-only + truncate 트리거)
             }
 
             SQLException missingPrimaryKey = assertThrows(

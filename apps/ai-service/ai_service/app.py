@@ -9,6 +9,7 @@ Core 400(AI 서비스가 만든 요청의 계약 위반) → 500, Core 연결 �
 """
 from __future__ import annotations
 
+import time
 from typing import Optional
 
 from contextlib import asynccontextmanager
@@ -21,7 +22,7 @@ from pydantic import BaseModel, Field
 
 from .assembler import InputError, prepare, record_class
 from .config import SettingsError, check_startup, load_es_settings, load_search_settings, load_settings
-from . import embedding
+from . import embedding, eval_trace, llm, rag
 from .es_client import UrllibEsTransport
 from .search import SearchInputError, search
 
@@ -92,6 +93,50 @@ def _invalid_request(request: Request, error: RequestValidationError) -> JSONRes
         return JSONResponse(status_code=422, content={"detail": error.errors()})
     fields = sorted({".".join(str(part) for part in item.get("loc", ()) if part != "body") for item in error.errors()})
     return JSONResponse(status_code=400, content={"detail": {"code": "INVALID_REQUEST", "message": "요청 본문이 계약과 다릅니다.", "fields": fields}})
+
+
+class AnswerRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    question: str = Field(min_length=1, max_length=200)
+    familyId: str = Field(min_length=1, max_length=64)
+    businessDate: str = Field(min_length=10, max_length=10)
+    consultationId: str = Field(min_length=1, max_length=64)
+    grantId: Optional[str] = Field(default=None, min_length=1, max_length=64)
+
+
+@app.post("/api/v1/ai/answers")
+def create_answer(request: AnswerRequest, authorization: _Optional[str] = Header(default=None),
+                  x_trace_id: _Optional[str] = Header(default=None)) -> JSONResponse:
+    """Core 전용: 근거 검색(grant·Core 재확인) → RAG 설명 생성·검증. 보류·결정 요청이면 LLM을 부르지 않는다.
+    LLM 예산이 없거나 실패해도 Core가 확인한 근거는 함께 돌려준다(직원은 기존 승인 규정으로 확인할 수 있다).
+    로컬 평가에서만 평가 전용 기록(eval_trace)을 남긴다. 생성 초안은 응답 본문에 넣지 않는다."""
+    started = time.perf_counter()
+    try:
+        settings = load_settings()
+        es_settings = load_es_settings()
+        search_settings = load_search_settings()
+    except SettingsError as error:
+        raise HTTPException(status_code=503, detail={"code": error.code, "message": str(error)}) from error
+    _check_inbound_token(settings, authorization)
+    es = UrllibEsTransport(es_settings.base_url, es_settings.username, es_settings.password, es_settings.timeout_seconds)
+    try:
+        found = search(request.question, request.familyId, request.businessDate, request.consultationId, None,
+                       settings=settings, search_settings=search_settings, es=es, grant_id=request.grantId)
+    except SearchInputError as error:
+        raise HTTPException(status_code=400, detail={"code": error.code, "message": str(error)}) from error
+    try:
+        gateway = llm.gateway_for_service()
+    except llm.LlmError as error:
+        raise HTTPException(status_code=503, detail={"code": error.code, "message": str(error)}) from error
+    result = rag.answer(request.question, found["business_date"], found, gateway)
+    directory = eval_trace.trace_dir()
+    if directory is not None:
+        eval_trace.write(directory, eval_trace.record(x_trace_id, request.question, request.familyId, found, result,
+                                                      int((time.perf_counter() - started) * 1000)))
+    eval_trace.strip(result)
+    result.update({"search_version": found["search_version"], "family_id": found["family_id"], "evaluated_at": found.get("evaluated_at"),
+                   "search_hold_reasons": found.get("hold_reasons") or []})
+    return JSONResponse(status_code=200, content=result)
 
 
 class EmbeddingRequest(BaseModel):
